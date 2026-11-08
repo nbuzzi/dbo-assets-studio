@@ -34,7 +34,7 @@ Safety model: every write goes to a **new output folder** with the original pres
 4. Build `pak-tool.exe` against your own client sources ([Build](#build)) and put it next to `DboAssetsStudio.exe`.
 5. Run `DboAssetsStudio.exe`.
 
-Everything except reading PAK indexes works without `pak-tool.exe` (RDF/WPS/TQS editing on loose files, for example).
+Features that read or write PAK archives need `pak-tool.exe`.
 
 ## Download
 
