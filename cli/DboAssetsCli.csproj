@@ -1,0 +1,94 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0-windows</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><AssemblyName>dbo-assets</AssemblyName><Version>5.6.0</Version><EnableDefaultCompileItems>false</EnableDefaultCompileItems></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="../StudioConfig.cs" Link="StudioConfig.cs" />
+    <Compile Include="../AppPaths.cs" Link="AppPaths.cs" />
+    <Compile Include="../TqsCli.cs" Link="TqsCli.cs" />
+    <Compile Include="../TqsTemplates.cs" Link="TqsTemplates.cs" />
+    <Compile Include="../QuestDocument.cs" Link="QuestDocument.cs" />
+    <Compile Include="../QuestTemplates.cs" Link="QuestTemplates.cs" />
+    <Compile Include="../QuestCli.cs" Link="QuestCli.cs" />
+    <Compile Include="../WpsSpawnSchema.cs" Link="WpsSpawnSchema.cs" />
+    <Compile Include="../TextAllReconcileService.cs" Link="TextAllReconcileService.cs" />
+    <Compile Include="../MapWorkshopService.cs" Link="MapWorkshopService.cs" />
+    <Compile Include="../MapWorkshopService.Terrain.cs" Link="MapWorkshopService.Terrain.cs" />
+    <Compile Include="../MapNavigationService.cs" Link="MapNavigationService.cs" />
+    <Compile Include="../NewMapTableService.cs" Link="NewMapTableService.cs" />
+    <Compile Include="../StandaloneBspWorldService.cs" Link="StandaloneBspWorldService.cs" />
+    <Compile Include="../CharacterPropertyCatalog.cs" Link="CharacterPropertyCatalog.cs" />
+    <Compile Include="../EffectSplineAliasService.cs" Link="EffectSplineAliasService.cs" />
+    <Compile Include="../AnimationTimelineService.cs" Link="AnimationTimelineService.cs" />
+    <Compile Include="../AnimationCallbackCatalog.cs" Link="AnimationCallbackCatalog.cs" />
+    <Compile Include="../CharacterToonCatalog.cs" Link="CharacterToonCatalog.cs" />
+    <Compile Include="../CharacterRiderMergeService.cs" Link="CharacterRiderMergeService.cs" />
+    <Compile Include="../ItemPropertyCatalog.cs" Link="ItemPropertyCatalog.cs" />
+    <Compile Include="../ItemPropertyAliasService.cs" Link="ItemPropertyAliasService.cs" />
+    <Compile Include="../StudioWorkspace.cs" Link="StudioWorkspace.cs" />
+    <Compile Include="../WorkspaceContentValidation.cs" Link="WorkspaceContentValidation.cs" />
+    <Compile Include="../WorkspaceCli.cs" Link="WorkspaceCli.cs" />
+    <Compile Include="../WpsDocument.cs" Link="WpsDocument.cs" />
+    <Compile Include="../WpsCli.cs" Link="WpsCli.cs" />
+    <Compile Include="../WpsReferenceCatalog.cs" Link="WpsReferenceCatalog.cs" />
+    <None Include="../wps-reference-schemas.txt" Link="wps-reference-schemas.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../wps-catalog.json" Link="wps-catalog.json" CopyToOutputDirectory="PreserveNewest" />
+    <Compile Include="../GlbInspection.cs" Link="GlbInspection.cs" />
+    <Compile Include="../ContentSafety.cs" Link="ContentSafety.cs" />
+    <Compile Include="../PakArchive.cs" Link="PakArchive.cs" />
+    <Compile Include="../CommonConfigRdfService.cs" Link="CommonConfigRdfService.cs" />
+    <Compile Include="../PackLibrary.cs" Link="PackLibrary.cs" />
+    <Compile Include="../PakMaterialReferenceService.cs" Link="PakMaterialReferenceService.cs" />
+    <Compile Include="../TaiwanSupplementalSchemas.cs" Link="TaiwanSupplementalSchemas.cs" />
+    <Compile Include="../ContentPakService.cs" Link="ContentPakService.cs" />
+    <Compile Include="../PakComparison.cs" Link="PakComparison.cs" />
+    <Compile Include="../PakFingerprintService.cs" Link="PakFingerprintService.cs" />
+    <Compile Include="../ContentCli.cs" Link="ContentCli.cs" />
+    <Compile Include="../SnakewayPvsWorldReadService.cs" Link="SnakewayPvsWorldReadService.cs" />
+    <Compile Include="../TerrainGeometryService.cs" Link="TerrainGeometryService.cs" />
+    <Compile Include="../SceneGeometryService.cs" Link="SceneGeometryService.cs" />
+    <Compile Include="../ScenePortalService.cs" Link="ScenePortalService.cs" />
+    <Compile Include="../SceneNaviPieceService.cs" Link="SceneNaviPieceService.cs" />
+    <Compile Include="../PlacedGroundNavigationService.cs" Link="PlacedGroundNavigationService.cs" />
+    <Compile Include="../StaticBspNavigationService.cs" Link="StaticBspNavigationService.cs" />
+    <Compile Include="../SnakewayGroundEnvelope.cs" Link="SnakewayGroundEnvelope.cs" />
+    <Compile Include="../SnakewayTerminalUnion.cs" Link="SnakewayTerminalUnion.cs" />
+    <Compile Include="../SnakewayRampService.cs" Link="SnakewayRampService.cs" />
+    <Compile Include="../NativeMedia.cs" Link="NativeMedia.cs" />
+    <Compile Include="../TextureUnitSliceService.cs" Link="TextureUnitSliceService.cs" />
+    <Compile Include="../AssetDependencyCatalog.cs" Link="AssetDependencyCatalog.cs" />
+    <Compile Include="../AssetBindingCatalog.cs" Link="AssetBindingCatalog.cs" />
+    <Compile Include="../UvStructureCatalog.cs" Link="UvStructureCatalog.cs" />
+    <Compile Include="../AnimationPoseCatalog.cs" Link="AnimationPoseCatalog.cs" />
+    <Compile Include="../EffectMergeService.cs" Link="EffectMergeService.cs" />
+    <Compile Include="../EffectParticleTrailCatalog.cs" Link="EffectParticleTrailCatalog.cs" />
+    <Compile Include="../EffectParticleTrailPolicyService.cs" Link="EffectParticleTrailPolicyService.cs" />
+    <Compile Include="../EffectAdvancedMergeService.cs" Link="EffectAdvancedMergeService.cs" />
+    <Compile Include="../EffectEmptyMeshPolicyService.cs" Link="EffectEmptyMeshPolicyService.cs" />
+    <Compile Include="../EffectMeshAliasService.cs" Link="EffectMeshAliasService.cs" />
+    <Compile Include="../EffectTextureAliasService.cs" Link="EffectTextureAliasService.cs" />
+    <Compile Include="../EffectKeyAliasService.cs" Link="EffectKeyAliasService.cs" />
+    <Compile Include="../EffectFallbackService.cs" Link="EffectFallbackService.cs" />
+    <Compile Include="../DffRepairService.cs" Link="DffRepairService.cs" />
+    <Compile Include="../NtlMaterialTextureSizeRepairService.cs" Link="NtlMaterialTextureSizeRepairService.cs" />
+    <Compile Include="../DffTextureAliasService.cs" Link="DffTextureAliasService.cs" />
+    <Compile Include="../DffUvLayoutService.cs" Link="DffUvLayoutService.cs" />
+    <Compile Include="../ToonTopologyService.cs" Link="ToonTopologyService.cs" />
+    <Compile Include="../ToonTopologyRebuildService.cs" Link="ToonTopologyRebuildService.cs" />
+    <Compile Include="../ToonSelectedTopologyService.cs" Link="ToonSelectedTopologyService.cs" />
+    <Compile Include="../ObjectPropertyCatalog.cs" Link="ObjectPropertyCatalog.cs" />
+    <Compile Include="../RdfSchema.cs" Link="RdfSchema.cs" />
+    <Compile Include="../EffectLiteralSplinePolicyService.cs" Link="EffectLiteralSplinePolicyService.cs" />
+    <Compile Include="../RdfReconcileService.cs" Link="RdfReconcileService.cs" />
+    <Compile Include="../RdfCreateService.cs" Link="RdfCreateService.cs" />
+    <Compile Include="../RdfVariableTextReconcileService.cs" Link="RdfVariableTextReconcileService.cs" />
+    <Compile Include="../RdfAdditiveImportService.cs" Link="RdfAdditiveImportService.cs" />
+    <Compile Include="../RdfCli.cs" Link="RdfCli.cs" />
+    <Compile Include="../QuestTextReconcileService.cs" Link="QuestTextReconcileService.cs" />
+    <Compile Include="../NativeTableMergeService.cs" Link="NativeTableMergeService.cs" />
+    <Compile Include="../MapNameRdfService.cs" Link="MapNameRdfService.cs" />
+    <Compile Include="../TextAllRdfService.cs" Link="TextAllRdfService.cs" />
+    <Compile Include="../TextAllAddService.cs" Link="TextAllAddService.cs" />
+    <Compile Include="../RdfSaveService.cs" Link="RdfSaveService.cs" />
+    <None Include="../taiwan.txt" Link="taiwan.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

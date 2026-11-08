@@ -1,0 +1,5 @@
+{
+  // Copy this file to studio.config.json (it is git-ignored) and fill in your values.
+  // The PAK index key of your own Dragon Ball Online client. Never commit the real file.
+  "pakKey": "PUT-YOUR-PAK-KEY-HERE"
+}

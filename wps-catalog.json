@@ -1,0 +1,1518 @@
+{
+  "schema": "dbo-assets.wps-catalog/v1",
+  "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeFactory.cpp",
+  "sourceSha256": "21b204c6829c828ed86c2609ed6a23286126a01062aea8fe7197793c4a7a6704",
+  "ccbdCurrentLimit": 150,
+  "ccbdAbiMaximum": 254,
+  "nodes": [
+    {
+      "kind": "Action",
+      "name": "add mob",
+      "symbol": "CWPSNodeAction_AddMob",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_AddMob.cpp",
+      "parameters": [
+        {
+          "key": "index",
+          "type": "number"
+        },
+        {
+          "key": "group",
+          "type": "number"
+        },
+        {
+          "key": "loc x",
+          "type": "number"
+        },
+        {
+          "key": "loc y",
+          "type": "number"
+        },
+        {
+          "key": "loc z",
+          "type": "number"
+        },
+        {
+          "key": "dir x",
+          "type": "number"
+        },
+        {
+          "key": "dir y",
+          "type": "number"
+        },
+        {
+          "key": "dir z",
+          "type": "number"
+        },
+        {
+          "key": "play script",
+          "type": "number"
+        },
+        {
+          "key": "play scene",
+          "type": "number"
+        },
+        {
+          "key": "party id",
+          "type": "number"
+        },
+        {
+          "key": "spawn time",
+          "type": "number"
+        },
+        {
+          "key": "spawn loc range",
+          "type": "number"
+        },
+        {
+          "key": "spawn count",
+          "type": "number"
+        },
+        {
+          "key": "nest range",
+          "type": "number"
+        },
+        {
+          "key": "ais script",
+          "type": "number"
+        },
+        {
+          "key": "ais scene",
+          "type": "number"
+        },
+        {
+          "key": "faint buff index",
+          "type": "number"
+        },
+        {
+          "key": "faint buff range",
+          "type": "number"
+        },
+        {
+          "key": "drop item",
+          "type": "number"
+        },
+        {
+          "key": "drop item amount",
+          "type": "number"
+        },
+        {
+          "key": "random loc value",
+          "type": "number"
+        },
+        {
+          "key": "no spawn wait",
+          "type": "string"
+        },
+        {
+          "key": "party leader",
+          "type": "string"
+        },
+        {
+          "key": "immortal",
+          "type": "string"
+        },
+        {
+          "key": "respawn",
+          "type": "string"
+        },
+        {
+          "key": "use loc var",
+          "type": "string"
+        },
+        {
+          "key": "loc var",
+          "type": "string"
+        },
+        {
+          "key": "dir var",
+          "type": "string"
+        },
+        {
+          "key": "nest type",
+          "type": "string"
+        },
+        {
+          "key": "faint buff apply type",
+          "type": "string"
+        },
+        {
+          "key": "calc player level",
+          "type": "string"
+        },
+        {
+          "key": "use random loc",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "add mobgroup",
+      "symbol": "CWPSNodeAction_AddMobGroup",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_AddMobGroup.cpp",
+      "parameters": [
+        {
+          "key": "group",
+          "type": "number"
+        },
+        {
+          "key": "play script",
+          "type": "number"
+        },
+        {
+          "key": "play scene",
+          "type": "number"
+        },
+        {
+          "key": "faint buff index",
+          "type": "number"
+        },
+        {
+          "key": "faint buff range",
+          "type": "number"
+        },
+        {
+          "key": "bind mob list",
+          "type": "number"
+        },
+        {
+          "key": "drop item",
+          "type": "number"
+        },
+        {
+          "key": "drop item custom",
+          "type": "number"
+        },
+        {
+          "key": "custom drop item",
+          "type": "number"
+        },
+        {
+          "key": "drop item amount",
+          "type": "number"
+        },
+        {
+          "key": "nest range",
+          "type": "number"
+        },
+        {
+          "key": "no spawn wait",
+          "type": "string"
+        },
+        {
+          "key": "spawn func",
+          "type": "string"
+        },
+        {
+          "key": "respawn",
+          "type": "string"
+        },
+        {
+          "key": "faint buff apply type",
+          "type": "string"
+        },
+        {
+          "key": "nest type",
+          "type": "string"
+        },
+        {
+          "key": "bind mob",
+          "type": "string"
+        },
+        {
+          "key": "calc player level",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "add npc",
+      "symbol": "CWPSNodeAction_AddNpc",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_AddNpc.cpp",
+      "parameters": [
+        {
+          "key": "index",
+          "type": "number"
+        },
+        {
+          "key": "loc x",
+          "type": "number"
+        },
+        {
+          "key": "loc y",
+          "type": "number"
+        },
+        {
+          "key": "loc z",
+          "type": "number"
+        },
+        {
+          "key": "dir x",
+          "type": "number"
+        },
+        {
+          "key": "dir z",
+          "type": "number"
+        },
+        {
+          "key": "play script",
+          "type": "number"
+        },
+        {
+          "key": "play scene",
+          "type": "number"
+        },
+        {
+          "key": "party id",
+          "type": "number"
+        },
+        {
+          "key": "use loc var",
+          "type": "string"
+        },
+        {
+          "key": "loc var",
+          "type": "string"
+        },
+        {
+          "key": "dir var",
+          "type": "string"
+        },
+        {
+          "key": "respawn",
+          "type": "string"
+        },
+        {
+          "key": "no spawn wait",
+          "type": "string"
+        },
+        {
+          "key": "stand alone",
+          "type": "string"
+        },
+        {
+          "key": "char condition",
+          "type": "string"
+        },
+        {
+          "key": "party leader",
+          "type": "string"
+        },
+        {
+          "key": "immortal",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "broad message",
+      "symbol": "CWPSNodeAction_BroadMessage",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_BroadMessage.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Action",
+      "name": "calculate",
+      "symbol": "CWPSNodeAction_Calculate",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_Calculate.cpp",
+      "parameters": [
+        {
+          "key": "declare",
+          "type": "string"
+        },
+        {
+          "key": "express",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "case",
+      "symbol": "CWPSNodeAction_Case",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_Case.cpp",
+      "parameters": [
+        {
+          "key": "value",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "change char attribute",
+      "symbol": "CWPSNodeAction_ChangeCharAttribute",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_ChangeCharAttribute.cpp",
+      "parameters": [
+        {
+          "key": "target index",
+          "type": "number"
+        },
+        {
+          "key": "size rate",
+          "type": "number"
+        },
+        {
+          "key": "target type",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "change npc attribute",
+      "symbol": "CWPSNodeAction_ChangeNpcAttribute",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_ChangeNpcAttribute.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Action",
+      "name": "change object state",
+      "symbol": "CWPSNodeAction_ChangeObjectState",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_ChangeObjectState.cpp",
+      "parameters": [
+        {
+          "key": "index",
+          "type": "number"
+        },
+        {
+          "key": "state",
+          "type": "number"
+        },
+        {
+          "key": "substate show",
+          "type": "number"
+        },
+        {
+          "key": "substate unselect",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "set object state",
+      "symbol": "CWPSNodeAction_SetObjectState",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_SetObjectState.cpp",
+      "parameters": [
+        {
+          "key": "index",
+          "type": "number"
+        },
+        {
+          "key": "state",
+          "type": "number"
+        },
+        {
+          "key": "substate",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "change sps scene",
+      "symbol": "CWPSNodeAction_ChangeSpsScene",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_ChangeSpsScene.cpp",
+      "parameters": [
+        {
+          "key": "index",
+          "type": "number"
+        },
+        {
+          "key": "play script",
+          "type": "number"
+        },
+        {
+          "key": "play scene",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "change stage",
+      "symbol": "CWPSNodeAction_ChangeStage",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_ChangeStage.cpp",
+      "parameters": [
+        {
+          "key": "stage",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "clear event",
+      "symbol": "CWPSNodeAction_ClearEvent",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_ClearEvent.cpp",
+      "parameters": [
+        {
+          "key": "event id",
+          "type": "number"
+        },
+        {
+          "key": "clear all",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "default",
+      "symbol": "CWPSNodeAction_Default",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_Default.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Action",
+      "name": "direction indicate",
+      "symbol": "CWPSNodeAction_Direction_Indicate",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_Direction_Indicate.cpp",
+      "parameters": [
+        {
+          "key": "loc x",
+          "type": "number"
+        },
+        {
+          "key": "loc y",
+          "type": "number"
+        },
+        {
+          "key": "loc z",
+          "type": "number"
+        },
+        {
+          "key": "apply",
+          "type": "string"
+        },
+        {
+          "key": "indicate type",
+          "type": "string"
+        },
+        {
+          "key": "auto hide",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "direct play",
+      "symbol": "CWPSNodeAction_DirectPlay",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_DirectPlay.cpp",
+      "parameters": [
+        {
+          "key": "id",
+          "type": "number"
+        },
+        {
+          "key": "item",
+          "type": "number"
+        },
+        {
+          "key": "amount",
+          "type": "number"
+        },
+        {
+          "key": "outDwc",
+          "type": "number"
+        },
+        {
+          "key": "sync",
+          "type": "string"
+        },
+        {
+          "key": "type",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "else",
+      "symbol": "CWPSNodeAction_Else",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_Else.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Action",
+      "name": "event handler",
+      "symbol": "CWPSNodeAction_EventHandler",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_EventHandler.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Action",
+      "name": "event status clear",
+      "symbol": "CWPSNodeAction_EventStatusClear",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_EventStatusClear.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Action",
+      "name": "event status register",
+      "symbol": "CWPSNodeAction_EventStatusRegister",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_EventStatusRegister.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Action",
+      "name": "event status select",
+      "symbol": "CWPSNodeAction_EventStatusSelect",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_EventStatusSelect.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Action",
+      "name": "exec at once",
+      "symbol": "CWPSNodeAction_ExecAtOnce",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_ExecAtOnce.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Action",
+      "name": "exec wps",
+      "symbol": "CWPSNodeAction_ExecWps",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_ExecWps.cpp",
+      "parameters": [
+        {
+          "key": "wps tblidx",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "flash play",
+      "symbol": "CWPSNodeAction_FlashPlay",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_FlashPlay.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Action",
+      "name": "function",
+      "symbol": "CWPSNodeAction_Function",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_Function.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Action",
+      "name": "get faint location",
+      "symbol": "CWPSNodeAction_GetFaintLocation",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_GetFaintLocation.cpp",
+      "parameters": [
+        {
+          "key": "target index",
+          "type": "number"
+        },
+        {
+          "key": "target type",
+          "type": "string"
+        },
+        {
+          "key": "loc var",
+          "type": "string"
+        },
+        {
+          "key": "dir var",
+          "type": "string"
+        },
+        {
+          "key": "default",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "get location",
+      "symbol": "CWPSNodeAction_GetLocation",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_GetLocation.cpp",
+      "parameters": [
+        {
+          "key": "target index",
+          "type": "number"
+        },
+        {
+          "key": "target type",
+          "type": "string"
+        },
+        {
+          "key": "loc var",
+          "type": "string"
+        },
+        {
+          "key": "dir var",
+          "type": "string"
+        },
+        {
+          "key": "default",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "if",
+      "symbol": "CWPSNodeAction_If",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_If.cpp",
+      "parameters": [
+        {
+          "key": "reverse",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "mob list",
+      "symbol": "CWPSNodeAction_MobList",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_MobList.cpp",
+      "parameters": [
+        {
+          "key": "index",
+          "type": "number"
+        },
+        {
+          "key": "auto actual level",
+          "type": "number"
+        },
+        {
+          "key": "auto effect level",
+          "type": "number"
+        },
+        {
+          "key": "mob1",
+          "type": "number"
+        },
+        {
+          "key": "mob2",
+          "type": "number"
+        },
+        {
+          "key": "mob3",
+          "type": "number"
+        },
+        {
+          "key": "mob4",
+          "type": "number"
+        },
+        {
+          "key": "mob5",
+          "type": "number"
+        },
+        {
+          "key": "mob6",
+          "type": "number"
+        },
+        {
+          "key": "mob7",
+          "type": "number"
+        },
+        {
+          "key": "mob8",
+          "type": "number"
+        },
+        {
+          "key": "mob9",
+          "type": "number"
+        },
+        {
+          "key": "mob10",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "play bgm",
+      "symbol": "CWPSNodeAction_PlayBgm",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_PlayBgm.cpp",
+      "parameters": [
+        {
+          "key": "play",
+          "type": "string"
+        },
+        {
+          "key": "name",
+          "type": "string"
+        },
+        {
+          "key": "loop",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "play jingle",
+      "symbol": "CWPSNodeAction_PlayJingle",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_PlayJingle.cpp",
+      "parameters": [
+        {
+          "key": "name",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "register buff",
+      "symbol": "CWPSNodeAction_RegisterBuff",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_RegisterBuff.cpp",
+      "parameters": [
+        {
+          "key": "target index",
+          "type": "number"
+        },
+        {
+          "key": "buff index",
+          "type": "number"
+        },
+        {
+          "key": "target type",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "remove mobgroup",
+      "symbol": "CWPSNodeAction_RemoveMobGroup",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_RemoveMobGroup.cpp",
+      "parameters": [
+        {
+          "key": "group",
+          "type": "number"
+        },
+        {
+          "key": "type",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "remove npc",
+      "symbol": "CWPSNodeAction_RemoveNpc",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_RemoveNpc.cpp",
+      "parameters": [
+        {
+          "key": "index",
+          "type": "number"
+        },
+        {
+          "key": "type",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "send ais event",
+      "symbol": "CWPSNodeAction_SendAISEvent",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_SendAISEvent.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Action",
+      "name": "send event to ais",
+      "symbol": "CWPSNodeAction_SendEventToAis",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_SendEventToAis.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Action",
+      "name": "send event to sps",
+      "symbol": "CWPSNodeAction_SendEventToSps",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_SendEventToSps.cpp",
+      "parameters": [
+        {
+          "key": "target index",
+          "type": "number"
+        },
+        {
+          "key": "event id",
+          "type": "number"
+        },
+        {
+          "key": "target type",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "send event to tqs",
+      "symbol": "CWPSNodeAction_SendEventToTqs",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_SendEventToTqs.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Action",
+      "name": "send event to ts",
+      "symbol": "CWPSNodeAction_SendEventToTs",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_SendEventToTs.cpp",
+      "parameters": [
+        {
+          "key": "event id",
+          "type": "number"
+        },
+        {
+          "key": "trigger type",
+          "type": "string"
+        },
+        {
+          "key": "apply type",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "send event to wps",
+      "symbol": "CWPSNodeAction_SendEventToWps",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_SendEventToWps.cpp",
+      "parameters": [
+        {
+          "key": "wps index",
+          "type": "number"
+        },
+        {
+          "key": "event id",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "send sps event",
+      "symbol": "CWPSNodeAction_SendSPSEvent",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_SendSPSEvent.cpp",
+      "parameters": [
+        {
+          "key": "target index",
+          "type": "number"
+        },
+        {
+          "key": "event id",
+          "type": "number"
+        },
+        {
+          "key": "target type",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "switch",
+      "symbol": "CWPSNodeAction_Switch",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_Switch.cpp",
+      "parameters": [
+        {
+          "key": "compare variable",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "system message",
+      "symbol": "CWPSNodeAction_SystemMessage",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_SystemMessage.cpp",
+      "parameters": [
+        {
+          "key": "text index",
+          "type": "number"
+        },
+        {
+          "key": "notify",
+          "type": "string"
+        },
+        {
+          "key": "text",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "bot message",
+      "symbol": "CWPSNodeAction_BotMessage",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_BotMessage.cpp",
+      "parameters": [
+        {
+          "key": "text index",
+          "type": "number"
+        },
+        {
+          "key": "bot id",
+          "type": "number"
+        },
+        {
+          "key": "dialog type",
+          "type": "string"
+        },
+        {
+          "key": "text",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "telecast message",
+      "symbol": "CWPSNodeAction_TelecastMessage",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_TelecastMessage.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Action",
+      "name": "then",
+      "symbol": "CWPSNodeAction_Then",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_Then.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Action",
+      "name": "time countdown",
+      "symbol": "CWPSNodeAction_TimeCountdown",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_TimeCountdown.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Action",
+      "name": "unregister buff",
+      "symbol": "CWPSNodeAction_UnregisterBuff",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_UnregisterBuff.cpp",
+      "parameters": [
+        {
+          "key": "target index",
+          "type": "number"
+        },
+        {
+          "key": "buff index",
+          "type": "number"
+        },
+        {
+          "key": "target type",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "wait",
+      "symbol": "CWPSNodeAction_Wait",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_Wait.cpp",
+      "parameters": [
+        {
+          "key": "operation",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "while",
+      "symbol": "CWPSNodeAction_While",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_While.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Action",
+      "name": "wps fail",
+      "symbol": "CWPSNodeAction_WpsFail",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_WpsFail.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Action",
+      "name": "loop",
+      "symbol": "CWPSNodeAction_Loop",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeAction_Loop.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Action",
+      "name": "CCBD",
+      "symbol": "CWpsNodeAction_CCBD",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WpsNodeAction_CCBD.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Action",
+      "name": "CCBD register direct play",
+      "symbol": "CWpsNodeAction_CCBD_register_direct_play",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WpsNodeAction_CCBD_register_direct_play.cpp",
+      "parameters": [
+        {
+          "key": "change next stage",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "CCBD wait user",
+      "symbol": "CWpsNodeAction_CCBD_wait_user",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WpsNodeAction_CCBD_wait_user.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Action",
+      "name": "CCBD stage",
+      "symbol": "CWpsNodeAction_CCBD_stage",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WpsNodeAction_CCBD_stage.cpp",
+      "parameters": [
+        {
+          "key": "stage",
+          "type": "number"
+        },
+        {
+          "key": "direct play",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "CCBD exec pattern",
+      "symbol": "CWpsNodeAction_CCBD_exec_pattern",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WpsNodeAction_CCBD_exec_pattern.cpp",
+      "parameters": [
+        {
+          "key": "pattern list",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "CCBD stage clear",
+      "symbol": "CWpsNodeAction_CCBD_stage_clear",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WpsNodeAction_CCBD_stage_clear.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Action",
+      "name": "CCBD reward",
+      "symbol": "CWpsNodeAction_CCBD_reward",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WpsNodeAction_CCBD_reward.cpp",
+      "parameters": [
+        {
+          "key": "item tblidx",
+          "type": "number"
+        },
+        {
+          "key": "last stage",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "CCBD leave",
+      "symbol": "CWpsNodeAction_CCBD_Leave",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WpsNodeAction_CCBD_Leave.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Condition",
+      "name": "all player faint",
+      "symbol": "CWPSNodeCondition_AllPlayerFaint",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeCondition_AllPlayerFaint.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Condition",
+      "name": "area enter",
+      "symbol": "CWPSNodeCondition_AreaEnter",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeCondition_AreaEnter.cpp",
+      "parameters": [
+        {
+          "key": "origin x",
+          "type": "number"
+        },
+        {
+          "key": "origin y",
+          "type": "number"
+        },
+        {
+          "key": "origin z",
+          "type": "number"
+        },
+        {
+          "key": "start x",
+          "type": "number"
+        },
+        {
+          "key": "start y",
+          "type": "number"
+        },
+        {
+          "key": "start z",
+          "type": "number"
+        },
+        {
+          "key": "end x",
+          "type": "number"
+        },
+        {
+          "key": "end y",
+          "type": "number"
+        },
+        {
+          "key": "end z",
+          "type": "number"
+        },
+        {
+          "key": "radius",
+          "type": "number"
+        },
+        {
+          "key": "all member",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Condition",
+      "name": "check object state",
+      "symbol": "CWPSNodeCondition_CheckObjectState",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeCondition_CheckObjectState.cpp",
+      "parameters": [
+        {
+          "key": "index",
+          "type": "number"
+        },
+        {
+          "key": "state",
+          "type": "number"
+        },
+        {
+          "key": "substate",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "kind": "Condition",
+      "name": "check battle",
+      "symbol": "CWPSNodeCondition_CheckBattle",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeCondition_CheckBattle.cpp",
+      "parameters": [
+        {
+          "key": "group",
+          "type": "number"
+        },
+        {
+          "key": "type",
+          "type": "string"
+        },
+        {
+          "key": "is battle",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Condition",
+      "name": "check countdown",
+      "symbol": "CWPSNodeCondition_CheckCountDown",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeCondition_CheckCountDown.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Condition",
+      "name": "check lp",
+      "symbol": "CWPSNodeCondition_CheckLP",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeCondition_CheckLP.cpp",
+      "parameters": [
+        {
+          "key": "index",
+          "type": "number"
+        },
+        {
+          "key": "group",
+          "type": "number"
+        },
+        {
+          "key": "lp",
+          "type": "number"
+        },
+        {
+          "key": "type",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Condition",
+      "name": "check mobgroup",
+      "symbol": "CWPSNodeCondition_CheckMobGroup",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeCondition_CheckMobGroup.cpp",
+      "parameters": [
+        {
+          "key": "group",
+          "type": "number"
+        },
+        {
+          "key": "count",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "kind": "Condition",
+      "name": "check time",
+      "symbol": "CWPSNodeCondition_CheckTime",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeCondition_CheckTime.cpp",
+      "parameters": [
+        {
+          "key": "time",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "kind": "Condition",
+      "name": "child",
+      "symbol": "CWPSNodeCondition_Child",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeCondition_Child.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Condition",
+      "name": "compare",
+      "symbol": "CWPSNodeCondition_Compare",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeCondition_Compare.cpp",
+      "parameters": [
+        {
+          "key": "express",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Condition",
+      "name": "loop cond",
+      "symbol": "CWPSNodeCondition_LoopCond",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeCondition_LoopCond.cpp",
+      "parameters": [
+        {
+          "key": "reverse",
+          "type": "string"
+        },
+        {
+          "key": "operation",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Condition",
+      "name": "npc faint",
+      "symbol": "CWPSNodeCondition_NpcFaint",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeCondition_NpcFaint.cpp",
+      "parameters": [
+        {
+          "key": "npc index",
+          "type": "number"
+        },
+        {
+          "key": "wps fail",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Condition",
+      "name": "recv event from ais",
+      "symbol": "CWPSNodeCondition_RecvEventFromAis",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeCondition_RecvEventFromAis.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Condition",
+      "name": "recv event from item",
+      "symbol": "CWPSNodeCondition_RecvEventFromItem",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeCondition_RecvEventFromItem.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Condition",
+      "name": "recv event from sps",
+      "symbol": "CWPSNodeCondition_RecvEventFromSps",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeCondition_RecvEventFromSps.cpp",
+      "parameters": [
+        {
+          "key": "object index",
+          "type": "number"
+        },
+        {
+          "key": "event id",
+          "type": "number"
+        },
+        {
+          "key": "object type",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Condition",
+      "name": "recv event from tqs",
+      "symbol": "CWPSNodeCondition_RecvEventFromTqs",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeCondition_RecvEventFromTqs.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Condition",
+      "name": "recv event from ts",
+      "symbol": "CWPSNodeCondition_RecvEventFromTs",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeCondition_RecvEventFromTs.cpp",
+      "parameters": [
+        {
+          "key": "event id",
+          "type": "number"
+        },
+        {
+          "key": "trigger type",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Condition",
+      "name": "recv event from wps",
+      "symbol": "CWPSNodeCondition_RecvEventFromWps",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeCondition_RecvEventFromWps.cpp",
+      "parameters": [
+        {
+          "key": "wps index",
+          "type": "number"
+        },
+        {
+          "key": "event id",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "kind": "Condition",
+      "name": "recv sps event",
+      "symbol": "CWPSNodeCondition_RecvSpsEvent",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeCondition_RecvSpsEvent.cpp",
+      "parameters": [
+        {
+          "key": "target index",
+          "type": "number"
+        },
+        {
+          "key": "event id",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "kind": "Condition",
+      "name": "recv ts event",
+      "symbol": "CWPSNodeCondition_RecvTsEvent",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeCondition_RecvTsEvent.cpp",
+      "parameters": [
+        {
+          "key": "event id",
+          "type": "number"
+        },
+        {
+          "key": "trigger type",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Condition",
+      "name": "spawned mob",
+      "symbol": "CWPSNodeCondition_SpawnedMob",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeCondition_SpawnedMob.cpp",
+      "parameters": [
+        {
+          "key": "group",
+          "type": "number"
+        },
+        {
+          "key": "count",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "kind": "Condition",
+      "name": "spawned npc",
+      "symbol": "CWPSNodeCondition_SpawnedNpc",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeCondition_SpawnedNpc.cpp",
+      "parameters": [
+        {
+          "key": "tblidx",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "kind": "Condition",
+      "name": "wait condition",
+      "symbol": "CWPSNodeCondition_WaitCondition",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WPSNodeCondition_WaitCondition.cpp",
+      "parameters": [
+        {
+          "key": "operation",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Condition",
+      "name": "CCBD check run state",
+      "symbol": "CWpsNodeCondition_CCBD_check_run_state",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WpsNodeCondition_CCBD_check_run_state.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Condition",
+      "name": "CCBD check limit time",
+      "symbol": "CWpsNodeCondition_CCBD_check_limit_time",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WpsNodeCondition_CCBD_check_limit_time.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Condition",
+      "name": "CCBD pattern",
+      "symbol": "CWpsNodeCondition_CCBD_pattern",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/WpsNodeCondition_CCBD_pattern.cpp",
+      "parameters": [
+        {
+          "key": "index",
+          "type": "number"
+        },
+        {
+          "key": "title tblidx",
+          "type": "number"
+        },
+        {
+          "key": "sub title tblidx",
+          "type": "number"
+        },
+        {
+          "key": "use limit timer",
+          "type": "string"
+        }
+      ]
+    }
+  ],
+  "note": "Vocabulary extracted from factory and direct AddParam handlers. Inherited/complex parameter contracts may need source review."
+}

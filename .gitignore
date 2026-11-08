@@ -1,0 +1,21 @@
+# Build output
+bin/
+obj/
+publish/
+dist/
+.vs/
+*.user
+
+# Secrets and local configuration -- NEVER commit these
+studio.config.json
+*.local.json
+.env
+.env.*
+
+# Local caches / generated
+.cache/
+native/bin/
+*.pdb
+*.obj
+*.exe
+*.dll

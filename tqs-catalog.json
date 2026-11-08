@@ -1,0 +1,715 @@
+{
+  "schema": "dbo-assets.tqs-catalog/v1",
+  "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/TQSNodeFactory.cpp",
+  "sourceSha256": "fc62ac3ebdf6faa58e887ed627a3960b9e59d61233bfc5fa84f54d7a2fde3a7b",
+  "ccbdCurrentLimit": 150,
+  "ccbdAbiMaximum": 254,
+  "nodes": [
+    {
+      "kind": "Action",
+      "name": "add npc",
+      "symbol": "CTQSNodeAction_AddNpc",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/TQSNodeAction_AddNpc.cpp",
+      "parameters": [
+        {
+          "key": "index",
+          "type": "number"
+        },
+        {
+          "key": "loc x",
+          "type": "number"
+        },
+        {
+          "key": "loc y",
+          "type": "number"
+        },
+        {
+          "key": "loc z",
+          "type": "number"
+        },
+        {
+          "key": "dir x",
+          "type": "number"
+        },
+        {
+          "key": "dir y",
+          "type": "number"
+        },
+        {
+          "key": "dir z",
+          "type": "number"
+        },
+        {
+          "key": "play script",
+          "type": "number"
+        },
+        {
+          "key": "play scene",
+          "type": "number"
+        },
+        {
+          "key": "respawn",
+          "type": "string"
+        },
+        {
+          "key": "no spawn wait",
+          "type": "string"
+        },
+        {
+          "key": "char condition",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "remove npc",
+      "symbol": "CTQSNodeAction_RemoveNpc",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/TQSNodeAction_RemoveNpc.cpp",
+      "parameters": [
+        {
+          "key": "index",
+          "type": "number"
+        },
+        {
+          "key": "type",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "add mob",
+      "symbol": "CTQSNodeAction_AddMob",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/TQSNodeAction_AddMob.cpp",
+      "parameters": [
+        {
+          "key": "index",
+          "type": "number"
+        },
+        {
+          "key": "loc x",
+          "type": "number"
+        },
+        {
+          "key": "loc y",
+          "type": "number"
+        },
+        {
+          "key": "loc z",
+          "type": "number"
+        },
+        {
+          "key": "dir x",
+          "type": "number"
+        },
+        {
+          "key": "dir y",
+          "type": "number"
+        },
+        {
+          "key": "dir z",
+          "type": "number"
+        },
+        {
+          "key": "play script",
+          "type": "number"
+        },
+        {
+          "key": "play scene",
+          "type": "number"
+        },
+        {
+          "key": "party id",
+          "type": "number"
+        },
+        {
+          "key": "no spawn wait",
+          "type": "string"
+        },
+        {
+          "key": "party leader",
+          "type": "string"
+        },
+        {
+          "key": "respawn",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "add mobgroup",
+      "symbol": "CTQSNodeAction_AddMobGroup",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/TQSNodeAction_AddMobGroup.cpp",
+      "parameters": [
+        {
+          "key": "group",
+          "type": "number"
+        },
+        {
+          "key": "loc x",
+          "type": "number"
+        },
+        {
+          "key": "loc y",
+          "type": "number"
+        },
+        {
+          "key": "loc z",
+          "type": "number"
+        },
+        {
+          "key": "dir x",
+          "type": "number"
+        },
+        {
+          "key": "dir y",
+          "type": "number"
+        },
+        {
+          "key": "dir z",
+          "type": "number"
+        },
+        {
+          "key": "play script",
+          "type": "number"
+        },
+        {
+          "key": "play scene",
+          "type": "number"
+        },
+        {
+          "key": "no spawn wait",
+          "type": "string"
+        },
+        {
+          "key": "respawn",
+          "type": "string"
+        },
+        {
+          "key": "immortal",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "remove mobgroup",
+      "symbol": "CTQSNodeAction_RemoveMobGroup",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/TQSNodeAction_RemoveMobGroup.cpp",
+      "parameters": [
+        {
+          "key": "group",
+          "type": "number"
+        },
+        {
+          "key": "type",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "direct play",
+      "symbol": "CTQSNodeAction_DirectPlay",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/TQSNodeAction_DirectPlay.cpp",
+      "parameters": [
+        {
+          "key": "id",
+          "type": "number"
+        },
+        {
+          "key": "time",
+          "type": "number"
+        },
+        {
+          "key": "type",
+          "type": "string"
+        },
+        {
+          "key": "ending",
+          "type": "string"
+        },
+        {
+          "key": "sync",
+          "type": "string"
+        },
+        {
+          "key": "skip",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "wait",
+      "symbol": "CTQSNodeAction_Wait",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/TQSNodeAction_Wait.cpp",
+      "parameters": [
+        {
+          "key": "operation",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "change stage",
+      "symbol": "CTQSNodeAction_ChangeStage",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/TQSNodeAction_ChangeStage.cpp",
+      "parameters": [
+        {
+          "key": "stage",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "change object state",
+      "symbol": "CTQSNodeAction_ChangeObjectState",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/TQSNodeAction_ChangeObjectState.cpp",
+      "parameters": [
+        {
+          "key": "index",
+          "type": "number"
+        },
+        {
+          "key": "state",
+          "type": "number"
+        },
+        {
+          "key": "substate show",
+          "type": "number"
+        },
+        {
+          "key": "substate unselect",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "time countdown",
+      "symbol": "CTQSNodeAction_TimeCountdown",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/TQSNodeAction_TimeCountdown.cpp",
+      "parameters": [
+        {
+          "key": "mode",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "send ts event",
+      "symbol": "CTQSNodeAction_SendTsEvent",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/TQSNodeAction_SendTsEvent.cpp",
+      "parameters": [
+        {
+          "key": "event id",
+          "type": "number"
+        },
+        {
+          "key": "trigger type",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "send tqs event",
+      "symbol": "CTQSNodeAction_SendTqsEvent",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/TQSNodeAction_SendTqsEvent.cpp",
+      "parameters": [
+        {
+          "key": "target index",
+          "type": "number"
+        },
+        {
+          "key": "event id",
+          "type": "number"
+        },
+        {
+          "key": "target type",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "reward",
+      "symbol": "CTQSNodeAction_Reward",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/TQSNodeAction_Reward.cpp",
+      "parameters": [
+        {
+          "key": "event id",
+          "type": "number"
+        },
+        {
+          "key": "time",
+          "type": "number"
+        },
+        {
+          "key": "trigger type",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "information",
+      "symbol": "CTQSNodeAction_Information",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/TQSNodeAction_Information.cpp",
+      "parameters": [
+        {
+          "key": "info type",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "broad message",
+      "symbol": "CTQSNodeAction_BroadMessage",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/TQSNodeAction_BroadMessage.cpp",
+      "parameters": [
+        {
+          "key": "owner tblidx",
+          "type": "number"
+        },
+        {
+          "key": "speech index",
+          "type": "number"
+        },
+        {
+          "key": "display time",
+          "type": "number"
+        },
+        {
+          "key": "execution type",
+          "type": "string"
+        },
+        {
+          "key": "broad type",
+          "type": "string"
+        },
+        {
+          "key": "showhide type",
+          "type": "string"
+        },
+        {
+          "key": "ballon shape type",
+          "type": "string"
+        },
+        {
+          "key": "speech dir type",
+          "type": "string"
+        },
+        {
+          "key": "owner condition",
+          "type": "string"
+        },
+        {
+          "key": "owner type",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "progress message",
+      "symbol": "CTQSNodeAction_ProgressMessage",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/TQSNodeAction_ProgressMessage.cpp",
+      "parameters": [
+        {
+          "key": "message value",
+          "type": "number"
+        },
+        {
+          "key": "progress type",
+          "type": "string"
+        },
+        {
+          "key": "message type",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "direction indicate",
+      "symbol": "CTQSNodeAction_DirectionIndicate",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/TQSNodeAction_DirectionIndicate.cpp",
+      "parameters": [
+        {
+          "key": "loc x",
+          "type": "number"
+        },
+        {
+          "key": "loc y",
+          "type": "number"
+        },
+        {
+          "key": "loc z",
+          "type": "number"
+        },
+        {
+          "key": "apply",
+          "type": "string"
+        },
+        {
+          "key": "indicate type",
+          "type": "string"
+        },
+        {
+          "key": "auto hide",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "register condition",
+      "symbol": "CTQSNodeAction_RegisterCondition",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/TQSNodeAction_RegisterCondition.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Action",
+      "name": "teleport",
+      "symbol": "CTQSNodeAction_Teleport",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/TQSNodeAction_Teleport.cpp",
+      "parameters": [
+        {
+          "key": "loc x",
+          "type": "number"
+        },
+        {
+          "key": "loc y",
+          "type": "number"
+        },
+        {
+          "key": "loc z",
+          "type": "number"
+        },
+        {
+          "key": "dir x",
+          "type": "number"
+        },
+        {
+          "key": "dir z",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "play bgm",
+      "symbol": "CTQSNodeAction_PlayBgm",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/TQSNodeAction_PlayBgm.cpp",
+      "parameters": [
+        {
+          "key": "play",
+          "type": "string"
+        },
+        {
+          "key": "name",
+          "type": "string"
+        },
+        {
+          "key": "loop",
+          "type": "string"
+        },
+        {
+          "key": "prev bgm fadeout",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "play jingle",
+      "symbol": "CTQSNodeAction_PlayJingle",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/TQSNodeAction_PlayJingle.cpp",
+      "parameters": [
+        {
+          "key": "name",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Action",
+      "name": "function",
+      "symbol": "CTQSNodeAction_Function",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/TQSNodeAction_Function.cpp",
+      "parameters": []
+    },
+    {
+      "kind": "Condition",
+      "name": "recv ts event",
+      "symbol": "CTQSNodeCondition_RecvTsEvent",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/TQSNodeCondition_RecvTsEvent.cpp",
+      "parameters": [
+        {
+          "key": "event id",
+          "type": "number"
+        },
+        {
+          "key": "time",
+          "type": "number"
+        },
+        {
+          "key": "trigger type",
+          "type": "string"
+        },
+        {
+          "key": "tmq fail",
+          "type": "string"
+        },
+        {
+          "key": "sync",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Condition",
+      "name": "recv sps event",
+      "symbol": "CTQSNodeCondition_RecvSpsEvent",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/TQSNodeCondition_RecvSpsEvent.cpp",
+      "parameters": [
+        {
+          "key": "target index",
+          "type": "number"
+        },
+        {
+          "key": "event id",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "kind": "Condition",
+      "name": "check time",
+      "symbol": "CTQSNodeCondition_CheckTime",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/TQSNodeCondition_CheckTime.cpp",
+      "parameters": [
+        {
+          "key": "time",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "kind": "Condition",
+      "name": "check mobgroup",
+      "symbol": "CTQSNodeCondition_CheckMobGroup",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/TQSNodeCondition_CheckMobGroup.cpp",
+      "parameters": [
+        {
+          "key": "group",
+          "type": "number"
+        },
+        {
+          "key": "count",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "kind": "Condition",
+      "name": "npc faint",
+      "symbol": "CTQSNodeCondition_NpcFaint",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/TQSNodeCondition_NpcFaint.cpp",
+      "parameters": [
+        {
+          "key": "npc index",
+          "type": "number"
+        },
+        {
+          "key": "tmq fail",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Condition",
+      "name": "all player faint",
+      "symbol": "CTQSNodeCondition_AllPlayerFaint",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/TQSNodeCondition_AllPlayerFaint.cpp",
+      "parameters": [
+        {
+          "key": "tmq fail",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Condition",
+      "name": "area enter",
+      "symbol": "CTQSNodeCondition_AreaEnter",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/TQSNodeCondition_AreaEnter.cpp",
+      "parameters": [
+        {
+          "key": "origin x",
+          "type": "number"
+        },
+        {
+          "key": "origin y",
+          "type": "number"
+        },
+        {
+          "key": "origin z",
+          "type": "number"
+        },
+        {
+          "key": "start x",
+          "type": "number"
+        },
+        {
+          "key": "start y",
+          "type": "number"
+        },
+        {
+          "key": "start z",
+          "type": "number"
+        },
+        {
+          "key": "end x",
+          "type": "number"
+        },
+        {
+          "key": "end y",
+          "type": "number"
+        },
+        {
+          "key": "end z",
+          "type": "number"
+        },
+        {
+          "key": "radius",
+          "type": "number"
+        },
+        {
+          "key": "all member",
+          "type": "string"
+        },
+        {
+          "key": "tmq fail",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "kind": "Condition",
+      "name": "child",
+      "symbol": "CTQSNodeCondition_Child",
+      "source": "src/taiwan-core/DBO-Server-2.0/Server/GameServer/TQSNodeCondition_Child.cpp",
+      "parameters": []
+    }
+  ],
+  "note": "Vocabulary extracted from factory and direct AddParam handlers. Inherited/complex parameter contracts may need source review."
+}

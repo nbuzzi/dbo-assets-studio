@@ -1,0 +1,12 @@
+{
+  "ruffle": {
+    "version": "0.6.0",
+    "url": "https://github.com/ruffle-rs/ruffle/releases/download/v0.6.0/ruffle-0.6.0-web-selfhosted.zip",
+    "sha256": "e8acfacc37443303872379d0e215999af846854d1dd3fa8fac0a765445b43dbf"
+  },
+  "three": {
+    "version": "0.180.0",
+    "url": "https://registry.npmjs.org/three/-/three-0.180.0.tgz",
+    "sha256": "ad66d724565ee29a2467277fa84daa5ed0211d6b8d446e9ef29f6bae0cd14144"
+  }
+}

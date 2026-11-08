@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AssemblyName>DboAssetsStudio</AssemblyName>
+    <Version>5.6.0</Version>
+    <Product>DBO Assets Studio</Product>
+    <Authors>nNico</Authors>
+    <Company>nNico</Company>
+    <Copyright>Copyright (c) nNico</Copyright>
+    <RepositoryUrl>https://github.com/nbuzzi/dbo-assets-studio</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/nbuzzi</PackageProjectUrl>
+    <Description>Open source asset and table editor for Dragon Ball Online (Taiwan 2.0 format) clients and servers.</Description>
+    <RootNamespace>DboAssetsStudio</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="cli\**\*.cs" />
+    <!-- Keep ordinary generated sources excluded even with isolated intermediates. -->
+    <Compile Remove="obj\**\*.cs;bin\**\*.cs" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2592.51" />
+    <Content Include="web\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="taiwan.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="wps-catalog.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="tqs-catalog.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="wps-reference-schemas.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

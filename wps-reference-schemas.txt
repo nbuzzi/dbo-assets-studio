@@ -1,0 +1,2 @@
+# Taiwan sSPAWN_TBLDAT, SpawnTable.h, pack(4), serialized sizeof minus vptr = 84. Read-only WPS references.
+MobSpawn;spawn_mob.rdf;0;tblidx,int,1;mob_tblidx,int,1;vSpawn_Loc,float,3;vSpawn_Dir,float,3;bySpawnLocRange,byte,1;bySpawnQuantity,byte,1;wSpawnCoolTime,short,1;bySpawnMoveType,byte,1;byWanderRange,byte,1;byMoveRange,byte,1;actionPatternTblidx,byte,1;pathTableIndex,int,1;vFollowDistance,float,3;playScript,int,1;playScriptScene,int,1;aiScript,int,1;aiScriptScene,int,1;dwPartyIndex,int,1;bPartyLeader,bool,1;Padding1,byte,3;spawnGroup,int,1
