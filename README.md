@@ -24,6 +24,10 @@ Safety model: every write goes to a **new output folder** with the original pres
 - No code from the Dragon Ball Online client/server source.
 - It is an independent community project, **not affiliated with or endorsed by** the original developers or publishers of Dragon Ball Online. You need your own, legitimately obtained client/server files, and you are responsible for complying with the applicable licenses and laws.
 
+## Download
+
+Prebuilt portable Windows x64 build (self-contained, no .NET install needed): see the [Releases](https://github.com/nbuzzi/dbo-assets-studio/releases) page. It does **not** include `pak-tool.exe` (it must be built against your own client sources, see below) nor any PAK key.
+
 ## Requirements
 
 - Windows 10/11 x64
