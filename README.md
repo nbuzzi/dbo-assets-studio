@@ -26,6 +26,18 @@ Safety model: every write goes to a **new output folder** with the original pres
 - No code from the Dragon Ball Online client/server source.
 - It is an independent community project, **not affiliated with or endorsed by** the original developers or publishers of Dragon Ball Online. You need your own, legitimately obtained client/server files, and you are responsible for complying with the applicable licenses and laws.
 
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/resource-browser.png" alt="Resource browser with preview and inspector" width="100%">
+</p>
+<p align="center"><sub>Resource browser: PAK library, collections, live preview and inspector.</sub></p>
+
+<p align="center">
+  <img src="docs/screenshots/table-editor.png" alt="Schema-aware RDF table editor" width="100%">
+</p>
+<p align="center"><sub>Schema-aware RDF table editor with pending-change highlighting. Screenshots use synthetic demo data.</sub></p>
+
 ## Quick start
 
 1. Download the latest zip from [Releases](https://github.com/nbuzzi/dbo-assets-studio/releases/latest) and extract it.
