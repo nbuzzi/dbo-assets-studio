@@ -23,12 +23,12 @@ internal sealed class ResourceCatalog
             {
                 string leaf = Path.GetFileName(entry.Name);
                 if (!names.Contains(leaf) && !(leaf.StartsWith("spawn_object_", StringComparison.OrdinalIgnoreCase) && leaf.EndsWith(".rdf", StringComparison.OrdinalIgnoreCase))) continue;
-                if (!seen.Add(leaf)) throw new InvalidDataException("El PAK contiene más de una tabla con el nombre " + leaf);
-                if (leaf.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || entry.Size > budget) throw new InvalidDataException("Las referencias RDF exceden los límites de importación.");
+                if (!seen.Add(leaf)) throw new InvalidDataException("The PAK contains more than one table named " + leaf);
+                if (leaf.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || entry.Size > budget) throw new InvalidDataException("RDF references exceed the import limits.");
                 budget -= entry.Size;
                 await File.WriteAllBytesAsync(Path.Combine(directory, leaf), await archive.ReadAsync(entry));
             }
-            if (seen.Count == 0) throw new InvalidDataException("El PAK no contiene tablas RDF compatibles para relacionar recursos.");
+            if (seen.Count == 0) throw new InvalidDataException("The PAK has no compatible RDF tables to link resources.");
             return await Task.Run(() => Load(directory, schemas));
         }
         finally { Directory.Delete(directory, true); }
@@ -57,7 +57,7 @@ internal sealed class ResourceCatalog
             catch (Exception ex) { catalog.Notes.Add(schema.Name + ": " + ex.Message); }
         }
         string layoutPath = Path.Combine(AppContext.BaseDirectory, "resource-layout.json");
-        if (!File.Exists(layoutPath)) { catalog.Notes.Add("No se encontró el catálogo nativo de Mob/NPC/Object."); return catalog; }
+        if (!File.Exists(layoutPath)) { catalog.Notes.Add("Native Mob/NPC/Object catalog not found."); return catalog; }
         using var layouts = JsonDocument.Parse(File.ReadAllText(layoutPath));
         foreach (var layout in layouts.RootElement.EnumerateArray())
         {
@@ -67,12 +67,12 @@ internal sealed class ResourceCatalog
             {
                 try
                 {
-                    if (new FileInfo(path).Length > 128L * 1024 * 1024) throw new InvalidDataException("Tabla demasiado grande.");
+                    if (new FileInfo(path).Length > 128L * 1024 * 1024) throw new InvalidDataException("Table too large.");
                     byte[] bytes = File.ReadAllBytes(path); int stride = layout.GetProperty("rowSize").GetInt32();
-                    if (stride <= 0 || bytes.Length < 1 || (bytes.Length - 1) % stride != 0) throw new InvalidDataException("La tabla no coincide con la ABI Taiwan.");
+                    if (stride <= 0 || bytes.Length < 1 || (bytes.Length - 1) % stride != 0) throw new InvalidDataException("The table does not match the Taiwan ABI.");
                     int idOffset = layout.GetProperty("idOffset").GetInt32(), modelOffset = layout.GetProperty("modelOffset").GetInt32(), modelLength = layout.GetProperty("modelLength").GetInt32();
                     int nameOffset = layout.GetProperty("nameOffset").GetInt32(), nameLength = layout.GetProperty("nameLength").GetInt32(); bool wide = layout.GetProperty("nameWide").GetBoolean();
-                    if (modelOffset < 0 || modelOffset + modelLength > stride || idOffset < 0 || idOffset + 4 > stride || nameOffset < 0 || nameOffset + nameLength * (wide ? 2 : 1) > stride) throw new InvalidDataException("Layout nativo inválido.");
+                    if (modelOffset < 0 || modelOffset + modelLength > stride || idOffset < 0 || idOffset + 4 > stride || nameOffset < 0 || nameOffset + nameLength * (wide ? 2 : 1) > stride) throw new InvalidDataException("Invalid native layout.");
                     for (int o = 1; o < bytes.Length; o += stride)
                     {
                         string model = Encoding.Latin1.GetString(bytes, o + modelOffset, modelLength).Split('\0')[0];
@@ -89,9 +89,9 @@ internal sealed class ResourceCatalog
     public string Describe(string resource)
     {
         string key = Path.GetFileNameWithoutExtension(resource).ToLowerInvariant();
-        if (_keys.TryGetValue(key, out var direct)) return Format(direct, "REFERENCIAS DIRECTAS EN RDF");
+        if (_keys.TryGetValue(key, out var direct)) return Format(direct, "DIRECT RDF REFERENCES");
         var candidates = _keys.Where(k => key.StartsWith(k.Key + "_", StringComparison.OrdinalIgnoreCase)).OrderByDescending(k => k.Key.Length).Take(3).SelectMany(k => k.Value).ToList();
-        return candidates.Count == 0 ? "Sin referencia encontrada en las tablas cargadas. El nombre del archivo no es un ID de juego." : Format(candidates, "COINCIDENCIAS POR PREFIJO — variantes posibles, requieren confirmar");
+        return candidates.Count == 0 ? "No reference found in the loaded tables. The file name is not a game ID." : Format(candidates, "PREFIX MATCHES — possible variants, need confirmation");
     }
     private static string Format(IEnumerable<ResourceReference> rows, string heading) => heading + "\r\n" + string.Join("\r\n", rows.Take(30).Select(r => $"{r.Kind} · ID {r.Id} · {r.Name}\r\n  {r.Table} / {r.Field} = {r.Key}"));
 }

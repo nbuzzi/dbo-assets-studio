@@ -7,21 +7,21 @@ export async function showMob(container,url,options={}){
  // is sent to this viewer; this second check protects against a stale/mismatched
  // inspection response and avoids adding oversized geometry to the WebGL scene.
  let vertices=0;const geometries=new Set();model.traverse(o=>{if(o.isMesh&&o.geometry&&!geometries.has(o.geometry)){geometries.add(o.geometry);vertices+=o.geometry.attributes.position?.count||0}});
- if(vertices<1||vertices>2_000_000){for(const g of geometries)g.dispose();throw new Error('La vista previa admite de 1 a 2.000.000 v茅rtices.')}
+ if(vertices<1||vertices>2_000_000){for(const g of geometries)g.dispose();throw new Error('The preview supports 1 to 2,000,000 vertices.')}
  const scene=new THREE.Scene();scene.add(model);
  const clips=gltf.animations||[],mixer=clips.length?new THREE.AnimationMixer(model):null;let action=null,playing=!!options.autoplay,clipIndex=0;
  const clock=new THREE.Clock();const bar=document.createElement('div');bar.className='mob-animation-bar';
  if(clips.length){
-  const select=document.createElement('select');select.setAttribute('aria-label','Clip de animación');clips.forEach((clip,i)=>{const o=document.createElement('option');o.value=i;o.textContent=clip.name||`Clip ${i+1}`;select.append(o)});
-  const play=document.createElement('button');play.className='button';play.textContent=playing?'Pausar':'Reproducir';
-  const seek=document.createElement('input');seek.type='range';seek.min='0';seek.step='.01';seek.setAttribute('aria-label','Tiempo de animación');
-  const speed=document.createElement('select');speed.setAttribute('aria-label','Velocidad');for(const value of [.25,.5,1,1.5,2]){const o=document.createElement('option');o.value=value;o.textContent=value+'×';o.selected=value===1;speed.append(o)}
+  const select=document.createElement('select');select.setAttribute('aria-label','Animation clip');clips.forEach((clip,i)=>{const o=document.createElement('option');o.value=i;o.textContent=clip.name||`Clip ${i+1}`;select.append(o)});
+  const play=document.createElement('button');play.className='button';play.textContent=playing?'Pause':'Play';
+  const seek=document.createElement('input');seek.type='range';seek.min='0';seek.step='.01';seek.setAttribute('aria-label','Animation time');
+  const speed=document.createElement('select');speed.setAttribute('aria-label','Speed');for(const value of [.25,.5,1,1.5,2]){const o=document.createElement('option');o.value=value;o.textContent=value+'×';o.selected=value===1;speed.append(o)}
   const time=document.createElement('span');
   const load=()=>{mixer.stopAllAction();action=mixer.clipAction(clips[clipIndex]);action.reset().play();seek.max=String(Math.max(.01,clips[clipIndex].duration));mixer.update(0)};
-  select.onchange=()=>{clipIndex=Number(select.value);load()};play.onclick=()=>{playing=!playing;play.textContent=playing?'Pausar':'Reproducir'};seek.oninput=()=>{action.time=Number(seek.value);mixer.update(0)};speed.onchange=()=>mixer.timeScale=Number(speed.value);load();
+  select.onchange=()=>{clipIndex=Number(select.value);load()};play.onclick=()=>{playing=!playing;play.textContent=playing?'Pause':'Play'};seek.oninput=()=>{action.time=Number(seek.value);mixer.update(0)};speed.onchange=()=>mixer.timeScale=Number(speed.value);load();
   bar.append(select,play,seek,speed,time);bar.update=()=>{seek.value=action.time;time.textContent=`${action.time.toFixed(1)} / ${clips[clipIndex].duration.toFixed(1)} s`};
   options.onClips?.(clips.map(c=>({name:c.name,duration:c.duration})));
- }else{bar.textContent='Modelo estático · sin clips de animación'}
+ }else{bar.textContent='Static model · no animation clips'}
  container.append(bar);
  scene.add(new THREE.HemisphereLight(0xdceaff,0x584233,2.8));const light=new THREE.DirectionalLight(0xffe4b7,3);light.position.set(3,5,4);scene.add(light);
  const bounds=new THREE.Box3().setFromObject(model),center=bounds.getCenter(new THREE.Vector3()),radius=Math.max(.01,bounds.getSize(new THREE.Vector3()).length()/2);

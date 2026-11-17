@@ -10,7 +10,7 @@ internal sealed partial class MainForm
     private bool _questFormDirty;
     private readonly Stack<string> _questUndo = new(), _questRedo = new();
     private bool ConfirmLeaveQuest() => !_questFormDirty && (_quest == null || _quest.Text == _questSaved) ||
-        MessageBox.Show(this, "Hay cambios de quest sin exportar. ¿Descartarlos al continuar?", "Quests", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
+        MessageBox.Show(this, Loc.T("There are unexported quest changes. Discard them and continue?", "Hay cambios de quest sin exportar. ¿Descartarlos al continuar?"), "Quests", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
     private object QuestState() => _quest == null ? new { loaded = false } : (object)new
     {
         loaded = true, name = Path.GetFileName(_quest.SourcePath), source = _quest.SourcePath,
@@ -34,7 +34,7 @@ internal sealed partial class MainForm
         uint NewId()
         {
             uint id = args.GetProperty("id").GetUInt32();
-            if (id is 0 or > 65534) throw new ArgumentException("El ID nativo debe estar entre 1 y 65534.");
+            if (id is 0 or > 65534) throw new ArgumentException("The native ID must be between 1 and 65534.");
             return id;
         }
         switch (action)
@@ -43,7 +43,7 @@ internal sealed partial class MainForm
             case "quest-dirty": _questFormDirty = !args.TryGetProperty("dirty", out var dirty) || dirty.GetBoolean(); return null;
             case "quest-open":
                 if (!ConfirmLeaveQuest()) return null;
-                using (var dialog = new OpenFileDialog { Filter = "Quest / trigger nativo|*.t", Title = "Abrir una quest para preparar una revisión" })
+                using (var dialog = new OpenFileDialog { Filter = Loc.T("Native quest / trigger|*.t", "Quest / trigger nativo|*.t"), Title = Loc.T("Open a quest to prepare a revision", "Abrir una quest para preparar una revisión") })
                 {
                     string examples = Path.Combine(AppContext.BaseDirectory, "examples", "quests");
                     if (Directory.Exists(examples)) dialog.InitialDirectory = examples;
@@ -60,8 +60,8 @@ internal sealed partial class MainForm
             case "quest-clone-template":
                 if (!ConfirmLeaveQuest()) return null;
                 uint cloneId = NewId();
-                using (var source = new OpenFileDialog { Filter = "Quest / trigger nativo|*.t", Title = "Elegir la quest plantilla que se conservará" })
-                using (var output = new FolderBrowserDialog { Description = "Carpeta donde crear el clon auditado" })
+                using (var source = new OpenFileDialog { Filter = Loc.T("Native quest / trigger|*.t", "Quest / trigger nativo|*.t"), Title = Loc.T("Choose the template quest to preserve", "Elegir la quest plantilla que se conservará") })
+                using (var output = new FolderBrowserDialog { Description = Loc.T("Folder where the audited clone will be created", "Carpeta donde crear el clon auditado") })
                 {
                     if (source.ShowDialog(this) != DialogResult.OK || output.ShowDialog(this) != DialogResult.OK) return null;
                     string destination = Path.Combine(output.SelectedPath, "quest-clone-" + Guid.NewGuid().ToString("N"));
@@ -70,10 +70,10 @@ internal sealed partial class MainForm
                     SetQuest(QuestDocument.Load(data.GetProperty("candidate").GetString()!), true); return QuestState();
                 }
             case "quest-source":
-                if (_quest == null) throw new IOException("Abrí una quest.");
+                if (_quest == null) throw new IOException("Open a quest.");
                 return new { original = _quest.OriginalText, current = _quest.Text };
             case "quest-edit-many": case "quest-add":
-                if (_quest == null) throw new IOException("Abrí una quest.");
+                if (_quest == null) throw new IOException("Open a quest.");
                 string before = _quest.Text;
                 try
                 {
@@ -86,7 +86,7 @@ internal sealed partial class MainForm
                         _quest.AddNode(S("parent"), S("kind"), fields);
                     }
                     _quest.Validate();
-                    if (!_quest.CanMutate) throw new InvalidDataException("La edición produjo una estructura que no puede analizarse con seguridad.");
+                    if (!_quest.CanMutate) throw new InvalidDataException("The edit produced a structure that cannot be parsed safely.");
                 }
                 catch { _quest.ReplaceText(before); throw; }
                 if (_quest.Text != before)
@@ -100,21 +100,21 @@ internal sealed partial class MainForm
                 }
                 _questFormDirty = false; return QuestState();
             case "quest-undo": case "quest-redo":
-                if (_quest == null) throw new IOException("Abrí una quest.");
+                if (_quest == null) throw new IOException("Open a quest.");
                 var from = action == "quest-undo" ? _questUndo : _questRedo;
                 var to = action == "quest-undo" ? _questRedo : _questUndo;
                 if (from.Count > 0) { to.Push(_quest.Text); _quest.ReplaceText(from.Pop()); }
                 _questFormDirty = false; return QuestState();
             case "quest-save":
-                if (_quest == null) throw new IOException("Abrí una quest.");
-                using (var output = new FolderBrowserDialog { Description = "Crear una revisión con original y auditoría; no se instala" })
+                if (_quest == null) throw new IOException("Open a quest.");
+                using (var output = new FolderBrowserDialog { Description = Loc.T("Create a revision with original and audit; it is not installed", "Crear una revisión con original y auditoría; no se instala") })
                 {
                     if (output.ShowDialog(this) != DialogResult.OK) return null;
                     string destination = Path.Combine(output.SelectedPath, "quest-revision-" + Guid.NewGuid().ToString("N"));
                     var saved = await Task.Run(() => _quest.SaveCandidate(destination)); _questSaved = _quest.Text;
                     return saved;
                 }
-            default: throw new ArgumentException("Comando de quests desconocido.");
+            default: throw new ArgumentException("Unknown quest command.");
         }
     }
 }

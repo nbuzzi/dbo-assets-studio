@@ -58,9 +58,9 @@ internal sealed class WpsDocument
     public static WpsDocument LoadTqs(string path) => LoadDialect(path, "tqs");
     private static WpsDocument LoadDialect(string path, string dialect)
     {
-        if (string.IsNullOrWhiteSpace(path)) throw new ArgumentException("Falta el archivo de script.", nameof(path));
+        if (string.IsNullOrWhiteSpace(path)) throw new ArgumentException("Script file is missing.", nameof(path));
         ContentSafety.NoLinks(path);
-        if (new FileInfo(path).Length > 8L * 1024 * 1024) throw new IOException("Límite de entrada: 8 MiB.");
+        if (new FileInfo(path).Length > 8L * 1024 * 1024) throw new IOException("Input limit: 8 MiB.");
         return new WpsDocument(path, File.ReadAllBytes(path), dialect);
     }
 
@@ -69,8 +69,8 @@ internal sealed class WpsDocument
         EnsureMutable();
         var node = Find(nodeId);
         var parsed = ParseLiteral(newLiteral, 0);
-        if (parsed is null) throw new ArgumentException("El nuevo valor debe ser un literal número, string o booleano.");
-        if (parsed.Value.Kind == "boolean") throw new ArgumentException("WPSScript.cpp no admite booleanos como Param; use un número o string literal.");
+        if (parsed is null) throw new ArgumentException("The new value must be a number, string or boolean literal.");
+        if (parsed.Value.Kind == "boolean") throw new ArgumentException("WPSScript.cpp does not accept booleans as Param; use a number or string literal.");
         EnsureRuntimeParamsSupported(node);
         var param = node.Params.LastOrDefault(p => p.Key.Equals(key, StringComparison.OrdinalIgnoreCase));
         if (param is not null) Replace(param.Start, param.Length, newLiteral);
@@ -95,11 +95,11 @@ internal sealed class WpsDocument
 
     public string ResolveNodePath(IReadOnlyList<int> path)
     {
-        if (path.Count == 0 || path[0] < 0 || path[0] >= _nodes.Count) throw new ArgumentException("nodePath debe comenzar con un índice de raíz válido.");
+        if (path.Count == 0 || path[0] < 0 || path[0] >= _nodes.Count) throw new ArgumentException("nodePath must start with a valid root index.");
         WpsNode node = _nodes[path[0]];
         for (int i = 1; i < path.Count; i++)
         {
-            if (path[i] < 0 || path[i] >= node.Children.Count) throw new ArgumentException("nodePath contiene un índice de hijo inválido.");
+            if (path[i] < 0 || path[i] >= node.Children.Count) throw new ArgumentException("nodePath contains an invalid child index.");
             node = node.Children[path[i]];
         }
         return node.Id;
@@ -109,17 +109,17 @@ internal sealed class WpsDocument
     {
         var stages = Flatten(_nodes).Where(n => n.Kind == "Action" && n.Name.Equals("CCBD stage", StringComparison.OrdinalIgnoreCase) &&
             n.Params.Any(p => p.Key.Equals("stage", StringComparison.OrdinalIgnoreCase) && p.Value is double d && d == floor)).ToList();
-        if (stages.Count != 1) throw new ArgumentException($"Se esperaba exactamente un CCBD stage {floor}; hay {stages.Count}.");
+        if (stages.Count != 1) throw new ArgumentException($"Expected exactly one CCBD stage {floor}; found {stages.Count}.");
         if (string.IsNullOrWhiteSpace(actionName)) return stages[0].Id;
         var matching = Flatten(stages[0].Children).Where(n => n.Kind == "Action" && n.Name.Equals(actionName, StringComparison.OrdinalIgnoreCase)).ToList();
-        if (matching.Count != 1) throw new ArgumentException($"En CCBD stage {floor} se esperaba un único Action('{actionName}'); hay {matching.Count}.");
+        if (matching.Count != 1) throw new ArgumentException($"Expected a single Action('{actionName}') in CCBD stage {floor}; found {matching.Count}.");
         return matching[0].Id;
     }
 
     private static void EnsureRuntimeParamsSupported(WpsNode node)
     {
         var unsupported = Flatten(node.Children).Append(node).SelectMany(n => n.Params).FirstOrDefault(p => p.ValueKind == "boolean");
-        if (unsupported is not null) throw new InvalidOperationException($"No se puede clonar/editar este nodo: Param '{unsupported.Key}' es booleano y el wrapper WPS solo acepta número/string.");
+        if (unsupported is not null) throw new InvalidOperationException($"Cannot clone/edit this node: Param '{unsupported.Key}' is a boolean and the WPS wrapper only accepts number/string.");
     }
 
     public void RemoveNode(string nodeId)
@@ -136,7 +136,7 @@ internal sealed class WpsDocument
         var siblings = node.Parent?.Children ?? _nodes.ToList();
         int index = siblings.IndexOf(node);
         int otherIndex = direction.Equals("up", StringComparison.OrdinalIgnoreCase) ? index - 1 : direction.Equals("down", StringComparison.OrdinalIgnoreCase) ? index + 1 : -1;
-        if (otherIndex < 0 || otherIndex >= siblings.Count) throw new ArgumentException("Dirección inválida o nodo en el límite; use up/down.");
+        if (otherIndex < 0 || otherIndex >= siblings.Count) throw new ArgumentException("Invalid direction or node already at the edge; use up/down.");
         var other = siblings[otherIndex];
         if (otherIndex < index) (node, other) = (other, node);
         string a = Text[node.Start..node.End], gap = Text[node.End..other.Start], b = Text[other.Start..other.End];
@@ -156,19 +156,19 @@ internal sealed class WpsDocument
     {
         EnsureMutable();
         kind = kind.Trim();
-        string call = kind switch { "Action" => "Action", "Condition" => "Condition", "GameStage" => "GameStage", "GameFailed" when Dialect == "wps" => "GameFailed", "GameBegin" or "GameEnd" when Dialect == "tqs" => kind, _ => throw new ArgumentException("kind debe ser Action, Condition, GameStage o GameFailed.") };
+        string call = kind switch { "Action" => "Action", "Condition" => "Condition", "GameStage" => "GameStage", "GameFailed" when Dialect == "wps" => "GameFailed", "GameBegin" or "GameEnd" when Dialect == "tqs" => kind, _ => throw new ArgumentException("kind must be Action, Condition, GameStage or GameFailed.") };
         if (call == "GameStage")
         {
-            if (parentId is not null) throw new ArgumentException("GameStage/GameFailed solo se agregan en la raíz.");
+            if (parentId is not null) throw new ArgumentException("GameStage/GameFailed can only be added at the root.");
             if (!int.TryParse(name, NumberStyles.Integer, CultureInfo.InvariantCulture, out int stage) || stage is < 0 or > 254)
-                throw new ArgumentException("GameStage requiere un entero decimal de 0 a 254.");
+                throw new ArgumentException("GameStage requires a decimal integer from 0 to 254.");
             name = stage.ToString(CultureInfo.InvariantCulture);
         }
         else if (call is "GameFailed" or "GameBegin" or "GameEnd")
         {
-            if (parentId is not null) throw new ArgumentException("GameStage/GameFailed solo se agregan en la raíz.");
+            if (parentId is not null) throw new ArgumentException("GameStage/GameFailed can only be added at the root.");
         }
-        else if (parentId is null) throw new ArgumentException("Action/Condition requiere nodo padre.");
+        else if (parentId is null) throw new ArgumentException("Action/Condition requires a parent node.");
         var parent = parentId is null ? null : Find(parentId);
         string indent = parent is null ? "" : IndentAt(parent.Start) + "\t";
         string arg = call == "GameStage" ? name : call is "GameFailed" or "GameBegin" or "GameEnd" ? "" : LuaQuote(name);
@@ -178,7 +178,7 @@ internal sealed class WpsDocument
         foreach (var pair in parameters)
         {
             var parsed = ParseLiteral(pair.Value, 0);
-            if (parsed is null || parsed.Value.Kind == "boolean") throw new ArgumentException($"El valor de Param '{pair.Key}' debe ser número/string; el wrapper de WPSScript.cpp no admite booleanos.");
+            if (parsed is null || parsed.Value.Kind == "boolean") throw new ArgumentException($"Param '{pair.Key}' value must be number/string; the WPSScript.cpp wrapper does not accept booleans.");
             sb.Append(indent).Append("\tParam( ").Append(LuaQuote(pair.Key)).Append(", ").Append(pair.Value).Append(" )").Append(_newline);
         }
         sb.Append(indent).Append("End()").Append(_newline);
@@ -191,13 +191,13 @@ internal sealed class WpsDocument
     public string CloneCcFloor(int sourceFloor, int newFloor)
     {
         EnsureMutable();
-        if (newFloor is < 0 or > 254) throw new ArgumentOutOfRangeException(nameof(newFloor), "CCBD stage debe estar entre 0 y 254; 255 es INVALID_BYTE.");
+        if (newFloor is < 0 or > 254) throw new ArgumentOutOfRangeException(nameof(newFloor), "CCBD stage must be between 0 and 254; 255 is INVALID_BYTE.");
         var stages = Flatten(_nodes).Where(n => n.Kind == "Action" && n.Name.Equals("CCBD stage", StringComparison.OrdinalIgnoreCase) &&
             n.Params.Any(p => p.Key.Equals("stage", StringComparison.OrdinalIgnoreCase) && p.Value is double d && d == sourceFloor)).ToList();
-        if (stages.Count != 1) throw new InvalidOperationException($"Se esperaba exactamente una Action(\"CCBD stage\") con Param stage={sourceFloor}; se encontraron {stages.Count}.");
+        if (stages.Count != 1) throw new InvalidOperationException($"Expected exactly one Action(\"CCBD stage\") with Param stage={sourceFloor}; found {stages.Count}.");
         if (Flatten(_nodes).Any(n => n.Kind == "Action" && n.Name.Equals("CCBD stage", StringComparison.OrdinalIgnoreCase) &&
             n.Params.Any(p => p.Key.Equals("stage", StringComparison.OrdinalIgnoreCase) && p.Value is double d && d == newFloor)))
-            throw new InvalidOperationException($"Ya existe CCBD stage {newFloor}.");
+            throw new InvalidOperationException($"CCBD stage {newFloor} already exists.");
         var source = stages[0];
         EnsureRuntimeParamsSupported(source);
         string copy = Text[source.Start..source.End];
@@ -218,11 +218,11 @@ internal sealed class WpsDocument
     {
         EnsureMutable();
         var validation = Validate();
-        if (validation.Any(x => x.Severity == "error")) throw new InvalidOperationException("La validación encontró errores; no se guardó candidato.");
+        if (validation.Any(x => x.Severity == "error")) throw new InvalidOperationException("Validation found errors; no candidate was saved.");
         string output = ContentSafety.SafeOutput(outputDirectory);
         if (Path.GetFullPath(SourcePath).Equals(output, StringComparison.OrdinalIgnoreCase) || Path.GetFullPath(SourcePath).StartsWith(output + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
-            throw new IOException("La salida no puede reemplazar ni contener el archivo fuente.");
-        if (!File.Exists(SourcePath)) throw new IOException("El archivo fuente ya no existe; vuelva a cargarlo antes de guardar.");
+            throw new IOException("The output cannot replace or contain the source file.");
+        if (!File.Exists(SourcePath)) throw new IOException("The source file no longer exists; reload it before saving.");
         string pending = ContentSafety.FreshDirectory(output);
         try
         {
@@ -237,7 +237,7 @@ internal sealed class WpsDocument
             using (var source = new FileStream(SourcePath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 originalBytes = SHA256.HashData(source);
-                if (!Convert.ToHexString(originalBytes).Equals(OriginalSha256, StringComparison.OrdinalIgnoreCase)) throw new IOException("El archivo fuente cambió desde que se abrió; vuelva a cargarlo antes de guardar.");
+                if (!Convert.ToHexString(originalBytes).Equals(OriginalSha256, StringComparison.OrdinalIgnoreCase)) throw new IOException("The source file changed since it was opened; reload it before saving.");
                 source.Position = 0;
                 using var snapshot = new FileStream(originalPath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
                 source.CopyTo(snapshot);
@@ -246,7 +246,7 @@ internal sealed class WpsDocument
             byte[] candidateBytes = Encode(Text);
             using (var fs = new FileStream(candidatePath, FileMode.CreateNew, FileAccess.Write, FileShare.None)) { fs.Write(candidateBytes); fs.Flush(true); }
             string candidateSha = Convert.ToHexString(SHA256.HashData(candidateBytes));
-            if (ContentSafety.Hash(candidatePath) != candidateSha || ContentSafety.Hash(originalPath) != OriginalSha256) throw new IOException("La revisión escrita no coincide con sus hashes; no se confirma la carpeta.");
+            if (ContentSafety.Hash(candidatePath) != candidateSha || ContentSafety.Hash(originalPath) != OriginalSha256) throw new IOException("The written revision does not match its hashes; the folder was not committed.");
             var audit = new { format = Dialect + "-candidate-v1", dialect = Dialect, sourcePath = SourcePath, sourceSha256 = OriginalSha256, snapshot = Path.GetRelativePath(pending, originalPath), candidate = Path.GetRelativePath(pending, candidatePath), candidateSha256 = candidateSha, encoding = EncodingName, savedUtc = DateTimeOffset.UtcNow, modified = Modified, diff = ExportDiff(), diagnostics = validation };
             ContentSafety.WriteJson(Path.Combine(pending, "audit.json"), audit);
             Directory.Move(pending, output);
@@ -272,7 +272,7 @@ internal sealed class WpsDocument
     }
     private void Replace(int start, int length, string replacement)
     {
-        if ((long)Text.Length - length + replacement.Length > 8 * 1024 * 1024) throw new IOException("La revisión excedería el límite de tamaño WPS.");
+        if ((long)Text.Length - length + replacement.Length > 8 * 1024 * 1024) throw new IOException("The revision would exceed the WPS size limit.");
         string before = Text;
         Text = Text.Remove(start, length).Insert(start, replacement);
         Parse();
@@ -280,11 +280,11 @@ internal sealed class WpsDocument
         {
             Text = before;
             Parse();
-            throw new InvalidOperationException("La edición dejaría una estructura WPS inválida; se revirtió automáticamente.");
+            throw new InvalidOperationException("The edit would leave an invalid WPS structure; it was reverted automatically.");
         }
     }
-    private void EnsureMutable() { if (!CanMutate) throw new InvalidOperationException("Edición bloqueada: WPS inseguro/no compatible o estructura inválida. Revisá Diagnostics."); }
-    private WpsNode Find(string id) => Flatten(_nodes).FirstOrDefault(n => n.Id == id) ?? throw new ArgumentException("No existe nodo con Id=" + id);
+    private void EnsureMutable() { if (!CanMutate) throw new InvalidOperationException("Edit blocked: unsafe/unsupported WPS or invalid structure. Check Diagnostics."); }
+    private WpsNode Find(string id) => Flatten(_nodes).FirstOrDefault(n => n.Id == id) ?? throw new ArgumentException("No node with Id=" + id);
     private string IndentAt(int pos) { int line = Text.LastIndexOf('\n', Math.Max(0, pos - 1)); int i = line + 1; while (i < Text.Length && Text[i] is ' ' or '\t') i++; return Text[(line + 1)..i]; }
     private int ClosingEndLength(WpsNode node) { var m = Regex.Match(Text[node.Start..node.End], @"End\s*\(\s*\)\s*$", RegexOptions.CultureInvariant); return m.Success ? m.Length : 0; }
     private static string LuaQuote(string value) => "\"" + value.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\r", "\\r").Replace("\n", "\\n") + "\"";
@@ -303,12 +303,12 @@ internal sealed class WpsDocument
             SkipTrivia(ref i, true);
             if (i >= Text.Length) break;
             int start = i;
-            if (!IsIdentifierStart(Text[i])) { _diagnostics.Add(Diagnostic("error", "Código Lua/expresión no compatible; solo se admite el DSL WPS declarado.", i)); SkipLine(ref i); continue; }
+            if (!IsIdentifierStart(Text[i])) { _diagnostics.Add(Diagnostic("error", "Unsupported Lua code/expression; only the declared WPS DSL is supported.", i)); SkipLine(ref i); continue; }
             string id = ReadIdentifier(ref i);
             if ((Dialect == "tqs" && id == "GameFailed") || (!new[] { "GameStage", "GameFailed", "Action", "Condition", "Param", "End" }.Contains(id, StringComparer.Ordinal) && !(Dialect == "tqs" && id is "GameBegin" or "GameEnd")))
-            { _diagnostics.Add(Diagnostic("error", $"Identificador ejecutable no permitido: {id}.", start)); SkipLine(ref i); continue; }
+            { _diagnostics.Add(Diagnostic("error", $"Executable identifier not allowed: {id}.", start)); SkipLine(ref i); continue; }
             SkipWhitespace(ref i);
-            if (i >= Text.Length || Text[i++] != '(') { _diagnostics.Add(Diagnostic("error", $"Se esperaba '(' después de {id}.", start)); SkipLine(ref i); continue; }
+            if (i >= Text.Length || Text[i++] != '(') { _diagnostics.Add(Diagnostic("error", $"Expected '(' after {id}.", start)); SkipLine(ref i); continue; }
             var args = new List<ParsedLiteral>();
             SkipTrivia(ref i);
             if (i < Text.Length && Text[i] != ')')
@@ -316,7 +316,7 @@ internal sealed class WpsDocument
                 while (i < Text.Length)
                 {
                     var literal = ReadLiteral(ref i);
-                    if (literal is null) { _diagnostics.Add(Diagnostic("error", $"Argumento de {id} debe ser literal número/string/booleano.", i)); SkipLine(ref i); break; }
+                    if (literal is null) { _diagnostics.Add(Diagnostic("error", $"Argument of {id} must be a number/string/boolean literal.", i)); SkipLine(ref i); break; }
                     args.Add(literal.Value);
                     SkipTrivia(ref i);
                     if (i < Text.Length && Text[i] == ',') { i++; SkipTrivia(ref i); continue; }
@@ -324,11 +324,11 @@ internal sealed class WpsDocument
                 }
             }
             SkipTrivia(ref i);
-            if (i >= Text.Length || Text[i++] != ')') { _diagnostics.Add(Diagnostic("error", $"Llamada {id} sin ')' válido.", start)); continue; }
+            if (i >= Text.Length || Text[i++] != ')') { _diagnostics.Add(Diagnostic("error", $"Call {id} has no valid ')'.", start)); continue; }
             int endCall = i;
             int expected = id switch { "GameFailed" or "GameBegin" or "GameEnd" or "End" => 0, _ => 1 };
             if (id == "Param") expected = 2;
-            if (args.Count != expected) { _diagnostics.Add(Diagnostic("error", $"{id} requiere {expected} argumento(s) literal(es); encontró {args.Count}.", start)); continue; }
+            if (args.Count != expected) { _diagnostics.Add(Diagnostic("error", $"{id} requires {expected} literal argument(s); found {args.Count}.", start)); continue; }
             bool opensNode = id is "GameStage" or "GameFailed" or "GameBegin" or "GameEnd" or "Action" or "Condition";
             if (ignoredNestedDepth > 0)
             {
@@ -336,8 +336,8 @@ internal sealed class WpsDocument
                 else if (id == "End") ignoredNestedDepth--;
                 continue;
             }
-            if (opensNode && nodeCount >= 100_000) { _diagnostics.Add(Diagnostic("error", "Límite WPS de 100.000 nodos excedido.", start)); break; }
-            if (opensNode && stack.Count >= 128) { _diagnostics.Add(Diagnostic("error", "Anidamiento WPS excede el límite seguro de 128.", start)); ignoredNestedDepth = 1; continue; }
+            if (opensNode && nodeCount >= 100_000) { _diagnostics.Add(Diagnostic("error", "WPS limit of 100,000 nodes exceeded.", start)); break; }
+            if (opensNode && stack.Count >= 128) { _diagnostics.Add(Diagnostic("error", "WPS nesting exceeds the safe limit of 128.", start)); ignoredNestedDepth = 1; continue; }
             if (opensNode) nodeCount++;
             switch (id)
             {
@@ -345,40 +345,40 @@ internal sealed class WpsDocument
                     bool isRootKind = id is "GameStage" or "GameFailed" or "GameBegin" or "GameEnd";
                     bool parentIsRoot = stack.Count > 0 && (stack.Peek().Kind is "GameStage" or "GameFailed" or "GameBegin" or "GameEnd");
                     if (parentIsRoot && isRootKind)
-                        _diagnostics.Add(Diagnostic("error", "Stage/GameFailed no puede anidarse dentro de otra raíz.", start));
+                        _diagnostics.Add(Diagnostic("error", "Stage/GameFailed cannot be nested inside another root.", start));
                     var val = id == "GameStage" ? args[0].Value : args.Count > 0 ? args[0].Value : null;
-                    if (id == "GameStage" && val is not double) { _diagnostics.Add(Diagnostic("error", "GameStage requiere número literal.", start)); break; }
+                    if (id == "GameStage" && val is not double) { _diagnostics.Add(Diagnostic("error", "GameStage requires a number literal.", start)); break; }
                     if (id == "GameStage" && val is double stageArg && (stageArg != Math.Truncate(stageArg) || stageArg < 0 || stageArg > 254))
-                        _diagnostics.Add(Diagnostic("error", "GameStage debe ser entero entre 0 y 254; 255 se reserva como INVALID_BYTE.", start));
-                    if ((id == "Action" || id == "Condition") && val is not string) { _diagnostics.Add(Diagnostic("error", id + " requiere string literal.", start)); break; }
-                    if ((id == "Action" || id == "Condition") && stack.Count == 0) { _diagnostics.Add(Diagnostic("error", id + " requiere un nodo padre abierto.", start)); break; }
+                        _diagnostics.Add(Diagnostic("error", "GameStage must be an integer between 0 and 254; 255 is reserved as INVALID_BYTE.", start));
+                    if ((id == "Action" || id == "Condition") && val is not string) { _diagnostics.Add(Diagnostic("error", id + " requires a string literal.", start)); break; }
+                    if ((id == "Action" || id == "Condition") && stack.Count == 0) { _diagnostics.Add(Diagnostic("error", id + " requires an open parent node.", start)); break; }
                     int? stageValue = null;
                     if (id == "GameStage" && val is double stageNumber && stageNumber >= int.MinValue && stageNumber <= int.MaxValue && stageNumber == Math.Truncate(stageNumber)) stageValue = (int)stageNumber;
                     var node = new WpsNode { Id = start.ToString(CultureInfo.InvariantCulture), Kind = id, Name = val?.ToString() ?? "", Stage = stageValue, Start = start, End = endCall, Line = LineAt(start), Parent = stack.Count == 0 ? null : stack.Peek() };
                     if (node.Parent is null) _nodes.Add(node); else node.Parent.Children.Add(node);
-                    if (isRootKind && node.Parent is not null) _diagnostics.Add(Diagnostic("error", "Raíz WPS anidada.", start));
+                    if (isRootKind && node.Parent is not null) _diagnostics.Add(Diagnostic("error", "Nested WPS root.", start));
                     stack.Push(node);
                     break;
                 case "Param":
-                    if (stack.Count == 0) { _diagnostics.Add(Diagnostic("error", "Param fuera de un nodo.", start)); break; }
-                    if (args[0].Value is not string key) { _diagnostics.Add(Diagnostic("error", "La clave Param debe ser string.", start)); break; }
+                    if (stack.Count == 0) { _diagnostics.Add(Diagnostic("error", "Param outside a node.", start)); break; }
+                    if (args[0].Value is not string key) { _diagnostics.Add(Diagnostic("error", "Param key must be a string.", start)); break; }
                     stack.Peek().Params.Add(new WpsParam { Key = key, Literal = args[1].Raw, Value = args[1].Value, ValueKind = args[1].Kind, Start = args[1].Start, Length = args[1].Length });
                     break;
                 case "End":
-                    if (stack.Count == 0) { _diagnostics.Add(Diagnostic("error", "End sin nodo abierto.", start)); break; }
+                    if (stack.Count == 0) { _diagnostics.Add(Diagnostic("error", "End without an open node.", start)); break; }
                     stack.Pop().End = endCall;
                     break;
             }
         }
-        foreach (var open in stack) _diagnostics.Add(Diagnostic("error", $"{open.Kind} no tiene End() correspondiente.", open.Start));
-        foreach (var n in Flatten(_nodes)) if (n.End == n.Start || n.End > Text.Length) _diagnostics.Add(Diagnostic("error", $"Nodo {n.Kind} sin End() correspondiente.", n.Start));
+        foreach (var open in stack) _diagnostics.Add(Diagnostic("error", $"{open.Kind} has no matching End().", open.Start));
+        foreach (var n in Flatten(_nodes)) if (n.End == n.Start || n.End > Text.Length) _diagnostics.Add(Diagnostic("error", $"Node {n.Kind} has no matching End().", n.Start));
         foreach (var node in Flatten(_nodes))
         foreach (var p in node.Params.Where(p => p.ValueKind == "boolean"))
-            _diagnostics.Add(Diagnostic("warning", $"Param '{p.Key}' usa booleano; WPSScript.cpp solo enlaza Param número/string.", p.Start, p.Length));
+            _diagnostics.Add(Diagnostic("warning", $"Param '{p.Key}' uses a boolean; WPSScript.cpp only binds number/string Params.", p.Start, p.Length));
         foreach (var n in Flatten(_nodes).Where(n => n.Kind is "Action" or "Condition"))
         {
             bool known = n.Kind == "Action" ? (Dialect == "tqs" ? TqsActions : KnownActions).Contains(n.Name) : (Dialect == "tqs" ? TqsConditions : KnownConditions).Contains(n.Name);
-            if (!known) _diagnostics.Add(Diagnostic("warning", $"{n.Kind} no está en {Dialect.ToUpperInvariant()}NodeFactory.cpp: '{n.Name}'. Se conserva para lectura.", n.Start));
+            if (!known) _diagnostics.Add(Diagnostic("warning", $"{n.Kind} is not in {Dialect.ToUpperInvariant()}NodeFactory.cpp: '{n.Name}'. Kept read-only.", n.Start));
         }
         AddSemanticDiagnostics();
     }
@@ -389,11 +389,11 @@ internal sealed class WpsDocument
             if (_nodes.Count(n => n.Kind == kind) > 1)
                 foreach (var node in _nodes.Where(n => n.Kind == kind)) _diagnostics.Add(Diagnostic("error", kind + " duplicado.", node.Start));
         if (_nodes.Count(n => n.Kind == "GameFailed") > 1)
-            foreach (var node in _nodes.Where(n => n.Kind == "GameFailed")) _diagnostics.Add(Diagnostic("error", "GameFailed duplicado: la revisión debe definir un único bloque de fallo.", node.Start));
+            foreach (var node in _nodes.Where(n => n.Kind == "GameFailed")) _diagnostics.Add(Diagnostic("error", "Duplicate GameFailed: the revision must define a single failure block.", node.Start));
         foreach (var group in _nodes.Where(n => n.Kind == "GameStage" && n.Stage.HasValue).GroupBy(n => n.Stage!.Value).Where(g => g.Count() > 1))
-            foreach (var node in group) _diagnostics.Add(Diagnostic("error", $"GameStage duplicado: {group.Key}.", node.Start));
+            foreach (var node in group) _diagnostics.Add(Diagnostic("error", $"Duplicate GameStage: {group.Key}.", node.Start));
         foreach (var node in Flatten(_nodes).Where(n => n.Kind == "GameStage" && (n.Stage is < 0 or > 254)))
-            _diagnostics.Add(Diagnostic("error", "GameStage debe estar entre 0 y 254; 255 se reserva como INVALID_BYTE.", node.Start));
+            _diagnostics.Add(Diagnostic("error", "GameStage must be between 0 and 254; 255 is reserved as INVALID_BYTE.", node.Start));
 
         if (Dialect == "tqs") return;
         var floors = Flatten(_nodes).Where(n => n.Kind == "Action" && n.Name.Equals("CCBD stage", StringComparison.OrdinalIgnoreCase)).ToList();
@@ -401,15 +401,15 @@ internal sealed class WpsDocument
         {
             var values = floor.Params.Where(p => p.Key.Equals("stage", StringComparison.OrdinalIgnoreCase)).ToList();
             if (values.Count != 1 || values[0].Value is not double value || value != Math.Truncate(value) || value < 0 || value > 254)
-                _diagnostics.Add(Diagnostic("error", "Action CCBD stage requiere exactamente un Param(\"stage\", número entero 0..254).", floor.Start));
+                _diagnostics.Add(Diagnostic("error", "Action CCBD stage requires exactly one Param(\"stage\", integer 0..254).", floor.Start));
         }
         var numericFloors = floors.Select(f => (Node: f, Param: f.Params.FirstOrDefault(p => p.Key.Equals("stage", StringComparison.OrdinalIgnoreCase))))
             .Where(x => x.Param?.Value is double d && d == Math.Truncate(d) && d is >= 0 and <= 254).ToList();
         foreach (var group in numericFloors.GroupBy(x => (double)x.Param!.Value!).Where(g => g.Count() > 1))
-            foreach (var item in group) _diagnostics.Add(Diagnostic("error", $"CCBD stage duplicado: {group.Key}.", item.Node.Start));
+            foreach (var item in group) _diagnostics.Add(Diagnostic("error", $"Duplicate CCBD stage: {group.Key}.", item.Node.Start));
         int maxFloor = numericFloors.Count == 0 ? -1 : (int)numericFloors.Max(x => (double)x.Param!.Value!);
         foreach (var item in numericFloors.Where(x => (double)x.Param!.Value! > 150))
-            _diagnostics.Add(Diagnostic("warning", "CCBD floor supera CCBD_MAX_STAGE=150 en NtlCCBD.h; requiere revisar/compilar cliente y servidor antes de aceptación.", item.Node.Start));
+            _diagnostics.Add(Diagnostic("warning", "CCBD floor exceeds CCBD_MAX_STAGE=150 in NtlCCBD.h; client and server must be reviewed/rebuilt before acceptance.", item.Node.Start));
         foreach (var item in numericFloors.Where(x =>
         {
             int floor = (int)(double)x.Param!.Value!;
@@ -417,7 +417,7 @@ internal sealed class WpsDocument
                 .SelectMany(n => n.Params).Any(p => p.Key.Equals("last stage", StringComparison.OrdinalIgnoreCase) && p.Value is string s && s.Equals("true", StringComparison.OrdinalIgnoreCase));
             return lastStage && floor < maxFloor;
         }))
-            _diagnostics.Add(Diagnostic("warning", $"CCBD stage {(double)item.Param!.Value!} marca last stage=true aunque el mayor piso CCBD declarado es {maxFloor}; revisar Action(\"CCBD reward\") descendiente y flujo de finalización.", item.Node.Start));
+            _diagnostics.Add(Diagnostic("warning", $"CCBD stage {(double)item.Param!.Value!} sets last stage=true although the highest declared CCBD floor is {maxFloor}; check the descendant Action(\"CCBD reward\") and the completion flow.", item.Node.Start));
     }
 
     // Exact native registration names from TQSNodeFactory.cpp; no Lua evaluation.
@@ -493,7 +493,7 @@ internal sealed class WpsDocument
                 i += 2;
                 if (TryLongComment(ref i))
                 {
-                    if (i < 0) { _diagnostics.Add(Diagnostic("error", "Comentario Lua largo sin cierre.", commentStart)); i = Text.Length; }
+                    if (i < 0) { _diagnostics.Add(Diagnostic("error", "Unclosed long Lua comment.", commentStart)); i = Text.Length; }
                 }
                 else SkipLine(ref i);
                 continue;

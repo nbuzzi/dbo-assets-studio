@@ -7,7 +7,7 @@ internal sealed partial class MainForm
 {
     private PakArchive? _pak;
     private readonly ListView _pakList = new() { View = View.Details, FullRowSelect = true, VirtualMode = true, HideSelection = false };
-    private readonly TextBox _pakSearch = new() { PlaceholderText = "Buscar ruta, nombre o extensión…", Width = 320 };
+    private readonly TextBox _pakSearch = new() { PlaceholderText = Loc.T("Search path, name or extension…", "Buscar ruta, nombre o extensión…"), Width = 320 };
     private readonly Label _pakSummary = new() { Dock = DockStyle.Fill, AutoEllipsis = true };
     private readonly PictureBox _pakImage = new() { Dock = DockStyle.Fill, SizeMode = PictureBoxSizeMode.Zoom };
     private readonly TextBox _pakDetails = new() { Multiline = true, ReadOnly = true, Dock = DockStyle.Fill, ScrollBars = ScrollBars.Both };
@@ -23,7 +23,7 @@ internal sealed partial class MainForm
 
     private void BuildPakTab()
     {
-        var page = new TabPage("Explorador PAK") { BackColor = Ink, Padding = new Padding(16) };
+        var page = new TabPage(Loc.T("PAK explorer", "Explorador PAK")) { BackColor = Ink, Padding = new Padding(16) };
         _tabs.TabPages.Add(page);
         var layout = new TableLayoutPanel { Dock = DockStyle.Fill, RowCount = 3, ColumnCount = 1 };
         layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 112));
@@ -32,18 +32,18 @@ internal sealed partial class MainForm
         var actions = new FlowLayoutPanel { Dock = DockStyle.Fill, BackColor = Panel, Padding = new Padding(6), AutoScroll = true, WrapContents = true };
         _pakSourceFormat.Items.AddRange(["Taiwan"]);
         _pakSourceFormat.SelectedIndex = 0; actions.Controls.Add(_pakSourceFormat);
-        actions.Controls.Add(MakeButton("Abrir PAK…", async () => await OpenPakAsync(), Accent, Ink));
-        actions.Controls.Add(MakeButton("Extraer selección…", async () => await ExportPakSelectionAsync(false), Panel2, Fg));
-        actions.Controls.Add(MakeButton("Editar RDF seleccionado", async () => await ExportPakSelectionAsync(true), Panel2, Fg));
-        actions.Controls.Add(MakeButton("Referencias RDF…", async () => await LoadResourceCatalogAsync(), Panel2, Fg));
-        actions.Controls.Add(MakeButton("Referencias desde PAK…", async () => await LoadPakReferencesAsync(), Panel2, Fg));
-        actions.Controls.Add(MakeButton("Guardar vista 3D…", SaveModelPreview, Panel2, Fg));
-        _pakCategory.Items.AddRange(["Todos los recursos", "Modelos 3D", "Mobs", "Dogis / vestuario", "Objetos", "Sonidos", "Texturas", "Animaciones"]);
+        actions.Controls.Add(MakeButton(Loc.T("Open PAK…", "Abrir PAK…"), async () => await OpenPakAsync(), Accent, Ink));
+        actions.Controls.Add(MakeButton(Loc.T("Extract selection…", "Extraer selección…"), async () => await ExportPakSelectionAsync(false), Panel2, Fg));
+        actions.Controls.Add(MakeButton(Loc.T("Edit selected RDF", "Editar RDF seleccionado"), async () => await ExportPakSelectionAsync(true), Panel2, Fg));
+        actions.Controls.Add(MakeButton(Loc.T("RDF references…", "Referencias RDF…"), async () => await LoadResourceCatalogAsync(), Panel2, Fg));
+        actions.Controls.Add(MakeButton(Loc.T("References from PAK…", "Referencias desde PAK…"), async () => await LoadPakReferencesAsync(), Panel2, Fg));
+        actions.Controls.Add(MakeButton(Loc.T("Save 3D view…", "Guardar vista 3D…"), SaveModelPreview, Panel2, Fg));
+        _pakCategory.Items.AddRange([Loc.T("All resources", "Todos los recursos"), Loc.T("3D models", "Modelos 3D"), "Mobs", Loc.T("Dogis / outfits", "Dogis / vestuario"), Loc.T("Objects", "Objetos"), Loc.T("Sounds", "Sonidos"), Loc.T("Textures", "Texturas"), Loc.T("Animations", "Animaciones")]);
         _pakCategory.SelectedIndex = 0; _pakCategory.Margin = new Padding(6, 10, 0, 0);
         _pakCategory.SelectedIndexChanged += (_, _) => FilterPak(); actions.Controls.Add(_pakCategory);
         _pakSearch.Margin = new Padding(18, 10, 0, 0); actions.Controls.Add(_pakSearch);
         _pakSearch.TextChanged += (_, _) => FilterPak(); layout.Controls.Add(actions, 0, 0);
-        _pakSummary.Text = "Abrí tex.pak, gui.pak, scr.pak u otro índice Taiwan. Conservá sus unidades en la misma carpeta.";
+        _pakSummary.Text = Loc.T("Open tex.pak, gui.pak, scr.pak or another Taiwan index. Keep its units in the same folder.", "Abrí tex.pak, gui.pak, scr.pak u otro índice Taiwan. Conservá sus unidades en la misma carpeta.");
         _pakSummary.ForeColor = Color.FromArgb(169, 189, 202); _pakSummary.Padding = new Padding(0, 12, 0, 0); layout.Controls.Add(_pakSummary, 0, 1);
         var body = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 1 };
         body.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 46)); body.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 54));
@@ -67,7 +67,7 @@ internal sealed partial class MainForm
             using var title = new Font("Segoe UI Semibold", 19);
             TextRenderer.DrawText(e.Graphics, "RESOURCE INSPECTOR", title,
                 new Rectangle(18, 60, Math.Max(1, _pakImage.Width - 36), 44), Accent, TextFormatFlags.HorizontalCenter);
-            TextRenderer.DrawText(e.Graphics, "Modelos 3D · Texturas · Sonidos\n\nSeleccioná un recurso para explorar su contenido.", Font,
+            TextRenderer.DrawText(e.Graphics, Loc.T("3D models · Textures · Sounds\n\nSelect a resource to explore its content.", "Modelos 3D · Texturas · Sonidos\n\nSeleccioná un recurso para explorar su contenido."), Font,
                 new Rectangle(24, 118, Math.Max(1, _pakImage.Width - 48), 100), Fg,
                 TextFormatFlags.HorizontalCenter | TextFormatFlags.WordBreak);
         };
@@ -79,7 +79,7 @@ internal sealed partial class MainForm
 
     private async Task OpenPakAsync()
     {
-        using var dialog = new OpenFileDialog { Filter = "Índice PAK (*.pak)|*.pak", Title = "Abrir índice del formato seleccionado" };
+        using var dialog = new OpenFileDialog { Filter = Loc.T("PAK index (*.pak)|*.pak", "Índice PAK (*.pak)|*.pak"), Title = Loc.T("Open index in the selected format", "Abrir índice del formato seleccionado") };
         if (dialog.ShowDialog(this) != DialogResult.OK) return;
         string format = "taiwan";
         await OpenPakPathAsync(dialog.FileName, format: format);
@@ -88,7 +88,7 @@ internal sealed partial class MainForm
     internal async Task OpenPakPathAsync(string path, string? resource = null, string? references = null, string format = "taiwan", string? family = null)
     {
         _tabs.SelectedIndex = 2;
-        UseWaitCursor = true; _pakSummary.Text = "Leyendo índice y comprobando unidades…";
+        UseWaitCursor = true; _pakSummary.Text = Loc.T("Reading index and checking units…", "Leyendo índice y comprobando unidades…");
         try
         {
             _pak = await Task.Run(() => PakArchive.OpenAsync(path, format, family));
@@ -101,11 +101,11 @@ internal sealed partial class MainForm
             if (resource != null)
             {
                 int selected = _pakVisible.FindIndex(e => e.Name.Equals(resource, StringComparison.OrdinalIgnoreCase));
-                if (selected < 0) throw new FileNotFoundException("Recurso no encontrado en el índice: " + resource);
+                if (selected < 0) throw new FileNotFoundException("Resource not found in the index: " + resource);
                 _pakList.SelectedIndices.Add(selected); _pakList.EnsureVisible(selected);
             }
         }
-        catch (Exception ex) { _pakSummary.Text = "No se pudo abrir el PAK."; ShowError("PAK no disponible", ex.Message); }
+        catch (Exception ex) { _pakSummary.Text = Loc.T("Could not open the PAK.", "No se pudo abrir el PAK."); ShowError(Loc.T("PAK not available", "PAK no disponible"), ex.Message); }
         finally { UseWaitCursor = false; }
     }
 
@@ -116,18 +116,18 @@ internal sealed partial class MainForm
         _pakList.SelectedIndices.Clear(); _pakList.VirtualListSize = 0;
         _pakVisible = _pak?.Entries.Where(e => MatchesCategory(e.Name) && e.Name.Contains(_pakSearch.Text.Trim(), StringComparison.OrdinalIgnoreCase)).ToList() ?? [];
         _pakList.VirtualListSize = _pakVisible.Count; _pakList.Invalidate();
-        if (_pak != null) _pakSummary.Text = $"{Path.GetFileName(_pak.IndexPath)}  /  {_pakVisible.Count:N0} de {_pak.Entries.Count:N0} recursos  /  {_pak.Entries.Count(e => e.Status != "Disponible"):N0} con problemas  /  Solo lectura";
+        if (_pak != null) _pakSummary.Text = Loc.T($"{Path.GetFileName(_pak.IndexPath)}  /  {_pakVisible.Count:N0} of {_pak.Entries.Count:N0} resources  /  {_pak.Entries.Count(e => e.Status != "Disponible"):N0} with problems  /  Read-only", $"{Path.GetFileName(_pak.IndexPath)}  /  {_pakVisible.Count:N0} de {_pak.Entries.Count:N0} recursos  /  {_pak.Entries.Count(e => e.Status != "Disponible"):N0} con problemas  /  Solo lectura");
     }
 
     private PakEntry? SelectedPakEntry => _pakList.SelectedIndices.Count == 0 ? null : _pakVisible[_pakList.SelectedIndices[0]];
 
     private void SaveModelPreview()
     {
-        if (_modelView.MeshCount == 0) { ShowError("Vista 3D", "Seleccioná primero un modelo DFF que pueda previsualizarse."); return; }
-        using var dialog = new SaveFileDialog { Filter = "Imagen PNG (*.png)|*.png", FileName = Path.GetFileNameWithoutExtension(SelectedPakEntry?.Name ?? "modelo") + ".png" };
+        if (_modelView.MeshCount == 0) { ShowError(Loc.T("3D view", "Vista 3D"), Loc.T("Select a DFF model that can be previewed first.", "Seleccioná primero un modelo DFF que pueda previsualizarse.")); return; }
+        using var dialog = new SaveFileDialog { Filter = Loc.T("PNG image (*.png)|*.png", "Imagen PNG (*.png)|*.png"), FileName = Path.GetFileNameWithoutExtension(SelectedPakEntry?.Name ?? "model") + ".png" };
         if (dialog.ShowDialog(this) != DialogResult.OK) return;
         try { _modelView.SaveRender(dialog.FileName); }
-        catch (Exception ex) { ShowError("Guardar vista 3D", ex.Message); }
+        catch (Exception ex) { ShowError(Loc.T("Save 3D view", "Guardar vista 3D"), ex.Message); }
     }
 
     private bool MatchesCategory(string name)
@@ -153,33 +153,33 @@ internal sealed partial class MainForm
 
     private async Task LoadResourceCatalogAsync()
     {
-        using var dialog = new FolderBrowserDialog { Description = "Carpeta RDF Taiwan con tablas Item, Mob, NPC y Object" };
+        using var dialog = new FolderBrowserDialog { Description = Loc.T("Taiwan RDF folder with Item, Mob, NPC and Object tables", "Carpeta RDF Taiwan con tablas Item, Mob, NPC y Object") };
         if (dialog.ShowDialog(this) != DialogResult.OK) return;
         try
         {
-            _pakSummary.Text = "Relacionando modelos e iconos con IDs RDF…";
+            _pakSummary.Text = Loc.T("Linking models and icons to RDF IDs…", "Relacionando modelos e iconos con IDs RDF…");
             _resourceCatalog = await Task.Run(() => ResourceCatalog.Load(dialog.SelectedPath, _schemas));
-            _pakSummary.Text = $"{_resourceCatalog.Count:N0} referencias RDF cargadas / {_resourceCatalog.Notes.Count} tablas omitidas";
+            _pakSummary.Text = Loc.T($"{_resourceCatalog.Count:N0} RDF references loaded / {_resourceCatalog.Notes.Count} tables skipped", $"{_resourceCatalog.Count:N0} referencias RDF cargadas / {_resourceCatalog.Notes.Count} tablas omitidas");
             await PreviewPakAsync();
-            if (_resourceCatalog.Notes.Count > 0) _pakDetails.AppendText("\r\n\r\nTABLAS OMITIDAS\r\n" + string.Join("\r\n", _resourceCatalog.Notes));
+            if (_resourceCatalog.Notes.Count > 0) _pakDetails.AppendText(Loc.T("\r\n\r\nSKIPPED TABLES\r\n", "\r\n\r\nTABLAS OMITIDAS\r\n") + string.Join("\r\n", _resourceCatalog.Notes));
         }
-        catch (Exception ex) { ShowError("Referencias RDF", ex.Message); }
+        catch (Exception ex) { ShowError(Loc.T("RDF references", "Referencias RDF"), ex.Message); }
     }
 
     private async Task LoadPakReferencesAsync()
     {
-        using var dialog = new OpenFileDialog { Filter = "PAK de tablas Taiwan (*.pak)|*.pak", Title = "Seleccionar tbl.pak con sus unidades" };
+        using var dialog = new OpenFileDialog { Filter = Loc.T("Taiwan table PAK (*.pak)|*.pak", "PAK de tablas Taiwan (*.pak)|*.pak"), Title = Loc.T("Select tbl.pak with its units", "Seleccionar tbl.pak con sus unidades") };
         if (dialog.ShowDialog(this) != DialogResult.OK) return;
         try
         {
-            _pakSummary.Text = "Leyendo referencias RDF desde el PAK de tablas…";
+            _pakSummary.Text = Loc.T("Reading RDF references from the table PAK…", "Leyendo referencias RDF desde el PAK de tablas…");
             var archive = await PakArchive.OpenAsync(dialog.FileName);
             _resourceCatalog = await ResourceCatalog.LoadPakAsync(archive, _schemas);
-            _pakSummary.Text = $"{_resourceCatalog.Count:N0} referencias cargadas de {Path.GetFileName(archive.IndexPath)} / {_resourceCatalog.Notes.Count} tablas omitidas";
+            _pakSummary.Text = Loc.T($"{_resourceCatalog.Count:N0} references loaded from {Path.GetFileName(archive.IndexPath)} / {_resourceCatalog.Notes.Count} tables skipped", $"{_resourceCatalog.Count:N0} referencias cargadas de {Path.GetFileName(archive.IndexPath)} / {_resourceCatalog.Notes.Count} tablas omitidas");
             await PreviewPakAsync();
-            if (_resourceCatalog.Notes.Count > 0) _pakDetails.AppendText("\r\n\r\nTABLAS OMITIDAS\r\n" + string.Join("\r\n", _resourceCatalog.Notes));
+            if (_resourceCatalog.Notes.Count > 0) _pakDetails.AppendText(Loc.T("\r\n\r\nSKIPPED TABLES\r\n", "\r\n\r\nTABLAS OMITIDAS\r\n") + string.Join("\r\n", _resourceCatalog.Notes));
         }
-        catch (Exception ex) { ShowError("Referencias PAK", ex.Message); }
+        catch (Exception ex) { ShowError(Loc.T("PAK references", "Referencias PAK"), ex.Message); }
     }
 
     private static Bitmap DecodeImage(byte[] bytes, string extension)
@@ -228,8 +228,8 @@ internal sealed partial class MainForm
         if (entry == null || archive == null) return;
         _previewCancellation = new CancellationTokenSource(); var token = _previewCancellation.Token;
         string extension = Path.GetExtension(entry.Name).ToLowerInvariant();
-        _pakDetails.Text = $"{entry.Name}\r\n\r\nUnidad: {Path.GetFileName(entry.UnitPath)} / Offset: {entry.Offset:N0}\r\nBytes: {entry.Size:N0} / Estado: {entry.Status}";
-        string references = _resourceCatalog?.Describe(entry.Name) ?? "Cargá Referencias RDF para consultar IDs y nombres asociados.";
+        _pakDetails.Text = Loc.T($"{entry.Name}\r\n\r\nUnit: {Path.GetFileName(entry.UnitPath)} / Offset: {entry.Offset:N0}\r\nBytes: {entry.Size:N0} / Status: {entry.Status}", $"{entry.Name}\r\n\r\nUnidad: {Path.GetFileName(entry.UnitPath)} / Offset: {entry.Offset:N0}\r\nBytes: {entry.Size:N0} / Estado: {entry.Status}");
+        string references = _resourceCatalog?.Describe(entry.Name) ?? Loc.T("Load RDF references to look up IDs and linked names.", "Cargá Referencias RDF para consultar IDs y nombres asociados.");
         if (entry.Size > 128 * 1024 * 1024 || entry.Status != "Disponible") return;
         try
         {
@@ -237,23 +237,23 @@ internal sealed partial class MainForm
             if (generation != _previewGeneration || IsDisposed) return;
             if (extension == ".dff")
             {
-                _pakDetails.AppendText("\r\n\r\nCargando geometría y texturas…");
+                _pakDetails.AppendText(Loc.T("\r\n\r\nLoading geometry and textures…", "\r\n\r\nCargando geometría y texturas…"));
                 var mesh = await NativeMedia.ConvertAsync("model", bytes, extension, token);
                 var model = await Task.Run(() => StudioModel.Parse(mesh), token);
                 var textures = await ReadModelTexturesAsync(model, archive, token);
                 if (generation != _previewGeneration || IsDisposed) return;
                 _modelView.SetModel(model, textures); _modelView.Visible = true; _modelView.BringToFront(); _pakImage.Visible = false;
-                _pakDetails.AppendText($"\r\nPOSE ESTÁTICA / {model.VertexCount:N0} vértices / {model.TriangleCount:N0} triángulos\r\nTexturas: {textures.Count}/{model.TextureNames.Count()} / Sin animación ni composición de personaje.");
+                _pakDetails.AppendText(Loc.T($"\r\nSTATIC POSE / {model.VertexCount:N0} vertices / {model.TriangleCount:N0} triangles\r\nTextures: {textures.Count}/{model.TextureNames.Count()} / No animation or character composition.", $"\r\nPOSE ESTÁTICA / {model.VertexCount:N0} vértices / {model.TriangleCount:N0} triángulos\r\nTexturas: {textures.Count}/{model.TextureNames.Count()} / Sin animación ni composición de personaje."));
                 var missing = model.TextureNames.Where(n => !textures.ContainsKey(n)).Take(20).ToArray();
-                if (missing.Length > 0) _pakDetails.AppendText("\r\nTexturas pendientes: " + string.Join(", ", missing));
+                if (missing.Length > 0) _pakDetails.AppendText(Loc.T("\r\nMissing textures: ", "\r\nTexturas pendientes: ") + string.Join(", ", missing));
             }
             else if (extension is ".wav" or ".ogg" or ".mp3")
             {
-                _pakDetails.AppendText("\r\n\r\nPreparando audio…");
+                _pakDetails.AppendText(Loc.T("\r\n\r\nPreparing audio…", "\r\n\r\nPreparando audio…"));
                 var wave = await NativeMedia.ConvertAsync("audio", bytes, extension, token);
                 if (generation != _previewGeneration || IsDisposed) return;
                 _audioView.LoadWave(wave); _audioView.Visible = true; _audioView.BringToFront(); _pakImage.Visible = false;
-                _pakDetails.AppendText($"\r\nAudio: {_audioView.DurationSeconds:N1} segundos. Pulsá Reproducir para escucharlo.");
+                _pakDetails.AppendText(Loc.T($"\r\nAudio: {_audioView.DurationSeconds:N1} seconds. Press Play to listen.", $"\r\nAudio: {_audioView.DurationSeconds:N1} segundos. Pulsá Reproducir para escucharlo."));
             }
             else if (extension is ".dds" or ".png" or ".jpg" or ".jpeg" or ".bmp")
             {
@@ -262,32 +262,32 @@ internal sealed partial class MainForm
                 _pakImage.Image = bitmap;
             }
             else if (extension is ".txt" or ".xml" or ".srf" or ".frm" or ".ini") _pakDetails.AppendText("\r\n\r\n" + Encoding.UTF8.GetString(bytes.AsSpan(0, Math.Min(bytes.Length, 16000))));
-            else _pakDetails.AppendText("\r\n\r\nSin visor para este formato. Primeros bytes:\r\n" + Convert.ToHexString(bytes.AsSpan(0, Math.Min(64, bytes.Length))));
+            else _pakDetails.AppendText(Loc.T("\r\n\r\nNo viewer for this format. First bytes:\r\n", "\r\n\r\nSin visor para este formato. Primeros bytes:\r\n") + Convert.ToHexString(bytes.AsSpan(0, Math.Min(64, bytes.Length))));
             _pakDetails.AppendText("\r\n\r\n" + references);
             _pakDetails.AppendText("\r\n\r\nSHA256: " + Convert.ToHexString(SHA256.HashData(bytes)));
         }
         catch (OperationCanceledException) { }
-        catch (Exception ex) { if (generation == _previewGeneration && !IsDisposed) _pakDetails.AppendText("\r\n\r\nVista previa: " + ex.Message); }
+        catch (Exception ex) { if (generation == _previewGeneration && !IsDisposed) _pakDetails.AppendText(Loc.T("\r\n\r\nPreview: ", "\r\n\r\nVista previa: ") + ex.Message); }
     }
 
     private async Task ExportPakSelectionAsync(bool editRdf)
     {
         var entry = SelectedPakEntry; var archive = _pak;
-        if (entry == null || archive == null) { ShowError("Seleccionar recurso", "Seleccioná primero un archivo del PAK."); return; }
+        if (entry == null || archive == null) { ShowError(Loc.T("Select resource", "Seleccionar recurso"), Loc.T("Select a file from the PAK first.", "Seleccioná primero un archivo del PAK.")); return; }
         string leaf = Path.GetFileName(entry.Name);
-        if (editRdf && RdfSchema.Detect(leaf, _schemas) == null) { ShowError("Esquema no soportado", "Este recurso no tiene un esquema RDF Taiwan registrado."); return; }
+        if (editRdf && RdfSchema.Detect(leaf, _schemas) == null) { ShowError(Loc.T("Unsupported schema", "Esquema no soportado"), Loc.T("This resource has no registered Taiwan RDF schema.", "Este recurso no tiene un esquema RDF Taiwan registrado.")); return; }
         try
         {
             byte[] bytes = await archive.ReadAsync(entry);
             string folder = Path.Combine(DefaultStagingFolder(), "pak-extract", Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(folder);
             // Use only a filename, never an archive-controlled directory hierarchy.
-            if (leaf.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || leaf.Length == 0) throw new InvalidDataException("Nombre de recurso no exportable.");
+            if (leaf.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || leaf.Length == 0) throw new InvalidDataException("Resource name cannot be exported.");
             string target = Path.Combine(folder, leaf);
             await File.WriteAllBytesAsync(target, bytes);
             if (editRdf) { LoadRdfPath(target); _tabs.SelectedIndex = 0; }
-            else MessageBox.Show(this, "Recurso extraído:\n" + target, "Extracción completada");
+            else MessageBox.Show(this, Loc.T("Resource extracted:\n", "Recurso extraído:\n") + target, Loc.T("Extraction complete", "Extracción completada"));
         }
-        catch (Exception ex) { ShowError("No se pudo extraer", ex.Message); }
+        catch (Exception ex) { ShowError(Loc.T("Could not extract", "No se pudo extraer"), ex.Message); }
     }
 }

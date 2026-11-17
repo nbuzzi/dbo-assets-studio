@@ -14,7 +14,7 @@ internal static class UiCodegen
     {
         var status = UiRenderService.Status(layoutPath);
         bool approved = (bool)status.GetType().GetProperty("approved")!.GetValue(status)!;
-        if (!approved && !allowUnapproved) throw new InvalidOperationException("El layout no está aprobado (o cambió después de aprobarse). Generá la revisión con 'ui review', pedí OK y registralo con 'ui approve'. Solo para pruebas: --allow-unapproved.");
+        if (!approved && !allowUnapproved) throw new InvalidOperationException("The layout is not approved (or it changed after approval). Generate the review with 'ui review', get an OK and record it with 'ui approve'. For tests only: --allow-unapproved.");
         var layout = UiLayout.Load(layoutPath);
         var scene = layout.Resolve("default", includeHidden: true);
         string ns = "UiLayout_" + Regex.Replace(layout.Name, @"[^A-Za-z0-9]+(.)?", m => m.Groups[1].Value.ToUpperInvariant());
@@ -100,8 +100,8 @@ internal static class UiCodegen
             else
             {
                 string name = Path.GetFileName(f.StartsWith("pak:", StringComparison.OrdinalIgnoreCase) ? f.Split('|').Last() : f);
-                notes.Add($"{name}: imagen nueva; embebela con scripts/embed-hud-art.py (o copiala a texture\\gui) y cambiá el asset a embedded:/gui:.");
-                Emit($"\t\tgui::CTexture* {v} = LoadEmbeddedHudArt(\"{name}\"); if ({v}) textures.push_back({v}); // TODO: asset nuevo, embeber primero");
+                notes.Add($"{name}: new image; embed it with scripts/embed-hud-art.py (or copy it to texture\\gui) and change the asset to embedded:/gui:.");
+                Emit($"\t\tgui::CTexture* {v} = LoadEmbeddedHudArt(\"{name}\"); if ({v}) textures.push_back({v}); // TODO: new asset, embed it first");
             }
             return v;
         }
@@ -142,14 +142,14 @@ internal static class UiCodegen
                         if (imgs.Count > 0 || (c.Fill >> 24) != 0) Emit($"\t\t{target} = NTL_NEW gui::CPanel(rc, {par.Var}, pSurf, {Surf(imgs.FirstOrDefault(), c.Width, c.Height, c.Fill)});");
                         else Emit($"\t\t{target} = NTL_NEW gui::CPanel(rc, {par.Var}, pSurf);");
                         foreach (var extra in imgs.Skip(1)) Emit($"\t\t{target}->AddSurface({Surf(extra, c.Width, c.Height, 0)});");
-                        if (c.Type is "progress" or "scroll") notes.Add($"{c.Id}: {c.Type} se genera como panel de fondo; la barra/thumb se actualiza en el código de la ventana.");
+                        if (c.Type is "progress" or "scroll") notes.Add($"{c.Id}: {c.Type} is generated as a background panel; the window code updates the bar/thumb.");
                         break;
                     case "label":
                         Emit($"\t\t{target} = NTL_NEW gui::CStaticBox(rc, {par.Var}, pSurf, {id}_STYLE);");
                         Emit($"\t\t{target}->CreateFontStd({FontName(c)}, {id}_FONT, {id}_FONT_ATTR); {target}->SetTextColor({id}_COLOR);");
                         foreach (var bg in imgs) Emit($"\t\t{target}->AddSurface({Surf(bg, c.Width, c.Height, 0)});");
                         if (c.Shadow) Emit($"\t\t{target}->SetEffectMode(TE_SHADOW);");
-                        if (!string.IsNullOrEmpty(c.Text)) Emit($"\t\t{target}->SetText(L\"{W(c.Text)}\"); // texto de muestra del layout");
+                        if (!string.IsNullOrEmpty(c.Text)) Emit($"\t\t{target}->SetText(L\"{W(c.Text)}\"); // sample text from the layout");
                         break;
                     case "button":
                         Emit($"\t\t{target} = NTL_NEW gui::CButton(rc, std::wstring(L\"{W(c.Text ?? "")}\"), {par.Var}, pSurf);");
@@ -166,14 +166,14 @@ internal static class UiCodegen
                     case "flash":
                     {
                         string swf = c.File == null ? "" : c.File.StartsWith("flash:", StringComparison.OrdinalIgnoreCase) ? c.File[6..] : Path.GetFileName(c.File);
-                        if (c.File != null && !c.File.StartsWith("flash:", StringComparison.OrdinalIgnoreCase)) notes.Add($"{swf}: película nueva; agregala a flash.pak como flash\\{Path.GetFileNameWithoutExtension(swf)}\\{swf}.");
+                        if (c.File != null && !c.File.StartsWith("flash:", StringComparison.OrdinalIgnoreCase)) notes.Add($"{swf}: new movie; add it to flash.pak as flash\\{Path.GetFileNameWithoutExtension(swf)}\\{swf}.");
                         Emit($"\t\t{target} = NTL_NEW gui::CFlash(rc, {par.Var}, pSurf, \"{swf}\", TRUE);");
                         if (c.Frame >= 0) Emit($"\t\t{target}->GotoFrame({c.Frame});");
                         break;
                     }
                 }
                 if (par.Var != "pDialog" && c.Type != "group") Emit($"\t\t{target}->SetClippingMode(true);");
-                if (c.Hidden) Emit($"\t\t{target}->Show(false); // oculto: lo muestra el código de la ventana");
+                if (c.Hidden) Emit($"\t\t{target}->Show(false); // hidden: the window code shows it");
                 if (c.Clip) clipVar[c.Id] = (target, c.X, c.Y);
             }
         }

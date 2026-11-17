@@ -8,7 +8,7 @@ internal static class WorkspaceContentValidation
         if (destination.EndsWith(".wps", StringComparison.OrdinalIgnoreCase))
         {
             var wps = WpsDocument.Load(file);
-            if (!wps.CanMutate || wps.Diagnostics.Any(d => d.Severity == "error")) throw new IOException("WPS con errores estructurales/semánticos: " + destination);
+            if (!wps.CanMutate || wps.Diagnostics.Any(d => d.Severity == "error")) throw new IOException("WPS has structural/semantic errors: " + destination);
             return;
         }
         if (destination.StartsWith("client/")) return; // Canonical PAK receipt validates these.
@@ -32,13 +32,13 @@ internal static class WorkspaceContentValidation
             int stride = leaf.Equals("table_mob_data_server.rdf", StringComparison.OrdinalIgnoreCase) ? 12 : 584;
             schema = new RdfSchema { Name = "TaiwanMOBWorkspace", FileName = leaf, Sheet = "MOB", RowSize = stride, Fields = [new("tblidx", "int", 1, 0), new("body", "byte", stride - 4, 4)] };
         }
-        if (schema == null) throw new IOException("RDF sin esquema Taiwan registrado: " + destination + ". Extender el motor antes de incluirlo en una entrega.");
+        if (schema == null) throw new IOException("RDF without a registered Taiwan schema: " + destination + ". Extend the engine before including it in a delivery.");
         var document = RdfDocument.Open(file, schema); var key = schema.Fields.Single(f => f.Name == schema.KeyField);
         var ids = new HashSet<string>();
         foreach (var row in document.Rows)
         {
             string id = schema.Decode(key, row.Original);
-            if (!ids.Add(id)) throw new IOException("RDF con ID duplicado: " + destination + " / " + id);
+            if (!ids.Add(id)) throw new IOException("RDF with duplicate ID: " + destination + " / " + id);
         }
     }
 }

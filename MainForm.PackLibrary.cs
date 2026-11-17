@@ -12,7 +12,7 @@ internal sealed partial class MainForm
         if (tables != null)
         {
             try { references = await ResourceCatalog.LoadPakAsync(tables, _schemas); }
-            catch (Exception ex) { library.Notes.Add("Referencias RDF: " + ex.Message); }
+            catch (Exception ex) { library.Notes.Add("RDF references: " + ex.Message); }
         }
         _modernPreview?.Cancel(); _packLibrary = library; _pak = null; _looseResources = []; _modernSource = library.Root;
         _resourceCatalog = references; _textureArchive = null; _selectedResource = null;
@@ -25,7 +25,7 @@ internal sealed partial class MainForm
         if (_packLibrary != null) { var row = _packLibrary.Get(key); return (row.Archive, row.Entry); }
         if (_pak != null)
         {
-            if (!int.TryParse(key, out int index) || index < 0 || index >= _pak.Entries.Count) throw new ArgumentException("Selección de recurso inválida.");
+            if (!int.TryParse(key, out int index) || index < 0 || index >= _pak.Entries.Count) throw new ArgumentException("Invalid resource selection.");
             return (_pak, _pak.Entries[index]);
         }
         return (null, null);

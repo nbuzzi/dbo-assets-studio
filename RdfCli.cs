@@ -74,7 +74,7 @@ internal static class RdfCli
         using var json = JsonDocument.Parse(selectionLock);
         TerrainGeometryService.NoDuplicateKeys(json.RootElement);
         var input = json.RootElement;
-        if (input.GetProperty("version").GetInt32() != 1) throw new InvalidDataException("Protected-row selection version1 required.");
+        if (input.GetProperty("version").GetInt32() != 1) throw new InvalidDataException("Protected-row selection version 1 required.");
         var (baseDoc, key) = Open(before);
         // Use the same explicitly registered schema for both snapshots.
         var proposed = RdfDocument.Open(candidate, baseDoc.Schema);
@@ -367,12 +367,12 @@ internal static class RdfCli
         foreach (var row in doc.Rows)
         {
             string id = doc.Schema.Decode(key, row.Current);
-            if (id is "0" or "4294967295" || !ids.Add(id)) throw new InvalidDataException("ID inválido o duplicado: " + id);
+            if (id is "0" or "4294967295" || !ids.Add(id)) throw new InvalidDataException("Invalid or duplicate ID: " + id);
             if (doc.Schema.Name == "CharTitle" && (!uint.TryParse(id, out uint titleId) || titleId > 512))
                 throw new InvalidDataException("CharTitle ID must fit Taiwan ownership bits: 1..512.");
             foreach (var field in doc.Schema.Fields.Where(f => f.IsPadding))
                 if (!row.Current.AsSpan(field.Offset, field.Size).SequenceEqual(row.Original.AsSpan(field.Offset, field.Size)))
-                    throw new InvalidDataException("Se modificó padding reservado.");
+                    throw new InvalidDataException("Reserved padding was modified.");
         }
         if (doc.Rows.Count > 0 && doc.Rows.Count > (512 * 1024 * 1024 - 1) / doc.Schema.RowSize)
             throw new InvalidDataException("Output RDF exceeds the 512 MiB safety limit.");

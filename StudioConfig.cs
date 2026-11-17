@@ -78,8 +78,8 @@ internal static class StudioConfig
     public static void ApplyPakKey(ProcessStartInfo start)
     {
         string key = PakKey() ?? throw new InvalidOperationException(
-            $"Falta la clave de los PAK. Copiá {FileName.Replace(".json", ".example.json")} a {FileName}, " +
-            $"completá \"pakKey\" (o definí la variable de entorno {PakKeyVariable}). Ver README.");
+            $"The PAK key is missing. Copy {FileName.Replace(".json", ".example.json")} to {FileName}, " +
+            $"fill in \"pakKey\" (or set the {PakKeyVariable} environment variable). See README.");
         start.Environment[PakKeyVariable] = key;
     }
 }

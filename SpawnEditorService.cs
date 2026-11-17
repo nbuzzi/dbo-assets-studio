@@ -88,21 +88,21 @@ internal sealed class SpawnEditSession
     public void UseTablesFolder(string folder)
     {
         folder = System.IO.Path.GetFullPath(folder);
-        if (!Directory.Exists(folder)) throw new DirectoryNotFoundException("La carpeta de tablas no existe: " + folder);
+        if (!Directory.Exists(folder)) throw new DirectoryNotFoundException("The table folder does not exist: " + folder);
         _tablesFolder = folder; _table = null;
     }
     /// <summary>Raises the floor for auto-assigned IDs (new maps use their own block, e.g. world 61006 -> 61006000).</summary>
     public void SetFirstId(uint firstId)
     {
-        if (firstId == 0 || firstId == uint.MaxValue) throw new ArgumentException("El primer ID debe estar entre 1 y 4294967294.");
+        if (firstId == 0 || firstId == uint.MaxValue) throw new ArgumentException("The first ID must be between 1 and 4294967294.");
         if (firstId - 1 > _maxId) _maxId = firstId - 1;
     }
 
     /// <summary>Creates an EMPTY spawn table (just the Taiwan margin byte) in a NEW folder, to populate a new map.</summary>
     public static string CreateEmptyFile(string outputDirectory, string kind, string name)
     {
-        if (kind is not ("mob" or "npc")) throw new ArgumentException("kind debe ser mob o npc.");
-        if (!System.Text.RegularExpressions.Regex.IsMatch(name ?? "", "^[a-z0-9_]{1,40}$")) throw new ArgumentException("El nombre del mapa debe ser a-z, 0-9 o _ (1 a 40).");
+        if (kind is not ("mob" or "npc")) throw new ArgumentException("kind must be mob or npc.");
+        if (!System.Text.RegularExpressions.Regex.IsMatch(name ?? "", "^[a-z0-9_]{1,40}$")) throw new ArgumentException("The map name must be a-z, 0-9 or _ (1 to 40).");
         string output = ContentSafety.SafeOutput(outputDirectory);
         string pending = ContentSafety.FreshDirectory(output);
         string file = $"spawn_{kind}_{name}.rdf";
@@ -114,7 +114,7 @@ internal sealed class SpawnEditSession
     public void TryAttachCatalog(string? folder = null)
     {
         try { Catalog = SpawnCatalog.Load(folder ?? TablesFolder); CatalogNote = Catalog.For(Kind).Count == 0 ? string.Join(" ", Catalog.Notes) : null; }
-        catch (Exception ex) { Catalog = null; CatalogNote = "Catálogo no disponible: " + ex.Message; }
+        catch (Exception ex) { Catalog = null; CatalogNote = "Catalog not available: " + ex.Message; }
     }
 
     private SpawnEditSession(string path, string kind, string sha, byte margin, Layout l, List<Row> rows)
@@ -126,9 +126,9 @@ internal sealed class SpawnEditSession
 
     public static SpawnEditSession Open(string path, string kind)
     {
-        string schemaName = kind switch { "mob" => "MobSpawn", "npc" => "NpcSpawn", _ => throw new ArgumentException("kind debe ser mob o npc.") };
+        string schemaName = kind switch { "mob" => "MobSpawn", "npc" => "NpcSpawn", _ => throw new ArgumentException("kind must be mob or npc.") };
         var schema = RdfSchema.LoadCatalog(RdfCli.LocateCatalog()).Single(s => s.Name == schemaName);
-        if (schema.RowSize != RowSize) throw new InvalidDataException("El esquema de spawn debe medir 84 bytes.");
+        if (schema.RowSize != RowSize) throw new InvalidDataException("The spawn schema must be 84 bytes.");
         var doc = RdfDocument.Open(path, schema);
         int Off(string n) => schema.Fields.Single(f => f.Name.Equals(n, StringComparison.OrdinalIgnoreCase)).Offset;
         var l = new Layout(Off("tblidx"), Off(kind == "mob" ? "mob_tblidx" : "npc_tblidx"), Off("vSpawn_Loc"), Off("vSpawn_Dir"),
@@ -143,10 +143,10 @@ internal sealed class SpawnEditSession
     private static readonly ConcurrentDictionary<string, SpawnEditSession> Sessions = new();
     public static SpawnEditSession Register(SpawnEditSession s)
     {
-        if (Sessions.Count >= 4) throw new InvalidOperationException("Hay demasiadas sesiones de edición abiertas; cerrá una.");
+        if (Sessions.Count >= 4) throw new InvalidOperationException("Too many edit sessions are open; close one.");
         Sessions[s.SessionId] = s; return s;
     }
-    public static SpawnEditSession Get(string id) => Sessions.TryGetValue(id, out var s) ? s : throw new KeyNotFoundException("Sesión de spawns inexistente o cerrada.");
+    public static SpawnEditSession Get(string id) => Sessions.TryGetValue(id, out var s) ? s : throw new KeyNotFoundException("Spawn session not found or closed.");
     public static void Close(string id) => Sessions.TryRemove(id, out _);
 
     // ---- byte helpers ----
@@ -188,7 +188,7 @@ internal sealed class SpawnEditSession
     }
 
     // ---- edits ----
-    private Row Req(int uid) => _byUid.TryGetValue(uid, out var r) && !r.Deleted ? r : throw new ArgumentException($"Spawn uid {uid} no existe o está borrado.");
+    private Row Req(int uid) => _byUid.TryGetValue(uid, out var r) && !r.Deleted ? r : throw new ArgumentException($"Spawn uid {uid} does not exist or was deleted.");
 
     private object Commit(Edit e)
     {
@@ -215,7 +215,7 @@ internal sealed class SpawnEditSession
 
     public object Undo()
     {
-        if (_undo.Count == 0) throw new InvalidOperationException("Nada para deshacer.");
+        if (_undo.Count == 0) throw new InvalidOperationException("Nothing to undo.");
         var e = _undo.Pop();
         foreach (var c in Enumerable.Reverse(e.Changes)) ApplyBackward(c);
         foreach (var t in Enumerable.Reverse(e.TableChanges)) t.Table.Rows[t.RowIndex] = t.Before;
@@ -225,7 +225,7 @@ internal sealed class SpawnEditSession
 
     public object Redo()
     {
-        if (_redo.Count == 0) throw new InvalidOperationException("Nada para rehacer.");
+        if (_redo.Count == 0) throw new InvalidOperationException("Nothing to redo.");
         var e = _redo.Pop();
         foreach (var c in e.Changes) ApplyForward(c);
         foreach (var t in e.TableChanges) t.Table.Rows[t.RowIndex] = t.After;
@@ -238,7 +238,7 @@ internal sealed class SpawnEditSession
 
     private static void CheckFinite(params float[] v)
     {
-        foreach (float f in v) if (!float.IsFinite(f) || Math.Abs(f) > CoordLimit) throw new ArgumentException("Coordenada inválida (NaN/infinito/fuera de ±1.000.000).");
+        foreach (float f in v) if (!float.IsFinite(f) || Math.Abs(f) > CoordLimit) throw new ArgumentException("Invalid coordinate (NaN/infinity/outside ±1,000,000).");
     }
 
     private Change Modify(Row r, Action<byte[]> mutate)
@@ -284,12 +284,12 @@ internal sealed class SpawnEditSession
 
     public object SetFields(IEnumerable<int> uids, IReadOnlyDictionary<string, double> fields)
     {
-        if (fields.Count == 0) throw new ArgumentException("No hay campos para cambiar.");
+        if (fields.Count == 0) throw new ArgumentException("No fields to change.");
         foreach (var (name, value) in fields)
         {
-            if (!FieldLimits.TryGetValue(name, out var lim)) throw new ArgumentException($"Campo no editable: {name}.");
+            if (!FieldLimits.TryGetValue(name, out var lim)) throw new ArgumentException($"Field not editable: {name}.");
             if (!double.IsFinite(value) || value != Math.Floor(value) || value < lim.Min || value > lim.Max)
-                throw new ArgumentException($"{name}: valor fuera de rango {lim.Min}..{lim.Max}.");
+                throw new ArgumentException($"{name}: value out of range {lim.Min}..{lim.Max}.");
         }
         var e = new Edit { Name = "set-fields" };
         foreach (int uid in uids)
@@ -336,7 +336,7 @@ internal sealed class SpawnEditSession
         foreach (int uid in uids.Distinct())
         {
             var src = Req(uid);
-            if (next >= uint.MaxValue - 1) throw new InvalidOperationException("No quedan IDs libres en este archivo.");
+            if (next >= uint.MaxValue - 1) throw new InvalidOperationException("No free IDs left in this file.");
             next++;
             var data = (byte[])src.Data.Clone();
             WriteU32(data, _l.Id, next);
@@ -363,10 +363,10 @@ internal sealed class SpawnEditSession
         foreach (var it in items)
         {
             CheckFinite(it.X, it.Y, it.Z, it.DirX, it.DirZ);
-            if (it.RefId == 0 || it.RefId == uint.MaxValue) throw new ArgumentException("Referencia de mob/NPC inválida.");
+            if (it.RefId == 0 || it.RefId == uint.MaxValue) throw new ArgumentException("Invalid mob/NPC reference.");
             if (Catalog != null && Catalog.For(Kind).Count > 0 && !Catalog.For(Kind).ContainsKey(it.RefId))
-                throw new ArgumentException($"El {(Kind == "npc" ? "NPC" : "mob")} {it.RefId} no existe o está inactivo en el catálogo.");
-            if (next >= uint.MaxValue - 1) throw new InvalidOperationException("No quedan IDs libres en este archivo.");
+                throw new ArgumentException($"{(Kind == "npc" ? "NPC" : "mob")} {it.RefId} does not exist or is inactive in the catalog.");
+            if (next >= uint.MaxValue - 1) throw new InvalidOperationException("No free IDs left in this file.");
             next++;
             Row? template = it.TemplateUid is int tu ? Req(tu) : _rows.FirstOrDefault(r => !r.Deleted && ReadU32(r.Data, _l.Ref) == it.RefId);
             byte[] data; string source;
@@ -382,7 +382,7 @@ internal sealed class SpawnEditSession
             var row = new Row { Uid = _nextUid++, Data = data, Original = null, Source = source };
             e.Changes.Add(new Change(row, data, data, false, false, true));
         }
-        if (e.Changes.Count == 0) throw new ArgumentException("No hay spawns para agregar.");
+        if (e.Changes.Count == 0) throw new ArgumentException("No spawns to add.");
         return Commit(e);
     }
 
@@ -401,9 +401,9 @@ internal sealed class SpawnEditSession
         if (_table != null) return _table;
         string file = Kind == "npc" ? "Table_NPC_Data.rdf" : "Table_Mob_Data.rdf";
         string path = System.IO.Path.Combine(TablesFolder, file);
-        if (!File.Exists(path)) throw new FileNotFoundException($"No se encontró {file} junto al archivo de spawns; no se puede editar la fila del {(Kind == "npc" ? "NPC" : "mob")}.");
+        if (!File.Exists(path)) throw new FileNotFoundException($"{file} was not found next to the spawn file; the {(Kind == "npc" ? "NPC" : "mob")} row cannot be edited.");
         var schema = RdfSchema.LoadCatalog(RdfCli.LocateCatalog()).FirstOrDefault(x => x.Name == (Kind == "npc" ? "NpcData" : "MobData"))
-            ?? throw new InvalidDataException("No hay esquema registrado para la tabla maestra.");
+            ?? throw new InvalidDataException("No schema registered for the master table.");
         var doc = RdfDocument.Open(path, schema);
         var idField = schema.Fields.First(f => f.Name.Equals("tblidx", StringComparison.OrdinalIgnoreCase));
         var index = new Dictionary<uint, int>();
@@ -429,14 +429,14 @@ internal sealed class SpawnEditSession
     public object TableRow(uint id)
     {
         var t = LoadTable();
-        if (!t.Index.TryGetValue(id, out int idx)) throw new ArgumentException($"El {(Kind == "npc" ? "NPC" : "mob")} {id} no existe en {System.IO.Path.GetFileName(t.Path)}.");
+        if (!t.Index.TryGetValue(id, out int idx)) throw new ArgumentException($"{(Kind == "npc" ? "NPC" : "mob")} {id} does not exist in {System.IO.Path.GetFileName(t.Path)}.");
         var row = t.Rows[idx]; var orig = t.Originals[idx];
         return new
         {
             id, table = System.IO.Path.GetFileName(t.Path), kind = Kind,
             spawnsUsing = _rows.Count(r => !r.Deleted && ReadU32(r.Data, _l.Ref) == id),
             modified = !row.AsSpan().SequenceEqual(orig),
-            warning = "Esta fila es compartida por TODOS los spawns de este mob/NPC en todos los mundos, y la tabla también la lee el cliente (tbl.pak): el cambio exige publicar cliente y servidor en la misma versión.",
+            warning = "This row is shared by ALL spawns of this mob/NPC in every world, and the client also reads the table (tbl.pak): the change requires publishing client and server in the same version.",
             fields = t.Schema.Fields.Where(f => !f.IsPadding).Select(f => new
             {
                 key = FieldKey(f), name = f.Name, type = f.Type, count = f.Count,
@@ -450,15 +450,15 @@ internal sealed class SpawnEditSession
     public object TableSet(uint id, IReadOnlyDictionary<string, string> values)
     {
         var t = LoadTable();
-        if (!t.Index.TryGetValue(id, out int idx)) throw new ArgumentException($"El {(Kind == "npc" ? "NPC" : "mob")} {id} no existe en {System.IO.Path.GetFileName(t.Path)}.");
-        if (values.Count == 0) throw new ArgumentException("No hay campos para cambiar.");
+        if (!t.Index.TryGetValue(id, out int idx)) throw new ArgumentException($"{(Kind == "npc" ? "NPC" : "mob")} {id} does not exist in {System.IO.Path.GetFileName(t.Path)}.");
+        if (values.Count == 0) throw new ArgumentException("No fields to change.");
         var after = (byte[])t.Rows[idx].Clone();
         foreach (var (key, text) in values)
         {
-            var f = t.Schema.Fields.FirstOrDefault(x => !x.IsPadding && FieldKey(x) == key) ?? throw new ArgumentException($"Campo desconocido o no editable: {key}.");
-            if (ReferenceEquals(f, t.IdField)) throw new ArgumentException("El tblidx no se puede cambiar.");
+            var f = t.Schema.Fields.FirstOrDefault(x => !x.IsPadding && FieldKey(x) == key) ?? throw new ArgumentException($"Unknown or non-editable field: {key}.");
+            if (ReferenceEquals(f, t.IdField)) throw new ArgumentException("The tblidx cannot be changed.");
             try { t.Schema.Encode(f, text, after); }
-            catch (Exception ex) when (ex is FormatException or OverflowException or ArgumentException) { throw new ArgumentException($"{f.Name}: valor inválido ({ex.Message})"); }
+            catch (Exception ex) when (ex is FormatException or OverflowException or ArgumentException) { throw new ArgumentException($"{f.Name}: invalid value ({ex.Message})"); }
         }
         var e = new Edit { Name = "table-set" };
         if (!after.AsSpan().SequenceEqual(t.Rows[idx])) e.TableChanges.Add(new TableChange(t, idx, (byte[])t.Rows[idx].Clone(), after));
@@ -476,14 +476,14 @@ internal sealed class SpawnEditSession
         foreach (var r in _rows.Where(r => !r.Deleted))
         {
             uint id = ReadU32(r.Data, _l.Id);
-            if (id == 0 || id == uint.MaxValue) issues.Add(new Issue("error", $"ID inválido {id}.", r.Uid));
-            else if (!ids.TryAdd(id, r.Uid)) issues.Add(new Issue("error", $"ID duplicado {id} (uid {ids[id]} y {r.Uid}).", r.Uid));
+            if (id == 0 || id == uint.MaxValue) issues.Add(new Issue("error", $"Invalid ID {id}.", r.Uid));
+            else if (!ids.TryAdd(id, r.Uid)) issues.Add(new Issue("error", $"Duplicate ID {id} (uid {ids[id]} and {r.Uid}).", r.Uid));
             foreach (int o in new[] { _l.Loc, _l.Loc + 4, _l.Loc + 8, _l.Dir, _l.Dir + 4, _l.Dir + 8 })
-                if (!float.IsFinite(ReadF(r.Data, o))) { issues.Add(new Issue("error", "Coordenada o dirección no finita.", r.Uid)); break; }
-            if (ReadU32(r.Data, _l.Ref) == 0) issues.Add(new Issue("warning", "Referencia de mob/NPC en 0.", r.Uid));
+                if (!float.IsFinite(ReadF(r.Data, o))) { issues.Add(new Issue("error", "Non-finite coordinate or direction.", r.Uid)); break; }
+            if (ReadU32(r.Data, _l.Ref) == 0) issues.Add(new Issue("warning", "Mob/NPC reference is 0.", r.Uid));
         }
         if (_table?.IsDirty == true)
-            issues.Add(new Issue("warning", $"Se modificaron {_table.ModifiedCount} fila(s) de {System.IO.Path.GetFileName(_table.Path)}: la tabla es compartida por todos los mundos y la lee el cliente (tbl.pak); publicar cliente y servidor juntos.", null));
+            issues.Add(new Issue("warning", $"{_table.ModifiedCount} row(s) of {System.IO.Path.GetFileName(_table.Path)} were modified: the table is shared by every world and the client reads it (tbl.pak); publish client and server together.", null));
         if (Catalog != null && Catalog.For(Kind).Count > 0)
         {
             var cat = Catalog.For(Kind); int legacyUnresolved = 0;
@@ -493,13 +493,13 @@ internal sealed class SpawnEditSession
                 bool touched = r.IsNew || (r.Original != null && ReadU32(r.Original, _l.Ref) != rf);
                 if (!cat.TryGetValue(rf, out var entry))
                 {
-                    if (touched) issues.Add(new Issue("error", $"La referencia {rf} no existe o está inactiva en el catálogo.", r.Uid)); else legacyUnresolved++;
+                    if (touched) issues.Add(new Issue("error", $"Reference {rf} does not exist or is inactive in the catalog.", r.Uid)); else legacyUnresolved++;
                     continue;
                 }
                 if (touched && Kind == "mob" && entry.Level > SpawnCatalog.MainWorldMobLevelCap)
-                    issues.Add(new Issue("warning", $"{entry.Name} ({rf}) es nivel {entry.Level}: en mundos con tblidx <= 15 el servidor descarta mobs sobre nivel {SpawnCatalog.MainWorldMobLevelCap}.", r.Uid));
+                    issues.Add(new Issue("warning", $"{entry.Name} ({rf}) is level {entry.Level}: in worlds with tblidx <= 15 the server drops mobs above level {SpawnCatalog.MainWorldMobLevelCap}.", r.Uid));
             }
-            if (legacyUnresolved > 0) issues.Add(new Issue("warning", $"{legacyUnresolved} filas preexistentes referencian mobs/NPC inactivos o ausentes (no se tocaron).", null));
+            if (legacyUnresolved > 0) issues.Add(new Issue("warning", $"{legacyUnresolved} existing rows reference inactive or missing mobs/NPCs (left untouched).", null));
         }
         else if (CatalogNote != null) issues.Add(new Issue("warning", CatalogNote, null));
         // New rows get IDs that are only unique inside this file: cross-check other spawn tables when provided.
@@ -511,11 +511,11 @@ internal sealed class SpawnEditSession
             {
                 uint id = ReadU32(r.Data, o._l.Id);
                 if (ids.TryGetValue(id, out int uid) && _byUid[uid].IsNew)
-                    issues.Add(new Issue("error", $"El ID nuevo {id} ya existe en {Path.GetFileName(other)}.", uid));
+                    issues.Add(new Issue("error", $"New ID {id} already exists in {Path.GetFileName(other)}.", uid));
             }
         }
         if (_rows.Any(r => r.IsNew && !r.Deleted) && alsoCheckAgainst == null)
-            issues.Add(new Issue("warning", "Hay IDs nuevos asignados automáticamente (máximo+1 del archivo); no se comprobaron contra otras tablas de spawn.", null));
+            issues.Add(new Issue("warning", "New IDs were assigned automatically (file maximum + 1); they were not checked against other spawn tables.", null));
         return issues;
     }
 
@@ -555,7 +555,7 @@ internal sealed class SpawnEditSession
         using (var src = new FileStream(t.Path, FileMode.Open, FileAccess.Read, FileShare.Read))
         {
             if (!Convert.ToHexString(SHA256.HashData(src)).Equals(t.Sha, StringComparison.OrdinalIgnoreCase))
-                throw new IOException($"{name} cambió desde que se abrió; abrí la sesión de nuevo antes de guardar.");
+                throw new IOException($"{name} changed since it was opened; open the session again before saving.");
             src.Position = 0;
             using var snap = new FileStream(snapPath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
             src.CopyTo(snap); snap.Flush(true);
@@ -565,17 +565,17 @@ internal sealed class SpawnEditSession
         for (int i = 0; i < t.Rows.Count; i++) t.Rows[i].CopyTo(bytes, 1 + i * rowSize);
         using (var fs = new FileStream(candPath, FileMode.CreateNew, FileAccess.Write, FileShare.None)) { fs.Write(bytes); fs.Flush(true); }
         var back = File.ReadAllBytes(candPath);
-        if (back.Length != bytes.Length || !back.AsSpan().SequenceEqual(bytes)) throw new IOException($"El candidato de {name} escrito no coincide con la edición.");
+        if (back.Length != bytes.Length || !back.AsSpan().SequenceEqual(bytes)) throw new IOException($"The written candidate of {name} does not match the edit.");
         // Original file layout must be preserved exactly outside the edited rows.
         var original = File.ReadAllBytes(snapPath);
-        if (original.Length != bytes.Length) throw new IOException($"{name}: el tamaño del candidato difiere del original.");
+        if (original.Length != bytes.Length) throw new IOException($"{name}: the candidate size differs from the original.");
         int unchanged = 0;
         var diffs = new List<object>();
         for (int i = 0; i < t.Rows.Count; i++)
         {
             if (!t.Rows[i].AsSpan().SequenceEqual(t.Originals[i]))
             {
-                if (!original.AsSpan(1 + i * rowSize, rowSize).SequenceEqual(t.Originals[i])) throw new IOException($"{name}: la fila {i} del snapshot no coincide con la leída.");
+                if (!original.AsSpan(1 + i * rowSize, rowSize).SequenceEqual(t.Originals[i])) throw new IOException($"{name}: snapshot row {i} does not match the row that was read.");
                 diffs.Add(new
                 {
                     id = t.IdOf(t.Rows[i]),
@@ -590,22 +590,22 @@ internal sealed class SpawnEditSession
             file = name, sourcePath = t.Path, sourceSha256 = t.Sha, snapshot = System.IO.Path.GetRelativePath(pending, snapPath),
             candidate = System.IO.Path.GetRelativePath(pending, candPath), candidateSha256 = Convert.ToHexString(SHA256.HashData(bytes)),
             rows = t.Rows.Count, unchangedRowsVerifiedByteIdentical = unchanged, modifiedRows = diffs.Count, diffs,
-            note = "Tabla compartida con el cliente (tbl.pak) y con todos los mundos: publicar cliente y servidor en la misma versión."
+            note = "Table shared with the client (tbl.pak) and every world: publish client and server in the same version."
         };
     }
 
     public object SaveCandidate(string outputDirectory, IEnumerable<string>? alsoCheckAgainst = null)
     {
         var issues = Validate(alsoCheckAgainst);
-        if (issues.Any(i => i.Severity == "error")) throw new InvalidOperationException("La validación encontró errores; no se guardó candidato: " + string.Join(" | ", issues.Where(i => i.Severity == "error").Take(5).Select(i => i.Message)));
+        if (issues.Any(i => i.Severity == "error")) throw new InvalidOperationException("Validation found errors; no candidate was saved: " + string.Join(" | ", issues.Where(i => i.Severity == "error").Take(5).Select(i => i.Message)));
         var counts0 = SpawnCounts();
         bool spawnDirty = counts0.Modified + counts0.Added + counts0.Deleted > 0, tableDirty = _table?.IsDirty == true;
-        if (!spawnDirty && !tableDirty) throw new InvalidOperationException("No hay cambios para guardar.");
+        if (!spawnDirty && !tableDirty) throw new InvalidOperationException("No changes to save.");
         string output = ContentSafety.SafeOutput(outputDirectory);
         foreach (string src0 in new[] { SourcePath, _table?.Path ?? SourcePath })
             if (Path.GetFullPath(src0).StartsWith(output + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) || Path.GetFullPath(src0).Equals(output, StringComparison.OrdinalIgnoreCase))
-                throw new IOException("La salida no puede reemplazar ni contener un archivo fuente.");
-        if (!File.Exists(SourcePath)) throw new IOException("El archivo fuente ya no existe.");
+                throw new IOException("The output cannot replace or contain a source file.");
+        if (!File.Exists(SourcePath)) throw new IOException("The source file no longer exists.");
         string pending = ContentSafety.FreshDirectory(output);
         string name = Path.GetFileName(SourcePath);
         string snapDir = Path.Combine(pending, "snapshot"), candDir = Path.Combine(pending, "candidate");
@@ -618,7 +618,7 @@ internal sealed class SpawnEditSession
             using (var src = new FileStream(SourcePath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 if (!Convert.ToHexString(SHA256.HashData(src)).Equals(SourceSha256, StringComparison.OrdinalIgnoreCase))
-                    throw new IOException("El archivo fuente cambió desde que se abrió; abrilo de nuevo antes de guardar.");
+                    throw new IOException("The source file changed since it was opened; open it again before saving.");
                 src.Position = 0;
                 using var snap = new FileStream(snapPath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
                 src.CopyTo(snap); snap.Flush(true);
@@ -630,10 +630,10 @@ internal sealed class SpawnEditSession
             // Read-back proof: re-parse the written file and compare against the expected rows byte by byte.
             var back = File.ReadAllBytes(candPath);
             var live = _rows.Where(r => !r.Deleted).ToList(); liveCount = live.Count;
-            if (back.Length != 1 + live.Count * RowSize || back[0] != _margin) throw new IOException("El candidato escrito no tiene el tamaño o margen esperado.");
+            if (back.Length != 1 + live.Count * RowSize || back[0] != _margin) throw new IOException("The written candidate does not have the expected size or margin.");
             for (int i = 0; i < live.Count; i++)
             {
-                if (!back.AsSpan(1 + i * RowSize, RowSize).SequenceEqual(live[i].Data)) throw new IOException($"Fila {i} del candidato no coincide con la edición.");
+                if (!back.AsSpan(1 + i * RowSize, RowSize).SequenceEqual(live[i].Data)) throw new IOException($"Candidate row {i} does not match the edit.");
                 if (!live[i].IsNew && live[i].Data.AsSpan().SequenceEqual(live[i].Original)) unchangedVerified++;
             }
             foreach (var r in _rows)
@@ -662,7 +662,7 @@ internal sealed class SpawnEditSession
             counts = new { moved = moved.Count, modified = modified.Count, added = added.Count, deleted = deleted.Count },
             autoAssignedNewIds = added, moved, modified, deleted, table = tableAudit, issues, savedUtc = DateTimeOffset.UtcNow,
             installAllowed = false,
-            note = "Candidato de edición de spawns (y tabla maestra si aplica). No instalar sin revisar contra el runtime actual (scripts/additive_guard.py) y sin OK explícito."
+            note = "Spawn edit candidate (and master table if applicable). Do not install without checking it against the current runtime (scripts/additive_guard.py) and without an explicit OK."
         };
         ContentSafety.WriteJson(Path.Combine(pending, "audit.json"), audit);
         Directory.Move(pending, output);
@@ -674,7 +674,7 @@ internal sealed class SpawnEditSession
     // ---- scripted edits (CLI) ----
     public object ApplyOps(JsonElement ops)
     {
-        if (ops.ValueKind != JsonValueKind.Array) throw new ArgumentException("ops debe ser un arreglo JSON.");
+        if (ops.ValueKind != JsonValueKind.Array) throw new ArgumentException("ops must be a JSON array.");
         int applied = 0;
         foreach (var op in ops.EnumerateArray())
         {
@@ -697,7 +697,7 @@ internal sealed class SpawnEditSession
                 case "clone": Clone(Uids(), F("dx"), F("dz")); break;
                 case "set":
                     SetFields(Uids(), op.GetProperty("fields").EnumerateObject().ToDictionary(p => p.Name, p => p.Value.GetDouble(), StringComparer.OrdinalIgnoreCase)); break;
-                default: throw new ArgumentException("Operación desconocida: " + kind);
+                default: throw new ArgumentException("Unknown operation: " + kind);
             }
             applied++;
         }

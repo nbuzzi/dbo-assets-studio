@@ -9,7 +9,7 @@ internal sealed partial class MainForm
     private readonly Stack<string> _wpsRedo = new();
     private string? _wpsSavedText;
     private string? _wpsProjectHash;
-    private bool ConfirmLeaveWps() => _wps == null || _wps.Text == _wpsSavedText || MessageBox.Show(this, "Hay cambios WPS sin exportar. ¿Descartarlos al salir?", "Editor WPS", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
+    private bool ConfirmLeaveWps() => _wps == null || _wps.Text == _wpsSavedText || MessageBox.Show(this, Loc.T("There are unexported WPS changes. Discard them and leave?", "Hay cambios WPS sin exportar. ¿Descartarlos al salir?"), Loc.T("WPS editor", "Editor WPS"), MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
     private object WpsState() => _wps == null ? new { loaded = false } : (object)new
     {
         loaded = true, dialect = _wps.Dialect, name = Path.GetFileName(_wps.SourcePath), source = _wps.SourcePath,
@@ -28,7 +28,7 @@ internal sealed partial class MainForm
             case "wps-catalog": return JsonSerializer.Deserialize<JsonElement>(await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, (S("dialect") == "tqs" ? "tqs" : "wps") + "-catalog.json")));
             case "wps-open":
                 if (!ConfirmLeaveWps()) return null;
-                using (var dialog = new OpenFileDialog { Filter = "Scripts de dungeon y TMQ|*.wps;*.tqs|World Play Script|*.wps|Time Quest Script|*.tqs", Title = "Abrir WPS / TQS para preparar una revisión" })
+                using (var dialog = new OpenFileDialog { Filter = Loc.T("Dungeon and TMQ scripts|*.wps;*.tqs|World Play Script|*.wps|Time Quest Script|*.tqs", "Scripts de dungeon y TMQ|*.wps;*.tqs|World Play Script|*.wps|Time Quest Script|*.tqs"), Title = Loc.T("Open WPS / TQS to prepare a revision", "Abrir WPS / TQS para preparar una revisión") })
                 {
                     string sample = Path.Combine(AppContext.BaseDirectory, "examples", S("sample") == "tmq" ? "00002.tqs" : "83000.wps");
                     if (S("sample") is "cc" or "tmq" && File.Exists(sample)) dialog.FileName = sample;
@@ -38,23 +38,23 @@ internal sealed partial class MainForm
                 }
             case "wps-new":
                 if (!ConfirmLeaveWps()) return null;
-                int scriptId = N("scriptId"); if (scriptId < 1) throw new ArgumentException("Elegí un ID de script positivo y libre en el servidor.");
+                int scriptId = N("scriptId"); if (scriptId < 1) throw new ArgumentException("Choose a positive script ID that is free on the server.");
                 string project = ContentSafety.SafeOutput(Path.Combine(AppPaths.Root, "wps-projects", Guid.NewGuid().ToString("N"))); Directory.CreateDirectory(project);
                 if (S("dialect") == "tqs") _wps = TqsTemplates.Create(scriptId, Path.Combine(project, scriptId.ToString("D5", System.Globalization.CultureInfo.InvariantCulture) + ".tqs"));
                 else
                 {
-                    if (S("dialect") is not ("" or "wps")) throw new ArgumentException("Formato esperado: WPS o TQS.");
+                    if (S("dialect") is not ("" or "wps")) throw new ArgumentException("Expected format: WPS or TQS.");
                     string newFile = Path.Combine(project, scriptId + ".wps");
                     await File.WriteAllTextAsync(newFile, "-- DBO Assets WPS project. Confirm script ID and WorldPlay references before deployment.\r\nGameStage( 0 )\r\nEnd()\r\n\r\nGameFailed()\r\nEnd()\r\n");
                     _wps = WpsDocument.Load(newFile);
                 }
                 _wpsProjectHash = null; _wpsSavedText = _wps.Text; _wpsUndo.Clear(); _wpsRedo.Clear(); return WpsState();
             case "wps-source":
-                if (_wps == null) throw new IOException("Abrí un WPS.");
+                if (_wps == null) throw new IOException("Open a WPS.");
                 return new { original = _wps.OriginalText, current = _wps.Text };
             case "wps-save":
-                if (_wps == null) throw new IOException("Abrí un WPS.");
-                using (var dialog = new FolderBrowserDialog { Description = "Carpeta donde crear una revisión WPS nueva. El original se conserva." })
+                if (_wps == null) throw new IOException("Open a WPS.");
+                using (var dialog = new FolderBrowserDialog { Description = Loc.T("Folder where a new WPS revision will be created. The original is kept.", "Carpeta donde crear una revisión WPS nueva. El original se conserva.") })
                 {
                     if (dialog.ShowDialog(this) != DialogResult.OK) return null;
                     string destination = Path.Combine(dialog.SelectedPath, "wps-revision-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + "-" + Guid.NewGuid().ToString("N")[..5]);
@@ -67,13 +67,13 @@ internal sealed partial class MainForm
                     return result;
                 }
             case "wps-edit": case "wps-edit-many": case "wps-clone-floor": case "wps-clone": case "wps-remove": case "wps-move": case "wps-add": case "wps-template": case "wps-add-stage":
-                if (_wps == null) throw new IOException("Abrí un WPS.");
+                if (_wps == null) throw new IOException("Open a WPS.");
                 string before = _wps.Text;
                 try { switch (action)
                 {
                     case "wps-add-stage":
                         string rootKind = S("kind") is "" ? "GameStage" : S("kind");
-                        if (rootKind is not ("GameStage" or "GameBegin" or "GameEnd" or "GameFailed")) throw new ArgumentException("Sección raíz no permitida.");
+                        if (rootKind is not ("GameStage" or "GameBegin" or "GameEnd" or "GameFailed")) throw new ArgumentException("Root section not allowed.");
                         _wps.AddNode(null, rootKind, N("stage").ToString(System.Globalization.CultureInfo.InvariantCulture), new()); break;
                     case "wps-edit": _wps.SetParam(S("id"), S("key"), S("literal")); break;
                     case "wps-edit-many": foreach (var update in args.GetProperty("updates").EnumerateArray()) _wps.SetParam(S("id"), update.GetProperty("key").GetString()!, update.GetProperty("literal").GetString()!); break;
@@ -86,14 +86,14 @@ internal sealed partial class MainForm
                         foreach (var p in args.GetProperty("parameters").EnumerateObject()) parameters.Add(p.Name, p.Value.GetString()!);
                         _wps.AddNode(string.IsNullOrEmpty(S("parent")) ? null : S("parent"), S("kind"), S("name"), parameters); break;
                     case "wps-template":
-                        int amount = N("value"); if (amount < 0) throw new ArgumentException("Usá un valor no negativo.");
+                        int amount = N("value"); if (amount < 0) throw new ArgumentException("Use a non-negative value.");
                         if (S("template") == "spawn-group") _wps.AddNode(S("parent"), "Action", "add mobgroup", new() { ["group"] = amount.ToString(System.Globalization.CultureInfo.InvariantCulture) });
                         else if (S("template") is "wait-time" or "wait-group")
                         {
                             string waitId = _wps.AddNode(S("parent"), "Action", "wait", new());
                             _wps.AddNode(waitId, "Condition", S("template") == "wait-time" ? "check time" : "check mobgroup", S("template") == "wait-time" ? new() { ["time"] = amount.ToString() } : new() { ["group"] = amount.ToString(), ["count"] = "0" });
                         }
-                        else throw new ArgumentException("Plantilla desconocida.");
+                        else throw new ArgumentException("Unknown template.");
                         break;
                 } } catch { _wps.ReplaceText(before); throw; }
                 if (before != _wps.Text)
@@ -103,10 +103,10 @@ internal sealed partial class MainForm
                 }
                 return WpsState();
             case "wps-undo": case "wps-redo":
-                if (_wps == null) throw new IOException("Abrí un WPS.");
+                if (_wps == null) throw new IOException("Open a WPS.");
                 var from = action == "wps-undo" ? _wpsUndo : _wpsRedo; var to = action == "wps-undo" ? _wpsRedo : _wpsUndo;
                 if (from.Count > 0) { to.Push(_wps.Text); _wps.ReplaceText(from.Pop()); } return WpsState();
-            default: throw new ArgumentException("Acción WPS desconocida.");
+            default: throw new ArgumentException("Unknown WPS action.");
         }
     }
 }

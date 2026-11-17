@@ -13,8 +13,8 @@ internal static class TgaPreview
     public static Bitmap Load(byte[] bytes)
     {
         ArgumentNullException.ThrowIfNull(bytes);
-        if (bytes.Length > MaxInputBytes) throw new InvalidDataException("TGA demasiado grande para vista previa (m谩ximo 128 MiB).");
-        if (bytes.Length < HeaderSize) throw new InvalidDataException("Cabecera TGA truncada.");
+        if (bytes.Length > MaxInputBytes) throw new InvalidDataException("TGA too large for preview (max 128 MiB).");
+        if (bytes.Length < HeaderSize) throw new InvalidDataException("Truncated TGA header.");
 
         int idLength = bytes[0];
         int colorMapType = bytes[1];
@@ -28,9 +28,9 @@ internal static class TgaPreview
         int descriptor = bytes[17];
 
         if (width is < 1 or > MaxDimension || height is < 1 or > MaxDimension || (long)width * height > MaxPixels)
-            throw new InvalidDataException("Dimensiones TGA rechazadas por seguridad.");
-        if ((descriptor & 0xC0) != 0) throw new InvalidDataException("TGA con entrelazado no est谩 soportado.");
-        if (imageType is not (1 or 2 or 3 or 9 or 10 or 11)) throw new InvalidDataException($"Tipo de imagen TGA {imageType} no soportado.");
+            throw new InvalidDataException("TGA dimensions rejected for safety.");
+        if ((descriptor & 0xC0) != 0) throw new InvalidDataException("Interlaced TGA is not supported.");
+        if (imageType is not (1 or 2 or 3 or 9 or 10 or 11)) throw new InvalidDataException($"TGA image type {imageType} is not supported.");
 
         bool indexed = imageType is 1 or 9;
         bool trueColor = imageType is 2 or 10;
@@ -38,29 +38,29 @@ internal static class TgaPreview
         if (indexed)
         {
             if (colorMapType != 1 || colorMapLength == 0 || pixelDepth is not (8 or 16) || colorMapDepth is not (16 or 24 or 32))
-                throw new InvalidDataException("TGA indexado requiere mapa de color y entradas de 16/24/32 bits con 铆ndices de 8/16 bits.");
-            if ((long)colorMapFirst + colorMapLength > 65_536) throw new InvalidDataException("Rango de 铆ndices de paleta TGA inv谩lido.");
+                throw new InvalidDataException("Indexed TGA requires a color map with 16/24/32-bit entries and 8/16-bit indices.");
+            if ((long)colorMapFirst + colorMapLength > 65_536) throw new InvalidDataException("Invalid TGA palette index range.");
         }
         else if (trueColor)
         {
             if (colorMapType != 0 || pixelDepth is not (16 or 24 or 32))
-                throw new InvalidDataException("TGA truecolor soporta 16/24/32 bpp sin mapa de color.");
+                throw new InvalidDataException("Truecolor TGA supports 16/24/32 bpp without a color map.");
         }
         else
         {
             if (colorMapType != 0 || pixelDepth is not (8 or 16))
-                throw new InvalidDataException("TGA grayscale soporta 8/16 bits sin mapa de color.");
+                throw new InvalidDataException("Grayscale TGA supports 8/16 bits without a color map.");
         }
 
         int p = HeaderSize;
-        Require(bytes, p, idLength, "Identificador TGA truncado.");
+        Require(bytes, p, idLength, "Truncated TGA identifier.");
         p += idLength;
         Color[]? palette = null;
         if (indexed)
         {
             int entrySize = (colorMapDepth + 7) / 8;
             int paletteBytes = checked(colorMapLength * entrySize);
-            Require(bytes, p, paletteBytes, "Paleta TGA truncada.");
+            Require(bytes, p, paletteBytes, "Truncated TGA palette.");
             palette = new Color[colorMapLength];
             for (int i = 0; i < palette.Length; i++) palette[i] = ReadColor(bytes, p + i * entrySize, colorMapDepth, (descriptor & 0x0F) != 0);
             p += paletteBytes;
@@ -76,11 +76,11 @@ internal static class TgaPreview
             bool repeated = false;
             if (rle)
             {
-                Require(bytes, p, 1, "Paquetes RLE TGA truncados.");
+                Require(bytes, p, 1, "Truncated TGA RLE packets.");
                 int packet = bytes[p++];
                 run = (packet & 0x7F) + 1;
                 repeated = (packet & 0x80) != 0;
-                if (run > count - pixel) throw new InvalidDataException("Paquete RLE TGA excede el n煤mero de p铆xeles.");
+                if (run > count - pixel) throw new InvalidDataException("TGA RLE packet exceeds the pixel count.");
             }
 
             if (repeated)
@@ -92,7 +92,7 @@ internal static class TgaPreview
             else
             {
                 int needed = checked(run * sourceBytesPerPixel);
-                Require(bytes, p, needed, "P铆xeles TGA truncados.");
+                Require(bytes, p, needed, "Truncated TGA pixels.");
                 for (int i = 0; i < run; i++) colors[pixel++] = ReadPixel(bytes, ref p, indexed, trueColor, pixelDepth, colorMapFirst, palette, descriptor);
             }
         }
@@ -129,13 +129,13 @@ internal static class TgaPreview
 
     private static Color ReadPixel(byte[] bytes, ref int p, bool indexed, bool trueColor, int depth, int paletteFirst, Color[]? palette, int descriptor)
     {
-        Require(bytes, p, (depth + 7) / 8, "Píxel TGA truncado.");
+        Require(bytes, p, (depth + 7) / 8, "Truncated TGA pixel.");
         if (indexed)
         {
             int index = depth == 8 ? bytes[p++] : ReadU16(bytes, p);
             if (depth == 16) p += 2;
             int slot = index - paletteFirst;
-            if (palette is null || (uint)slot >= (uint)palette.Length) throw new InvalidDataException($"脥ndice de paleta TGA fuera de rango: {index}.");
+            if (palette is null || (uint)slot >= (uint)palette.Length) throw new InvalidDataException($"TGA palette index out of range: {index}.");
             return palette[slot];
         }
         if (trueColor) { Color c = ReadColor(bytes, p, depth, (descriptor & 0x0F) != 0); p += (depth + 7) / 8; return c; }

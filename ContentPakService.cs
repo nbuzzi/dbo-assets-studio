@@ -34,10 +34,10 @@ internal static class ContentPakService
     private sealed record Payload(string Name, PakEntry? Original, string? Replacement);
     public static PakPlan ReadPlan(string path)
     {
-        if (new FileInfo(path).Length > 16 * 1024 * 1024) throw new IOException("Plan mayor a 16 MiB.");
+        if (new FileInfo(path).Length > 16 * 1024 * 1024) throw new IOException("Plan exceeds 16 MiB.");
         ContentSafety.NoLinks(path);
         var document = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllBytes(path))?.AsObject()
-            ?? throw new InvalidDataException("Plan vacío.");
+            ?? throw new InvalidDataException("Empty plan.");
         // Preserve the sealed add-only append recipe used by earlier Snake Way
         // candidates while keeping the current typed append-overlay engine.
         if (document["mode"]?.GetValue<string>() == "append-unit")
@@ -58,7 +58,7 @@ internal static class ContentPakService
         }
         else if (document.ContainsKey("appendUnitBytes") || document.ContainsKey("appendUnitSha256"))
             throw new InvalidDataException("Legacy append pins require append-unit mode.");
-        var plan = document.Deserialize<PakPlan>(ContentSafety.Json) ?? throw new InvalidDataException("Plan vacío.");
+        var plan = document.Deserialize<PakPlan>(ContentSafety.Json) ?? throw new InvalidDataException("Empty plan.");
         string root = Path.GetDirectoryName(Path.GetFullPath(path))!;
         if (plan.Source != null) plan.Source = Path.GetFullPath(plan.Source, root);
         plan.Operations = plan.Operations.Select(o => o with { File = o.File == null ? null : Path.GetFullPath(o.File, root) }).ToList();
@@ -70,58 +70,58 @@ internal static class ContentPakService
         return new { version = 1, source = archive?.IndexPath, sourceSha256 = archive?.IndexHash, sourceFormat = plan.Format, targetFormat = "taiwan", plan.Mode, plan.Prefix,
             resourcesBefore = archive?.Entries.Count ?? 0, resourcesAfter = payloads.Count, operations = plan.Operations,
             payloadBytes = payloads.Sum(p => p.Replacement != null ? new FileInfo(p.Replacement).Length : (long)p.Original!.Size),
-            output = "Carpeta nueva; overlay requiere las unidades originales indicadas en audit.json. Repack crea un paquete completo.",
-            compatibility = "Estructura Taiwan; carga en el juego pendiente." };
+            output = "New folder; overlay requires the original units listed in audit.json. Repack creates a complete package.",
+            compatibility = "Taiwan structure; in-game loading not yet tested." };
     }
     private static async Task<(PakArchive? archive, List<Payload> payloads)> ResolveAsync(PakPlan plan)
     {
         bool append = plan.Version == 2 && plan.Mode == "append-overlay" && plan.AppendUnit != null;
-        if ((!append && (plan.Version != 1 || plan.Mode is not ("overlay" or "repack") || plan.AppendUnit != null)) || plan.UnitMaxMiB < 1 || plan.UnitMaxMiB > 1900) throw new InvalidDataException("Versión, modo o límite de unidad inválido.");
-        if (!Regex.IsMatch(plan.Prefix, "^[a-z][a-z_]*$")) throw new InvalidDataException("Prefix debe ser una familia Taiwan en minúsculas, sin números (tex, obj, tbl…).");
-        if (plan.Source == null && plan.Mode != "repack") throw new InvalidDataException("Un PAK nuevo requiere mode=repack.");
-        if (plan.Format != "taiwan") throw new InvalidDataException("Mutación sólo para el formato Taiwan.");
+        if ((!append && (plan.Version != 1 || plan.Mode is not ("overlay" or "repack") || plan.AppendUnit != null)) || plan.UnitMaxMiB < 1 || plan.UnitMaxMiB > 1900) throw new InvalidDataException("Invalid version, mode or unit limit.");
+        if (!Regex.IsMatch(plan.Prefix, "^[a-z][a-z_]*$")) throw new InvalidDataException("Prefix must be a lowercase Taiwan family without digits (tex, obj, tbl…).");
+        if (plan.Source == null && plan.Mode != "repack") throw new InvalidDataException("A new PAK requires mode=repack.");
+        if (plan.Format != "taiwan") throw new InvalidDataException("Mutation only for the Taiwan format.");
         PakArchive? archive = plan.Source == null ? null : await PakArchive.OpenAsync(plan.Source, plan.Format, plan.Family);
-        if (archive != null && (string.IsNullOrEmpty(plan.SourceSha256) || !archive.IndexHash.Equals(plan.SourceSha256, StringComparison.OrdinalIgnoreCase))) throw new IOException("sourceSha256 ausente o distinto: recreá el plan sobre el índice actual.");
-        if (archive != null && plan.Mode != "repack" && plan.Prefix != archive.Prefix) throw new InvalidDataException("Overlay debe conservar la familia del índice.");
+        if (archive != null && (string.IsNullOrEmpty(plan.SourceSha256) || !archive.IndexHash.Equals(plan.SourceSha256, StringComparison.OrdinalIgnoreCase))) throw new IOException("sourceSha256 missing or different: recreate the plan against the current index.");
+        if (archive != null && plan.Mode != "repack" && plan.Prefix != archive.Prefix) throw new InvalidDataException("Overlay must keep the index family.");
         if (append)
         {
-            if (archive == null || archive.Format != "taiwan" || plan.AppendUnit!.Number is < 0 or > 255 || plan.AppendUnit.Bytes < 0 || !Regex.IsMatch(plan.AppendUnit.Sha256, "^[a-fA-F0-9]{64}$")) throw new InvalidDataException("Append requiere unidad Taiwan y preimagen sellada.");
+            if (archive == null || archive.Format != "taiwan" || plan.AppendUnit!.Number is < 0 or > 255 || plan.AppendUnit.Bytes < 0 || !Regex.IsMatch(plan.AppendUnit.Sha256, "^[a-fA-F0-9]{64}$")) throw new InvalidDataException("Append requires a Taiwan unit and a sealed preimage.");
             string file = AppendPath(archive, plan.AppendUnit.Number); ContentSafety.NoLinks(file);
-            if (new FileInfo(file).Length != plan.AppendUnit.Bytes || !ContentSafety.Hash(file).Equals(plan.AppendUnit.Sha256, StringComparison.OrdinalIgnoreCase)) throw new IOException("Preimagen de unidad append cambió.");
+            if (new FileInfo(file).Length != plan.AppendUnit.Bytes || !ContentSafety.Hash(file).Equals(plan.AppendUnit.Sha256, StringComparison.OrdinalIgnoreCase)) throw new IOException("Append unit preimage changed.");
             long added = plan.Operations.Sum(c => c.File == null ? 0L : new FileInfo(c.File).Length);
-            if (added <= 0 || added > plan.UnitMaxMiB * 1024L * 1024 - plan.AppendUnit.Bytes) throw new IOException("Append debe caber completo en la unidad sellada; no asigna otra unidad.");
+            if (added <= 0 || added > plan.UnitMaxMiB * 1024L * 1024 - plan.AppendUnit.Bytes) throw new IOException("Append must fit entirely in the sealed unit; it does not allocate another unit.");
         }
         var entries = new Dictionary<string, Payload>(StringComparer.OrdinalIgnoreCase);
         foreach (var entry in archive?.Entries ?? [])
         {
             string name = ContentSafety.ResourcePath(entry.Name);
-            if (!entries.TryAdd(name, new(name, entry, null))) throw new InvalidDataException("Nombre duplicado en índice: " + name);
+            if (!entries.TryAdd(name, new(name, entry, null))) throw new InvalidDataException("Duplicate name in index: " + name);
             if (entry.Status != "Disponible") throw new IOException(entry.Status + ": " + name);
         }
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var change in plan.Operations)
         {
             string name = ContentSafety.ResourcePath(change.Path);
-            if (!seen.Add(name)) throw new InvalidDataException("Más de una operación para: " + name);
-            if (change.Op == "remove") throw new InvalidDataException("Preservación aditiva: no se permite eliminar recursos PAK: " + name);
-            if (change.Op is not ("add" or "replace")) throw new InvalidDataException("Operación desconocida: " + change.Op);
+            if (!seen.Add(name)) throw new InvalidDataException("More than one operation for: " + name);
+            if (change.Op == "remove") throw new InvalidDataException("Additive preservation: removing PAK resources is not allowed: " + name);
+            if (change.Op is not ("add" or "replace")) throw new InvalidDataException("Unknown operation: " + change.Op);
             bool exists = entries.TryGetValue(name, out var old);
-            if ((change.Op == "add" && exists) || (change.Op != "add" && !exists)) throw new InvalidDataException("Conflicto " + change.Op + ": " + name);
-            if (string.IsNullOrWhiteSpace(change.File)) throw new InvalidDataException("Falta file para " + name);
+            if ((change.Op == "add" && exists) || (change.Op != "add" && !exists)) throw new InvalidDataException("Conflict " + change.Op + ": " + name);
+            if (string.IsNullOrWhiteSpace(change.File)) throw new InvalidDataException("Missing file for " + name);
             ContentSafety.NoLinks(change.File);
-            if (new FileInfo(change.File).Length > plan.UnitMaxMiB * 1024L * 1024) throw new IOException("Payload supera el límite por unidad: " + name);
-            if (string.IsNullOrEmpty(change.Sha256) || !ContentSafety.Hash(change.File).Equals(change.Sha256, StringComparison.OrdinalIgnoreCase)) throw new IOException("sha256 del payload ausente o cambió: " + name);
+            if (new FileInfo(change.File).Length > plan.UnitMaxMiB * 1024L * 1024) throw new IOException("Payload exceeds the per-unit limit: " + name);
+            if (string.IsNullOrEmpty(change.Sha256) || !ContentSafety.Hash(change.File).Equals(change.Sha256, StringComparison.OrdinalIgnoreCase)) throw new IOException("Payload sha256 missing or changed: " + name);
             entries[name] = new(old?.Name ?? name, old?.Original, Path.GetFullPath(change.File));
         }
-        if (entries.Count == 0) throw new InvalidDataException("No se genera un PAK vacío.");
+        if (entries.Count == 0) throw new InvalidDataException("An empty PAK is not generated.");
         foreach (var p in entries.Values)
-            if (Encoding.Latin1.GetByteCount(p.Name) + 2 >= 128) throw new InvalidDataException("Nombre excede 127 bytes del índice Taiwan: " + p.Name);
+            if (Encoding.Latin1.GetByteCount(p.Name) + 2 >= 128) throw new InvalidDataException("Name exceeds the 127-byte Taiwan index limit: " + p.Name);
         return (archive, entries.Values.ToList());
     }
     private static string AppendPath(PakArchive archive, int number) => Path.Combine(Path.GetDirectoryName(archive.IndexPath)!, archive.Prefix + number + ".pak");
     public static PakAppendUnit SealAppendUnit(PakArchive archive, int number)
     {
-        if (archive.Format != "taiwan" || number is < 0 or > 255) throw new InvalidDataException("Append requiere unidad Taiwan 0..255 existente.");
+        if (archive.Format != "taiwan" || number is < 0 or > 255) throw new InvalidDataException("Append requires an existing Taiwan unit 0..255.");
         string file = AppendPath(archive, number); ContentSafety.NoLinks(file);
         using var s = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read, 1024 * 1024);
         return new(number, s.Length, Convert.ToHexString(SHA256.HashData(s)));
@@ -130,7 +130,7 @@ internal static class ContentPakService
     {
         output = ContentSafety.SafeOutput(output);
         var (archive, payloads) = await ResolveAsync(plan);
-        if (archive != null && output.StartsWith(Path.GetDirectoryName(archive.IndexPath)! + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) throw new IOException("La salida debe quedar fuera de la carpeta del PAK original.");
+        if (archive != null && output.StartsWith(Path.GetDirectoryName(archive.IndexPath)! + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) throw new IOException("The output must be outside the original PAK folder.");
         string pending = ContentSafety.FreshDirectory(output);
         var locks = new Dictionary<string, FileStream>(StringComparer.OrdinalIgnoreCase);
         FileStream Lock(string file)
@@ -142,14 +142,14 @@ internal static class ContentPakService
             if (archive != null)
             {
                 var idx = Lock(archive.IndexPath);
-                if (Convert.ToHexString(SHA256.HashData(idx)) != archive.IndexHash) throw new IOException("Índice cambió durante el plan.");
+                if (Convert.ToHexString(SHA256.HashData(idx)) != archive.IndexHash) throw new IOException("Index changed during the plan.");
                 foreach (var e in archive.Entries) Lock(e.UnitPath);
                 File.Copy(archive.IndexPath, Path.Combine(pending, "source-index.original.bak"));
             }
             foreach (var c in plan.Operations.Where(c => c.File != null))
             {
                 var s = Lock(c.File!); s.Position = 0;
-                if (!Convert.ToHexString(SHA256.HashData(s)).Equals(c.Sha256, StringComparison.OrdinalIgnoreCase)) throw new IOException("Payload cambió durante el plan.");
+                if (!Convert.ToHexString(SHA256.HashData(s)).Equals(c.Sha256, StringComparison.OrdinalIgnoreCase)) throw new IOException("Payload changed during the plan.");
             }
             int unitNumber = 0;
             if (archive != null && plan.Mode == "overlay")
@@ -169,7 +169,7 @@ internal static class ContentPakService
                 target.Flush(true); target.Dispose(); target = null;
                 string expected = Convert.ToHexString(unitHash!.GetHashAndReset()); unitHash.Dispose(); unitHash = null;
                 string actual = ContentSafety.Hash(targetPath!);
-                if (actual != expected) throw new IOException("La relectura de la unidad difiere de lo escrito.");
+                if (actual != expected) throw new IOException("Unit readback differs from what was written.");
                 writtenUnits.Add(new { file = Path.GetFileName(targetPath), bytes = new FileInfo(targetPath!).Length, sha256 = actual });
             }
             try
@@ -185,21 +185,21 @@ internal static class ContentPakService
                         var source = Lock(payload.Replacement ?? payload.Original!.UnitPath);
                         long length = payload.Replacement != null ? source.Length : payload.Original!.Size;
                         source.Position = payload.Replacement != null ? 0 : payload.Original!.Offset;
-                        if (length > limit || source.Position + length > source.Length) throw new IOException("Payload fuera de límites: " + payload.Name);
+                        if (length > limit || source.Position + length > source.Length) throw new IOException("Payload out of bounds: " + payload.Name);
                         if (target != null && target.Position + length > limit)
                         {
-                            if (plan.AppendUnit != null) throw new IOException("Append excedió la unidad sellada.");
+                            if (plan.AppendUnit != null) throw new IOException("Append exceeded the sealed unit.");
                             CloseUnit(); unitNumber++;
                         }
                         if (target == null)
                         {
-                            if (unitNumber > 255) throw new IOException("Sin unidades libres. Usá repack para compactar en una carpeta nueva.");
+                            if (unitNumber > 255) throw new IOException("No free units. Use repack to compact into a new folder.");
                             targetPath = Path.Combine(pending, plan.Prefix + unitNumber + ".pak");
                             target = new(targetPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, buffer.Length); unitHash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
                             if (plan.AppendUnit != null)
                             {
                                 var original = Lock(AppendPath(archive!, unitNumber)); original.Position = 0;
-                                if (original.Length != plan.AppendUnit.Bytes || !Convert.ToHexString(SHA256.HashData(original)).Equals(plan.AppendUnit.Sha256, StringComparison.OrdinalIgnoreCase)) throw new IOException("Preimagen append cambió durante apply.");
+                                if (original.Length != plan.AppendUnit.Bytes || !Convert.ToHexString(SHA256.HashData(original)).Equals(plan.AppendUnit.Sha256, StringComparison.OrdinalIgnoreCase)) throw new IOException("Append preimage changed during apply.");
                                 original.Position = 0;
                                 using var snapshot = new FileStream(Path.Combine(pending, "source-unit.original.bak"), FileMode.CreateNew, FileAccess.Write, FileShare.None);
                                 while (original.Position < original.Length)
@@ -277,12 +277,12 @@ internal static class ContentPakService
             var start = new ProcessStartInfo(Path.Combine(AppContext.BaseDirectory, "pak-tool.exe")) { WorkingDirectory = cache, UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };
             StudioConfig.ApplyPakKey(start);
             foreach (string arg in new[] { "import-index", "index.bin", "index.pak" }) start.ArgumentList.Add(arg);
-            using var process = Process.Start(start) ?? throw new IOException("No inició pak-tool.");
+            using var process = Process.Start(start) ?? throw new IOException("pak-tool did not start.");
             var stdout = process.StandardOutput.ReadToEndAsync(); var stderr = process.StandardError.ReadToEndAsync();
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(60));
-            try { await process.WaitForExitAsync(timeout.Token); } catch (OperationCanceledException) { process.Kill(true); await process.WaitForExitAsync(); throw new IOException("Timeout cifrando índice."); }
+            try { await process.WaitForExitAsync(timeout.Token); } catch (OperationCanceledException) { process.Kill(true); await process.WaitForExitAsync(); throw new IOException("Timed out encrypting the index."); }
             await Task.WhenAll(stdout, stderr).WaitAsync(timeout.Token);
-            if (process.ExitCode != 0) throw new IOException("Falló índice Taiwan: " + await stderr);
+            if (process.ExitCode != 0) throw new IOException("Taiwan index failed: " + await stderr);
             File.Move(Path.Combine(cache, "index.pak"), output);
         }
         finally { Directory.Delete(cache, true); }
@@ -291,19 +291,19 @@ internal static class ContentPakService
     {
         output = ContentSafety.SafeOutput(output);
         var selected = archive.Entries.Where(e => query == "*" || e.Name.Equals(ContentSafety.ResourcePath(query), StringComparison.OrdinalIgnoreCase)).ToArray();
-        if (selected.Length == 0) throw new FileNotFoundException("No hay coincidencia exacta; '*' extrae todo.");
+        if (selected.Length == 0) throw new FileNotFoundException("No exact match; '*' extracts everything.");
         using var indexLock = new FileStream(archive.IndexPath, FileMode.Open, FileAccess.Read, FileShare.Read);
-        if (Convert.ToHexString(SHA256.HashData(indexLock)) != archive.IndexHash) throw new IOException("El índice cambió.");
+        if (Convert.ToHexString(SHA256.HashData(indexLock)) != archive.IndexHash) throw new IOException("The index changed.");
         string pending = ContentSafety.FreshDirectory(output);
         try
         {
         var report = new List<object>(); var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var e in selected)
         {
-            string rel = ContentSafety.ResourcePath(e.Name); if (!seen.Add(rel)) throw new InvalidDataException("Recurso duplicado: " + rel);
+            string rel = ContentSafety.ResourcePath(e.Name); if (!seen.Add(rel)) throw new InvalidDataException("Duplicate resource: " + rel);
             string path = Path.Combine(pending, rel); Directory.CreateDirectory(Path.GetDirectoryName(path)!);
             using var input = new FileStream(e.UnitPath, FileMode.Open, FileAccess.Read, FileShare.Read, 1024 * 1024);
-            if ((ulong)e.Offset + e.Size > (ulong)input.Length) throw new InvalidDataException("Payload fuera de unidad: " + rel);
+            if ((ulong)e.Offset + e.Size > (ulong)input.Length) throw new InvalidDataException("Payload outside its unit: " + rel);
             input.Position = e.Offset; using var target = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None);
             byte[] buffer = new byte[1024 * 1024]; using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
             for (long left = e.Size; left > 0;)
@@ -323,27 +323,27 @@ internal static class ContentPakService
         // Explicit, hash-pinned selections.
         // once per resource. Wildcards and implicit whole-family extraction stay forbidden.
         ContentSafety.NoLinks(selectionFile);
-        if (new FileInfo(selectionFile).Length is < 1 or > 256 * 1024) throw new InvalidDataException("Selección fuera de límites.");
+        if (new FileInfo(selectionFile).Length is < 1 or > 256 * 1024) throw new InvalidDataException("Selection out of bounds.");
         string selectionHash = ContentSafety.Hash(selectionFile);
         byte[] selectionBytes = await File.ReadAllBytesAsync(selectionFile);
         if (Convert.ToHexString(SHA256.HashData(selectionBytes)) != selectionHash)
-            throw new IOException("La selección cambió durante snapshot.");
+            throw new IOException("The selection changed during snapshot.");
         using var document = JsonDocument.Parse(selectionBytes);
         var selection = document.RootElement;
         if (!selection.GetProperty("sourceSha256").GetString()!.Equals(archive.IndexHash, StringComparison.OrdinalIgnoreCase) ||
             selection.GetProperty("sourceBuildSha256").GetString() != archive.SourceBuildHash)
-            throw new IOException("Selección sellada para otro índice/build.");
+            throw new IOException("Selection sealed for another index/build.");
         var names = selection.GetProperty("paths").EnumerateArray().Select(n => ContentSafety.ResourcePath(n.GetString()!)).ToArray();
         if (names.Length is < 1 or > 1024 || names.Distinct(StringComparer.OrdinalIgnoreCase).Count() != names.Length)
-            throw new InvalidDataException("Selección literal única requerida (1..1024).");
+            throw new InvalidDataException("A unique literal selection is required (1..1024).");
         var lookup = archive.Entries.ToDictionary(e => e.Name, StringComparer.OrdinalIgnoreCase);
-        var entries = names.Select(n => lookup.TryGetValue(n, out var e) ? e : throw new FileNotFoundException("Recurso ausente: " + n)).ToArray();
-        if (entries.Sum(e => (long)e.Size) > 256L * 1024 * 1024) throw new InvalidDataException("Límite batch256MiB.");
+        var entries = names.Select(n => lookup.TryGetValue(n, out var e) ? e : throw new FileNotFoundException("Missing resource: " + n)).ToArray();
+        if (entries.Sum(e => (long)e.Size) > 256L * 1024 * 1024) throw new InvalidDataException("Batch limit 256 MiB.");
         output = ContentSafety.SafeOutput(output);
         if (output.StartsWith(Path.GetDirectoryName(archive.IndexPath)! + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
-            throw new IOException("Salida fuera de la carpeta del PAK fuente requerida.");
+            throw new IOException("Output must be outside the source PAK folder.");
         using var indexLock = new FileStream(archive.IndexPath, FileMode.Open, FileAccess.Read, FileShare.Read);
-        if (Convert.ToHexString(SHA256.HashData(indexLock)) != archive.IndexHash) throw new IOException("El índice cambió.");
+        if (Convert.ToHexString(SHA256.HashData(indexLock)) != archive.IndexHash) throw new IOException("The index changed.");
         string pending = ContentSafety.FreshDirectory(output);
         try
         {
@@ -359,7 +359,7 @@ internal static class ContentPakService
                 report.Add(new { path = names[i], entries[i].Size, sha256 = ContentSafety.Hash(path) });
             }
             if (ContentSafety.Hash(selectionFile) != selectionHash)
-                throw new IOException("La selección cambió durante extracción.");
+                throw new IOException("The selection changed during extraction.");
             ContentSafety.WriteJson(Path.Combine(pending, "assets-extraction.json"), new { source = archive.IndexPath, archive.IndexHash,
                 archive.Format, payloadSemantics = "extracted_payload",
                 sourceBuildSha256 = archive.SourceBuildHash, sourceModuleSha256 = archive.SourceModuleHash, formatNotes = archive.FormatNotes, selectionSha256 = selectionHash, resources = report });
@@ -379,7 +379,7 @@ internal static class ContentPakService
             foreach (var entry in entries)
             {
                 if (entry.Size > 128L * 1024 * 1024 || entry.Status != "Disponible")
-                    throw new IOException("Recurso batch ausente, fuera de límites o mayor a128MiB.");
+                    throw new IOException("Batch resource missing, out of bounds or larger than 128 MiB.");
                 if (units.ContainsKey(entry.UnitPath)) continue;
                 ContentSafety.NoLinks(entry.UnitPath);
                 units[entry.UnitPath] = new(entry.UnitPath, FileMode.Open, FileAccess.Read, FileShare.Read, 65536, true);
@@ -389,14 +389,14 @@ internal static class ContentPakService
             {
                 var unit = units[entry.UnitPath];
                 if ((ulong)entry.Offset + entry.Size > (ulong)unit.Length)
-                    throw new InvalidDataException("El recurso excede los límites de su unidad PAK.");
+                    throw new InvalidDataException("The resource exceeds the bounds of its PAK unit.");
                 unit.Position = entry.Offset;
                 byte[] bytes = new byte[entry.Size];
                 await unit.ReadExactlyAsync(bytes); payloads.Add(bytes);
             }
             indexLock.Position = 0;
             if (Convert.ToHexString(SHA256.HashData(indexLock)) != archive.IndexHash)
-                throw new IOException("El índice cambió durante extracción batch.");
+                throw new IOException("The index changed during batch extraction.");
             return payloads;
         }
         finally { foreach (var unit in units.Values) unit.Dispose(); }
@@ -408,16 +408,16 @@ internal static class ContentPakService
         using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(directory, "audit.json")));
         var root = doc.RootElement;
         int version = root.GetProperty("version").GetInt32();
-        if (version is not (1 or 2) || root.GetProperty("format").GetString() != "taiwan" || (version == 2 && root.GetProperty("mode").GetString() != "append-overlay")) throw new InvalidDataException("Auditoría no compatible.");
+        if (version is not (1 or 2) || root.GetProperty("format").GetString() != "taiwan" || (version == 2 && root.GetProperty("mode").GetString() != "append-overlay")) throw new InvalidDataException("Unsupported audit.");
         var verified = new List<object>();
         void Check(JsonElement record, bool dependency)
         {
             string rel = ContentSafety.ResourcePath(record.GetProperty("file").GetString()!);
-            if (rel.Contains('\\')) throw new InvalidDataException("El manifiesto requiere nombres de unidad simples.");
+            if (rel.Contains('\\')) throw new InvalidDataException("The manifest requires simple unit names.");
             string path = dependency ? record.GetProperty("source").GetString()! : Path.Combine(directory, rel);
             string hash = ContentSafety.Hash(path);
-            if (!hash.Equals(record.GetProperty("sha256").GetString(), StringComparison.OrdinalIgnoreCase)) throw new IOException("Hash difiere: " + path);
-            if (record.TryGetProperty("bytes", out var length) && new FileInfo(path).Length != length.GetInt64()) throw new IOException("Tamaño difiere: " + path);
+            if (!hash.Equals(record.GetProperty("sha256").GetString(), StringComparison.OrdinalIgnoreCase)) throw new IOException("Hash differs: " + path);
+            if (record.TryGetProperty("bytes", out var length) && new FileInfo(path).Length != length.GetInt64()) throw new IOException("Size differs: " + path);
             verified.Add(new { path, sha256 = hash, dependency });
         }
         Check(root.GetProperty("index"), false);
@@ -426,15 +426,15 @@ internal static class ContentPakService
         if (version == 2)
         {
             var pins = root.GetProperty("appendPreimages").EnumerateArray().ToArray();
-            if (pins.Length != 1) throw new InvalidDataException("Append requiere exactamente una preimagen.");
+            if (pins.Length != 1) throw new InvalidDataException("Append requires exactly one preimage.");
             var pin = pins[0]; string file = ContentSafety.ResourcePath(pin.GetProperty("file").GetString()!);
             var sealedUnit = root.GetProperty("plan").GetProperty("appendUnit");
             if (root.GetProperty("plan").GetProperty("version").GetInt32() != 2 || root.GetProperty("plan").GetProperty("mode").GetString() != "append-overlay" ||
                 sealedUnit.GetProperty("number").GetInt32() is < 0 or > 255 ||
                 file != root.GetProperty("prefix").GetString() + sealedUnit.GetProperty("number").GetInt32() + ".pak" ||
                 pin.GetProperty("bytes").GetInt64() != sealedUnit.GetProperty("bytes").GetInt64() ||
-                !pin.GetProperty("sha256").GetString()!.Equals(sealedUnit.GetProperty("sha256").GetString(), StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Preimagen append no coincide con plan sellado.");
-            if (file.Contains('\\') || !root.GetProperty("writtenUnits").EnumerateArray().Any(u => u.GetProperty("file").GetString() == file)) throw new InvalidDataException("Preimagen append sin unidad escrita.");
+                !pin.GetProperty("sha256").GetString()!.Equals(sealedUnit.GetProperty("sha256").GetString(), StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Append preimage does not match the sealed plan.");
+            if (file.Contains('\\') || !root.GetProperty("writtenUnits").EnumerateArray().Any(u => u.GetProperty("file").GetString() == file)) throw new InvalidDataException("Append preimage has no written unit.");
             Check(pin, true); CheckPrefix(Path.Combine(directory, file), pin.GetProperty("bytes").GetInt64(), pin.GetProperty("sha256").GetString()!);
         }
         return new { directory, verified, integrity = "manifest_hashes_match", gameCompatibility = "not_tested" };
@@ -443,13 +443,13 @@ internal static class ContentPakService
     {
         ContentSafety.NoLinks(file);
         using var stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read, 1024 * 1024);
-        if (bytes < 0 || bytes > stream.Length) throw new IOException("Preimagen append fuera de límites.");
+        if (bytes < 0 || bytes > stream.Length) throw new IOException("Append preimage out of bounds.");
         using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256); byte[] buffer = new byte[1024 * 1024];
         for (long left = bytes; left > 0;)
         {
             int n = stream.Read(buffer, 0, (int)Math.Min(buffer.Length, left)); if (n == 0) throw new EndOfStreamException();
             hash.AppendData(buffer, 0, n); left -= n;
         }
-        if (!Convert.ToHexString(hash.GetHashAndReset()).Equals(expected, StringComparison.OrdinalIgnoreCase)) throw new IOException("Append perdió bytes de la unidad original.");
+        if (!Convert.ToHexString(hash.GetHashAndReset()).Equals(expected, StringComparison.OrdinalIgnoreCase)) throw new IOException("Append lost bytes from the original unit.");
     }
 }

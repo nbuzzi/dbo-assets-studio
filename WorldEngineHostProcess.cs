@@ -44,7 +44,7 @@ internal sealed class WorldEngineHostProcess : IAsyncDisposable
     {
         await DisposeAsync();
         WorldEngineService.ValidWorld(world);
-        WorldEngineService.GuardNotClient(cacheRoot, "La caché");
+        WorldEngineService.GuardNotClient(cacheRoot, "The cache");
         string exe = WorldEngineService.HostPath();
         var start = new ProcessStartInfo(exe)
         {
@@ -59,7 +59,7 @@ internal sealed class WorldEngineHostProcess : IAsyncDisposable
         else Arg("--size", $"{Math.Clamp(width, 64, 4096)}x{Math.Clamp(height, 64, 2160)}", "--hidden");
         lock (_sync) { _status = "loading"; _world = world; _worldReady = false; _window = 0; _state = default; _diagnostics.Clear(); _picks.Clear(); }
         _ready = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        _process = Process.Start(start) ?? throw new IOException("No se pudo iniciar world-host.exe.");
+        _process = Process.Start(start) ?? throw new IOException("Could not start world-host.exe.");
         Process owned = _process;
         _read = ReadAsync(owned); _errors = ReadErrorsAsync(owned);
         try { await _ready.Task.WaitAsync(TimeSpan.FromSeconds(180)); return Status(); }
@@ -99,10 +99,10 @@ internal sealed class WorldEngineHostProcess : IAsyncDisposable
             await owned.WaitForExitAsync();
             lock (_sync)
             {
-                if (owned.ExitCode != 0) { _status = "error"; Note("world-host terminó con código " + owned.ExitCode); }
-                _ready?.TrySetException(new IOException("world-host terminó antes de cargar el mundo. " + string.Join(" ", _diagnostics.TakeLast(4))));
+                if (owned.ExitCode != 0) { _status = "error"; Note("world-host exited with code " + owned.ExitCode); }
+                _ready?.TrySetException(new IOException("world-host exited before loading the world. " + string.Join(" ", _diagnostics.TakeLast(4))));
             }
-            FailPending(new IOException("world-host se cerró."));
+            FailPending(new IOException("world-host closed."));
         }
         catch (Exception ex) { lock (_sync) { _status = "error"; Note(ex.Message); _ready?.TrySetException(ex); } FailPending(ex); }
     }
@@ -129,7 +129,7 @@ internal sealed class WorldEngineHostProcess : IAsyncDisposable
 
     internal async Task<JsonElement> SendAsync(string command, object? values = null, int timeoutSeconds = 30)
     {
-        if (!Running) throw new IOException("El motor no está ejecutándose. Abrí un mundo primero.");
+        if (!Running) throw new IOException("The engine is not running. Open a world first.");
         var data = values == null ? new Dictionary<string, JsonElement>()
             : JsonSerializer.SerializeToElement(values).EnumerateObject().ToDictionary(p => p.Name, p => p.Value.Clone());
         string id = Interlocked.Increment(ref _sequence).ToString(System.Globalization.CultureInfo.InvariantCulture);

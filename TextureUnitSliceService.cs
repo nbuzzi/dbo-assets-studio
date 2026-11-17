@@ -16,29 +16,29 @@ internal static class TextureUnitSliceService
         source = Path.GetFullPath(source); ContentSafety.NoLinks(source);
         using var stream = new FileStream(source, FileMode.Open, FileAccess.Read, FileShare.Read,
             1024 * 1024, FileOptions.SequentialScan);
-        if (offset < 0 || offset > stream.Length - 128) throw new InvalidDataException("DDS offset fuera de la unidad.");
+        if (offset < 0 || offset > stream.Length - 128) throw new InvalidDataException("DDS offset outside the unit.");
         string sourceHash = Convert.ToHexString(SHA256.HashData(stream));
         stream.Position = offset;
         byte[] header = new byte[128]; stream.ReadExactly(header);
         uint U(int at) => BinaryPrimitives.ReadUInt32LittleEndian(header.AsSpan(at, 4));
         if (!header.AsSpan(0, 4).SequenceEqual("DDS "u8) || U(4) != 124 || U(76) != 32)
-            throw new InvalidDataException("Cabecera DDS inválida.");
+            throw new InvalidDataException("Invalid DDS header.");
         uint height = U(12), width = U(16), mips = Math.Max(1, U(28));
         if ((U(8) & 0x1007) != 0x1007 || (U(108) & 0x1000) == 0 || width is 0 or > 8192 || height is 0 or > 8192)
-            throw new InvalidDataException("Dimensiones/flags DDS no compatibles.");
+            throw new InvalidDataException("Unsupported DDS dimensions/flags.");
         if (U(24) > 1 || U(112) != 0 || (U(80) & 4) == 0)
-            throw new InvalidDataException("Solo DDS 2D comprimido, sin arrays, cubemaps ni volumen.");
+            throw new InvalidDataException("Only compressed 2D DDS; no arrays, cubemaps or volumes.");
         string format = System.Text.Encoding.ASCII.GetString(header, 84, 4);
-        int blockBytes = format switch { "DXT1" => 8, "DXT3" or "DXT5" => 16, _ => throw new InvalidDataException("FourCC DDS no soportado: " + format) };
+        int blockBytes = format switch { "DXT1" => 8, "DXT3" or "DXT5" => 16, _ => throw new InvalidDataException("Unsupported DDS FourCC: " + format) };
         int maxMips = 1; for (uint d = Math.Max(width, height); d > 1; d >>= 1) maxMips++;
-        if (mips > maxMips || (mips > 1 && (U(8) & 0x20000) == 0)) throw new InvalidDataException("Mip chain DDS inválida.");
+        if (mips > maxMips || (mips > 1 && (U(8) & 0x20000) == 0)) throw new InvalidDataException("Invalid DDS mip chain.");
         long length = 128; uint w = width, h = height;
         for (int i = 0; i < mips; i++)
         {
             length = checked(length + (long)Math.Max(1, (w + 3) / 4) * Math.Max(1, (h + 3) / 4) * blockBytes);
             w = Math.Max(1, w >> 1); h = Math.Max(1, h >> 1);
         }
-        if (length > 128 * 1024 * 1024 || length > stream.Length - offset) throw new InvalidDataException("DDS truncado o demasiado grande.");
+        if (length > 128 * 1024 * 1024 || length > stream.Length - offset) throw new InvalidDataException("DDS truncated or too large.");
         byte[] bytes = new byte[(int)length]; header.CopyTo(bytes, 0);
         stream.ReadExactly(bytes.AsSpan(128));
         return (new Plan(1, source, sourceHash, offset, (int)length,
@@ -51,7 +51,7 @@ internal static class TextureUnitSliceService
         string parent = Path.GetDirectoryName(Path.GetFullPath(source))!;
         output = ContentSafety.SafeOutput(output);
         if (output.Equals(parent, StringComparison.OrdinalIgnoreCase) || output.StartsWith(parent + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
-            throw new IOException("La salida debe quedar fuera de la carpeta fuente.");
+            throw new IOException("The output must be outside the source folder.");
     }
 
     public static async Task<object> CreatePlanAsync(string source, long offset, string output)
@@ -68,13 +68,13 @@ internal static class TextureUnitSliceService
     {
         string helper = Path.Combine(AppContext.BaseDirectory, "media-helper.exe");
         ContentSafety.NoLinks(helper); string helperHash = ContentSafety.Hash(helper);
-        if (helperHash != plan.NativeHelperSha256) throw new IOException("Helper difiere del plan sellado.");
+        if (helperHash != plan.NativeHelperSha256) throw new IOException("Helper differs from the sealed plan.");
         byte[] result = await NativeMedia.ConvertAsync("texture", bytes, ".dds");
-        if (ContentSafety.Hash(helper) != helperHash) throw new IOException("Helper cambió durante decodificación.");
+        if (ContentSafety.Hash(helper) != helperHash) throw new IOException("Helper changed during decoding.");
         var metadata = JsonSerializer.Deserialize<JsonElement>(result);
-        if (!metadata.GetProperty("nativeReaderPass").GetBoolean()) throw new InvalidDataException("Falló lector nativo DDS.");
+        if (!metadata.GetProperty("nativeReaderPass").GetBoolean()) throw new InvalidDataException("Native DDS reader failed.");
         if (metadata.GetProperty("width").GetUInt32() != plan.Width || metadata.GetProperty("height").GetUInt32() != plan.Height || metadata.GetProperty("levels").GetUInt32() != plan.MipCount)
-            throw new InvalidDataException("Lector nativo no coincide con cabecera DDS.");
+            throw new InvalidDataException("Native reader does not match the DDS header.");
         return metadata;
     }
 
@@ -82,10 +82,10 @@ internal static class TextureUnitSliceService
     {
         ContentSafety.NoLinks(planPath);
         var plan = JsonSerializer.Deserialize<Plan>(File.ReadAllText(planPath), ContentSafety.Json)
-            ?? throw new InvalidDataException("Plan vacío.");
-        if (plan.Version != 1) throw new InvalidDataException("Versión de plan no soportada.");
+            ?? throw new InvalidDataException("Empty plan.");
+        if (plan.Version != 1) throw new InvalidDataException("Unsupported plan version.");
         var snapshot = Snapshot(plan.Source, plan.Offset);
-        if (snapshot.Plan != plan) throw new InvalidDataException("Preimagen/plan DDS cambió; generar otro plan.");
+        if (snapshot.Plan != plan) throw new InvalidDataException("DDS pre-image/plan changed; generate a new plan.");
         return snapshot;
     }
 

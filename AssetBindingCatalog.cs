@@ -16,9 +16,9 @@ internal static class AssetBindingCatalog
     public static async Task<object> InspectAsync(string path, string? bspOutput = null)
     {
         string planPath = System.IO.Path.GetFullPath(path); ContentSafety.NoLinks(planPath);
-        if (new FileInfo(planPath).Length is < 1 or > 1024 * 1024) throw new InvalidDataException("Plan de bindings máximo1MiB.");
+        if (new FileInfo(planPath).Length is < 1 or > 1024 * 1024) throw new InvalidDataException("Bindings plan maximum 1 MiB.");
         string planHash = ContentSafety.Hash(planPath);
-        Plan plan = JsonSerializer.Deserialize<Plan>(await File.ReadAllBytesAsync(planPath), Options) ?? throw new InvalidDataException("Plan requerido.");
+        Plan plan = JsonSerializer.Deserialize<Plan>(await File.ReadAllBytesAsync(planPath), Options) ?? throw new InvalidDataException("Plan required.");
         bool twoEntries = plan.Version == 3 && plan.UvProfile == "two-entry-two-frame-v1";
         bool twoUnused = plan.Version == 5 && plan.UvProfile == "two-entry-two-frame-linear-unused-map-v1";
         bool unusedMap = plan.Version == 4 && plan.UvProfile == "single-two-frame-unused-map-v1";
@@ -34,7 +34,7 @@ internal static class AssetBindingCatalog
             (plan.Version == 7 && (!sourceMulti || plan.UvAnimation is null)) ||
             (plan.Version is 2 or 3 or 4 or 5 && plan.UvAnimation is null) || (plan.Version == 3 && !twoEntries) ||
             (plan.Version == 4 && !unusedMap) || (plan.Version == 5 && !twoUnused) || (plan.Version is 1 or 2 && plan.UvProfile is not null) || plan.Model is null || plan.Textures is null || plan.Textures.Count > 4096)
-            throw new InvalidDataException("Plan v1 sin UV o v2 con UvAnimation; máximo4096 texturas.");
+            throw new InvalidDataException("Plan v1 without UV or v2 with UvAnimation; maximum 4096 textures.");
         if (popoAbsent ? plan.UvAnimation is not null || plan.UvProfile is not null || plan.ModelAliasPlan is not null ||
             plan.AdditionalMesh is not null || plan.Textures.Count != 4 || plan.ConsumerSources?.Count != 2 ||
             plan.SourceTextureCatalog is null || plan.SourceTextureIndex is null :
@@ -54,11 +54,11 @@ internal static class AssetBindingCatalog
         {
             sourcePath = System.IO.Path.GetFullPath(System.IO.Path.IsPathRooted(sourcePath) ? sourcePath : System.IO.Path.Combine(System.IO.Path.GetDirectoryName(planPath)!, sourcePath));
             ContentSafety.NoLinks(sourcePath);
-            if (!allowed.Contains(System.IO.Path.GetExtension(sourcePath).ToLowerInvariant()) || new FileInfo(sourcePath).Length is < 1 or > 128L * 1024 * 1024 || pin is null || pin.Length != 64 || !pin.All(Uri.IsHexDigit)) throw new InvalidDataException("Fuente/pin/extensión fuera de contrato.");
+            if (!allowed.Contains(System.IO.Path.GetExtension(sourcePath).ToLowerInvariant()) || new FileInfo(sourcePath).Length is < 1 or > 128L * 1024 * 1024 || pin is null || pin.Length != 64 || !pin.All(Uri.IsHexDigit)) throw new InvalidDataException("Source/pin/extension outside the contract.");
             string hash = ContentSafety.Hash(sourcePath);
-            if (!hash.Equals(pin, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("SHA256 de fuente no coincide con plan.");
+            if (!hash.Equals(pin, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Source SHA256 does not match the plan.");
             byte[] bytes = await File.ReadAllBytesAsync(sourcePath);
-            if (!Convert.ToHexString(SHA256.HashData(bytes)).Equals(pin, StringComparison.OrdinalIgnoreCase) || ContentSafety.Hash(sourcePath) != hash) throw new IOException("Fuente cambió durante snapshot.");
+            if (!Convert.ToHexString(SHA256.HashData(bytes)).Equals(pin, StringComparison.OrdinalIgnoreCase) || ContentSafety.Hash(sourcePath) != hash) throw new IOException("Source changed during snapshot.");
             sources[sourcePath] = hash; return bytes;
         }
         byte[] model = await Snapshot(plan.Model.Path, plan.Model.Sha256, [".dff"]);
@@ -137,12 +137,12 @@ internal static class AssetBindingCatalog
         foreach (Binding binding in plan.Textures)
         {
             byte[] name = Convert.FromHexString(binding.NameHex), mask = Convert.FromHexString(binding.MaskHex);
-            if (name.Length is < 1 or > 31 || mask.Length != 0 || name.Any(x => x < 32 || x == 127)) throw new InvalidDataException("Nombre RenderWare máximo31bytes; máscara separada aún no soportada.");
+            if (name.Length is < 1 or > 31 || mask.Length != 0 || name.Any(x => x < 32 || x == 127)) throw new InvalidDataException("RenderWare name maximum 31 bytes; separate mask not supported yet.");
             string resource = Encoding.Latin1.GetString(name); ContentSafety.ResourcePath(resource);
-            if (!unique.Add(Convert.ToHexString(name))) throw new InvalidDataException("Binding de nombre duplicado.");
+            if (!unique.Add(Convert.ToHexString(name))) throw new InvalidDataException("Duplicate name binding.");
             byte[] texture = await Snapshot(binding.Path, binding.Sha256, [".dds", ".png", ".bmp"]);
             string ext = System.IO.Path.GetExtension(binding.Path).ToLowerInvariant();
-            if (bundle.Length + texture.Length + name.Length + 16 > 128L * 1024 * 1024) throw new InvalidDataException("Bundle completo máximo128MiB.");
+            if (bundle.Length + texture.Length + name.Length + 16 > 128L * 1024 * 1024) throw new InvalidDataException("Complete bundle maximum 128 MiB.");
             writer.Write((uint)name.Length); writer.Write(name); writer.Write((uint)mask.Length); writer.Write(mask);
             writer.Write(ext == ".dds" ? 1u : ext == ".png" ? 2u : 3u); writer.Write((uint)texture.Length); writer.Write(texture);
             bindings.Add(new { nameHex = Convert.ToHexString(name), name = resource, maskHex = "", binding.Sha256, binding.Path });
@@ -150,7 +150,7 @@ internal static class AssetBindingCatalog
         if (plan.Animation is not null)
         {
             byte[] animation = await Snapshot(plan.Animation.Path, plan.Animation.Sha256, [".anm"]);
-            if (bundle.Length + animation.Length + 4 > 128L * 1024 * 1024) throw new InvalidDataException("Bundle completo máximo128MiB.");
+            if (bundle.Length + animation.Length + 4 > 128L * 1024 * 1024) throw new InvalidDataException("Complete bundle maximum 128 MiB.");
             writer.Write((uint)animation.Length); writer.Write(animation);
         }
         if (plan.UvAnimation is not null)
@@ -221,18 +221,18 @@ internal static class AssetBindingCatalog
             aux.GetProperty("toonAtomics").GetInt32()!=0 || aux.GetProperty("customPipelines").GetInt32()!=0 || aux.GetProperty("matfxMode").GetInt32()!=5 ||
             !aux.GetProperty("uvMatricesNull").GetBoolean() || !aux.GetProperty("nativeCloneValidated").GetBoolean()))
             throw new InvalidDataException("Native wind inactive auxiliary material/renderer proof differs.");
-        if (ContentSafety.Hash(planPath) != planHash || ContentSafety.Hash(helper) != helperHash || sources.Any(x => ContentSafety.Hash(x.Key) != x.Value)) throw new IOException("Plan/helper/fuente modificados durante inspección.");
-        if (result.RootElement.GetProperty("texturesSubstituted").GetBoolean() || result.RootElement.GetProperty("renderingTested").GetBoolean()) throw new InvalidDataException("Metadata de bindings inconsistente.");
+        if (ContentSafety.Hash(planPath) != planHash || ContentSafety.Hash(helper) != helperHash || sources.Any(x => ContentSafety.Hash(x.Key) != x.Value)) throw new IOException("Plan/helper/source modified during inspection.");
+        if (result.RootElement.GetProperty("texturesSubstituted").GetBoolean() || result.RootElement.GetProperty("renderingTested").GetBoolean()) throw new InvalidDataException("Inconsistent bindings metadata.");
         if (plan.Animation is not null && (!result.RootElement.TryGetProperty("animationBinding", out var playback) ||
             !playback.GetProperty("nativeHierarchyPlayback").GetBoolean() || playback.GetProperty("steps").GetInt32() != 40 ||
             playback.GetProperty("nodes").GetInt32() < 1 || playback.GetProperty("eventsTested").GetBoolean() || playback.GetProperty("renderingTested").GetBoolean()))
-            throw new InvalidDataException("Metadata de playback nativo inconsistente.");
+            throw new InvalidDataException("Inconsistent native playback metadata.");
         if (plan.UvAnimation is not null && (!result.RootElement.TryGetProperty("uvBinding", out var uvPlayback) ||
             !uvPlayback.GetProperty("nativeMaterialPlayback").GetBoolean() || uvPlayback.GetProperty("steps").GetInt32() != 40 ||
             uvPlayback.GetProperty("entries").GetInt32() != (twoEntries || twoUnused || identicalNamed ? 2 : 1) || uvPlayback.GetProperty("frames").GetInt32() != (threeFrames ? 3 : sevenFrames ? 7 : 2) ||
             uvPlayback.GetProperty("profile").GetString() != (sourceMulti || identicalNamed ? plan.UvProfile : twoUnused ? "two-entry-two-frame-linear-unused-map-v1" : unusedMap ? "single-two-frame-unused-map-v1" : twoEntries ? "two-entry-two-frame-v1" : "single-two-frame-v1") ||
             uvPlayback.GetProperty("materials").GetInt32() < 1 || uvPlayback.GetProperty("renderingTested").GetBoolean()))
-            throw new InvalidDataException("Metadata de playback UV nativo inconsistente.");
+            throw new InvalidDataException("Inconsistent native UV playback metadata.");
         return new { planPath, planSha256 = planHash, modelSha256 = plan.Model.Sha256, helperSha256 = helperHash,
             nativeReaderPass = true, realTextureBindings = !popoAbsent, allAvailableSourceRastersBound = true,
             sourceAbsentPrimaryPreserved = popoAbsent, texturesSubstituted = false, sourcePreserved = true,

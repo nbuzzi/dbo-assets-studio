@@ -36,7 +36,7 @@ internal sealed class SpawnCatalog
         if (File.Exists(textAll))
         {
             try { mobNames = MapNameRdfService.ReadTextCategory(textAll, 5); }
-            catch (Exception ex) { catalog.Notes.Add("Nombres de mobs (TextAll): " + ex.Message + "; se usan los embebidos."); }
+            catch (Exception ex) { catalog.Notes.Add("Mob names (TextAll): " + ex.Message + "; using the embedded ones."); }
         }
         catalog.ReadTable(mobPath, schemas.FirstOrDefault(s => s.Name == "MobData"), "mob", "byGrade", mobNames);
         catalog.ReadTable(npcPath, schemas.FirstOrDefault(s => s.Name == "NpcData"), "npc", "byNpcType", new Dictionary<uint, string>());
@@ -48,10 +48,10 @@ internal sealed class SpawnCatalog
 
     private void ReadTable(string path, RdfSchema? schema, string kind, string typeField, IReadOnlyDictionary<uint, string> textNames)
     {
-        if (schema == null) { Notes.Add($"No hay esquema registrado para {kind}."); return; }
-        if (!File.Exists(path)) { Notes.Add($"Falta {Path.GetFileName(path)} junto al archivo de spawns; la paleta de {kind} no está disponible."); return; }
+        if (schema == null) { Notes.Add($"No schema registered for {kind}."); return; }
+        if (!File.Exists(path)) { Notes.Add($"{Path.GetFileName(path)} is missing next to the spawn file; the {kind} palette is not available."); return; }
         RdfField? F(string n) => schema.Fields.FirstOrDefault(f => f.Name.Equals(n, StringComparison.OrdinalIgnoreCase));
-        var id = F("tblidx") ?? throw new InvalidDataException("Falta tblidx.");
+        var id = F("tblidx") ?? throw new InvalidDataException("tblidx is missing.");
         var name = F("wszNameText"); var textId = F("Name"); var model = F("szModel"); var level = F("byLevel"); var type = F(typeField); var valid = F("bValidity_Able");
         var dict = kind == "npc" ? Npcs : Mobs;
         var doc = RdfDocument.Open(path, schema);

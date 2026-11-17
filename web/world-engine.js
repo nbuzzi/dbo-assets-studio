@@ -14,49 +14,49 @@ const fmt = (n, d = 1) => Number.isFinite(Number(n)) ? Number(n).toFixed(d) : '�
 export function installWorldEngine({sidebar, main, api, toast, escape: e}) {
  sidebar.innerHTML = `
  <div class="map-native-intro">
-  <span class="eyebrow">WORLD EDITOR · MOTOR NTL REAL</span>
-  <h2>Ver y editar con el render del juego</h2>
-  <p>Abre el mundo con el motor del cliente (NtlPresentation en modo herramienta). Lee una caché privada extraída de los paks; no escribe en el cliente ni en runtime.</p>
-  <span class="map-native-badge">Spawns: candidato en carpeta nueva con auditoría</span>
+  <span class="eyebrow">WORLD EDITOR · REAL NTL ENGINE</span>
+  <h2>View and edit with the game renderer</h2>
+  <p>Opens the world in the client engine (NtlPresentation in tool mode). Reads a private cache extracted from the paks; never writes to the client or runtime.</p>
+  <span class="map-native-badge">Spawns: candidate in a new folder with audit</span>
  </div>
  <div class="map-native-picker">
-  <label for="we-world">Mundo</label>
-  <input id="we-filter" class="we-filter" placeholder="Filtrar mundos (dbo_main…)">
+  <label for="we-world">World</label>
+  <input id="we-filter" class="we-filter" placeholder="Filter worlds (dbo_main…)">
   <select id="we-world" size="9"></select>
-  <p id="we-world-note" class="map-path">Leyendo ter.pak…</p>
+  <p id="we-world-note" class="map-path">Reading ter.pak…</p>
   <p id="we-prepare-note" class="map-path we-prepare-note" hidden></p>
   <div class="map-native-actions">
-   <button id="we-prepare" class="map-button" type="button" disabled>Preparar caché</button>
-   <button id="we-open" class="map-button map-button-primary" type="button" disabled>Abrir en el motor</button>
-   <button id="we-close" class="map-button map-button-secondary" type="button" disabled>Cerrar motor</button>
+   <button id="we-prepare" class="map-button" type="button" disabled>Prepare cache</button>
+   <button id="we-open" class="map-button map-button-primary" type="button" disabled>Open in engine</button>
+   <button id="we-close" class="map-button map-button-secondary" type="button" disabled>Close engine</button>
   </div>
-  <label class="we-check"><input id="we-edit" type="checkbox"> Abrir para editar (workspace privado: copia del mundo)</label>
+  <label class="we-check"><input id="we-edit" type="checkbox"> Open for editing (private workspace: copy of the world)</label>
   <div class="map-native-actions">
-   <button id="we-save" class="map-button" type="button" disabled>Guardar en workspace</button>
-   <button id="we-export" class="map-button map-button-secondary" type="button" disabled>Exportar candidato…</button>
+   <button id="we-save" class="map-button" type="button" disabled>Save to workspace</button>
+   <button id="we-export" class="map-button map-button-secondary" type="button" disabled>Export candidate…</button>
   </div>
-  <p id="we-edit-note" class="map-path">Modo visor: no escribe nada. La edición trabaja sobre una copia; el candidato lleva solo lo que cambió (audit.json).</p>
-  <label>Ir a posición (x, z)</label>
+  <p id="we-edit-note" class="map-path">Viewer mode: nothing is written. Editing works on a copy; the candidate carries only what changed (audit.json).</p>
+  <label>Go to position (x, z)</label>
   <div class="map-picker-row we-goto">
    <input id="we-x" type="number" step="1" placeholder="x"><input id="we-z" type="number" step="1" placeholder="z">
-   <button id="we-goto" class="map-button" type="button" disabled>Ir</button>
+   <button id="we-goto" class="map-button" type="button" disabled>Go</button>
   </div>
  </div>
  <div id="we-tools" class="we-tools"></div>
  <p id="we-pick-note" class="map-path"></p>
  </div>
- <div class="map-legacy-hint"><strong>Controles del visor</strong><small>Botón derecho: orbitar · rueda: zoom · botón medio o Shift+derecho: desplazar · WASD/QE: mover (clic en el visor para el foco).</small></div>`;
+ <div class="map-legacy-hint"><strong>Viewer controls</strong><small>Right button: orbit · wheel: zoom · middle button or Shift+right: pan · WASD/QE: move (click the viewer to focus).</small></div>`;
  main.innerHTML = `
- <header class="map-workshop-header"><div><span class="eyebrow">MOTOR NTL · CNtlPLWorldEntity + CNtlPLVisualManager</span><h2 id="we-title">Elegí un mundo</h2><p id="we-subtitle">Render real del cliente: terreno, objetos, agua, cielo, niebla y sombras.</p></div>
+ <header class="map-workshop-header"><div><span class="eyebrow">NTL ENGINE · CNtlPLWorldEntity + CNtlPLVisualManager</span><h2 id="we-title">Choose a world</h2><p id="we-subtitle">Real client render: terrain, objects, water, sky, fog and shadows.</p></div>
   <div class="we-toolbar">
-   <div class="we-cams" role="group" aria-label="Cámara">
-    ${['free','top','front','back','left','right'].map(m => `<button type="button" class="map-button" data-we-cam="${m}">${{free:'Libre',top:'Top',front:'Frente',back:'Atrás',left:'Izq.',right:'Der.'}[m]}</button>`).join('')}
+   <div class="we-cams" role="group" aria-label="Camera">
+    ${['free','top','front','back','left','right'].map(m => `<button type="button" class="map-button" data-we-cam="${m}">${{free:'Free',top:'Top',front:'Front',back:'Back',left:'Left',right:'Right'}[m]}</button>`).join('')}
    </div>
-   <label class="we-check"><input id="we-overlay" type="checkbox" checked> Stats del motor</label>
-   <button id="we-capture" class="map-button" type="button" disabled>Captura</button>
+   <label class="we-check"><input id="we-overlay" type="checkbox" checked> Engine stats</label>
+   <button id="we-capture" class="map-button" type="button" disabled>Capture</button>
   </div>
  </header>
- <div class="we-stage"><div id="we-view" class="we-view"><p id="we-placeholder" class="map-empty">El motor se dibuja aquí.</p></div></div>
+ <div class="we-stage"><div id="we-view" class="we-view"><p id="we-placeholder" class="map-empty">The engine draws here.</p></div></div>
  <footer id="we-stats" class="we-stats">—</footer>`;
 
  const $ = s => sidebar.querySelector(s) || main.querySelector(s);
@@ -93,8 +93,8 @@ export function installWorldEngine({sidebar, main, api, toast, escape: e}) {
  function render() {
   const w = worlds.find(x => x.world === selectedWorld);
   $('#we-prepare').disabled = busy || !w;
-  $('#we-prepare').textContent = preparing ? 'Preparando…' : w?.cached ? 'Caché lista ✓' : 'Preparar caché';
-  $('#we-open').title = w && !w.cached ? 'Primero prepará la caché de este mundo' : '';
+  $('#we-prepare').textContent = preparing ? 'Preparing…' : w?.cached ? 'Cache ready ✓' : 'Prepare cache';
+  $('#we-open').title = w && !w.cached ? 'Prepare the cache for this world first' : '';
   $('#we-open').disabled = busy || !w?.cached;
   $('#we-close').disabled = busy || !running();
   $('#we-goto').disabled = busy || !running();
@@ -102,13 +102,13 @@ export function installWorldEngine({sidebar, main, api, toast, escape: e}) {
   $('#we-save').disabled = busy || !editing();
   $('#we-export').disabled = busy || !editing();
   const es = status?.engine;
-  if (editing() && es) $('#we-edit-note').textContent = `Editando en workspace · fields con cambios sin guardar: ${es.dirtyFields ?? 0} · editados en la sesión: ${es.editedFields ?? 0} · deshacer: ${es.undo ?? 0}`;
+  if (editing() && es) $('#we-edit-note').textContent = `Editing in workspace · fields with unsaved changes: ${es.dirtyFields ?? 0} · edited this session: ${es.editedFields ?? 0} · undo: ${es.undo ?? 0}`;
   for (const t of tools) t.render?.(status);
   main.querySelectorAll('[data-we-cam]').forEach(b => { b.disabled = busy || !running(); b.classList.toggle('active', b.dataset.weCam === (status?.engine?.camera || '')); });
   $('#we-placeholder').hidden = running();
-  $('#we-title').textContent = status?.world ? status.world : (selectedWorld || 'Elegí un mundo');
+  $('#we-title').textContent = status?.world ? status.world : (selectedWorld || 'Choose a world');
   const s = status?.engine;
-  $('#we-stats').textContent = s ? `${status.worldReady ? 'listo' : 'cargando…'} · cámara ${s.camera} · pos ${fmt(s.pos?.[0])}, ${fmt(s.pos?.[1])}, ${fmt(s.pos?.[2])} · field ${s.field} · sector ${s.sector} · sectores ${s.frustumSectors}/${s.visibleSectors} · polígonos ${s.polys} · ${fmt(s.fps, 0)} fps · spawns ${s.spawns}` : (status?.state === 'error' ? 'Error: ' + (status.diagnostics || []).slice(-2).join(' · ') : '—');
+  $('#we-stats').textContent = s ? `${status.worldReady ? 'ready' : 'loading…'} · camera ${s.camera} · pos ${fmt(s.pos?.[0])}, ${fmt(s.pos?.[1])}, ${fmt(s.pos?.[2])} · field ${s.field} · sector ${s.sector} · sectors ${s.frustumSectors}/${s.visibleSectors} · polygons ${s.polys} · ${fmt(s.fps, 0)} fps · spawns ${s.spawns}` : (status?.state === 'error' ? 'Error: ' + (status.diagnostics || []).slice(-2).join(' · ') : '—');
  }
  function renderWorlds() {
   const q = $('#we-filter').value.trim().toLowerCase();
@@ -119,7 +119,7 @@ export function installWorldEngine({sidebar, main, api, toast, escape: e}) {
   const r = await api('world-engine-worlds');
   worlds = r.worlds || [];
   if (!selectedWorld) selectedWorld = worlds.find(w => w.world === 'dbo_main_world')?.world || worlds[0]?.world || '';
-  $('#we-world-note').textContent = `${worlds.length} mundos en ${r.pack} · caché ${r.cacheRoot}`;
+  $('#we-world-note').textContent = `${worlds.length} worlds in ${r.pack} · cache ${r.cacheRoot}`;
   renderWorlds(); render();
  }
  async function refreshStatus() {
@@ -131,7 +131,7 @@ export function installWorldEngine({sidebar, main, api, toast, escape: e}) {
  }
  async function handlePick(p) {
   for (const t of tools) if (t.onPick && await t.onPick(p)) return;
-  if (p.terrain) $('#we-pick-note').textContent = `Terreno ${fmt(p.terrain[0])}, ${fmt(p.terrain[1])}, ${fmt(p.terrain[2])}`;
+  if (p.terrain) $('#we-pick-note').textContent = `Terrain ${fmt(p.terrain[0])}, ${fmt(p.terrain[1])}, ${fmt(p.terrain[2])}`;
  }
  function editing() { return running() && !!status?.engine?.editMode; }
  const tools = TOOL_MODULES.map(install => install({container: $('#we-tools'), api, toast, escape: e,
@@ -145,7 +145,7 @@ export function installWorldEngine({sidebar, main, api, toast, escape: e}) {
   // Progress and errors stay visible in the panel (not only in a toast): the extraction can take a while.
   const world = selectedWorld, note = $('#we-prepare-note'), started = Date.now();
   const show = (text, error = false) => { note.hidden = false; note.textContent = text; note.classList.toggle('we-error', error); };
-  show(`Preparando ${world}: leyendo los paks del cliente (solo lectura)…`);
+  show(`Preparing ${world}: reading the client paks (read-only)…`);
   preparing = true; render();
   const secs = () => Math.round((Date.now() - started) / 1000);
   try {
@@ -156,17 +156,17 @@ export function installWorldEngine({sidebar, main, api, toast, escape: e}) {
     await new Promise(r => setTimeout(r, 600));
     st = await api('world-engine-state');
     if (st.prepareWorld === world && !st.prepareRunning) break;
-    show(`Preparando ${world}: ${st.prepare || 'trabajando…'} · ${secs()} s`);
+    show(`Preparing ${world}: ${st.prepare || 'working…'} · ${secs()} s`);
    }
    if (st.prepareError) throw new Error(st.prepareError);
    const r = st.prepareResult || {world};
    const n = (r.steps || []).reduce((a, s) => a + (s.extracted || 0), 0), bad = (r.steps || []).reduce((a, s) => a + (s.failed || 0), 0);
    const w = worlds.find(x => x.world === world); if (w) w.cached = true;
    renderWorlds();
-   show(`Caché lista para ${world}: ${n} archivos extraídos${bad ? `, ${bad} ilegibles` : ''} en ${secs()} s. Ya podés abrirlo en el motor.`);
-   toast(`Caché lista para ${world}.`);
+   show(`Cache ready for ${world}: ${n} files extracted${bad ? `, ${bad} unreadable` : ''} in ${secs()} s. You can now open it in the engine.`);
+   toast(`Cache ready for ${world}.`);
   } catch (err) {
-   show(`No se pudo preparar ${world}: ${err.message || err}`, true);
+   show(`Could not prepare ${world}: ${err.message || err}`, true);
    throw err;
   } finally { preparing = false; }
   // Refresh sizes/flags in the background; the world is already marked as cached.
@@ -179,22 +179,22 @@ export function installWorldEngine({sidebar, main, api, toast, escape: e}) {
   if ($('#we-x').value !== '' && $('#we-z').value !== '') Object.assign(args, {x, y: 0, z});
   else if (selectedWorld === 'dbo_main_world') Object.assign(args, {x: 4583, y: 0, z: 4053});
   args.edit = $('#we-edit').checked;
-  if (args.edit) toast('Creando el workspace de edición (copia del mundo)…');
+  if (args.edit) toast('Creating the edit workspace (copy of the world)…');
   status = await api('world-engine-open', args);
   startPoll();
   await sendViewport(true);
   if (args.edit) { for (let i = 0; i < 240 && !status?.worldReady; i++) { await new Promise(r => setTimeout(r, 500)); await refreshStatus(); } await api('world-engine-before'); }
  });
- $('#we-save').onclick = () => guarded(async () => { const r = await api('world-engine-save'); toast(`Guardado en el workspace: fields ${(r.saved || []).join(', ') || '—'}.`); });
+ $('#we-save').onclick = () => guarded(async () => { const r = await api('world-engine-save'); toast(`Saved to the workspace: fields ${(r.saved || []).join(', ') || '—'}.`); });
  $('#we-export').onclick = () => guarded(async () => {
   const r = await api('world-engine-export'); if (!r) return;
-  toast(`Candidato: ${r.filesChanged} archivos cambiados (${r.rewrittenIdentical} reescritos idénticos), solo lo editado: ${r.onlyEditedChanged ? 'sí' : 'NO'}.`);
+  toast(`Candidate: ${r.filesChanged} files changed (${r.rewrittenIdentical} rewritten identical), only edits changed: ${r.onlyEditedChanged ? 'yes' : 'NO'}.`);
  });
  $('#we-close').onclick = () => guarded(async () => { await sendViewport(true, true); status = await api('world-engine-close'); });
  $('#we-goto').onclick = () => guarded(async () => { await api('world-engine-goto', {x: Number($('#we-x').value), y: 0, z: Number($('#we-z').value), ground: true, dist: 120}); });
  main.querySelectorAll('[data-we-cam]').forEach(b => b.onclick = () => guarded(async () => { await api('world-engine-camera', b.dataset.weCam === 'free' ? {mode: 'free'} : {mode: b.dataset.weCam}); }));
  $('#we-overlay').onchange = () => guarded(async () => { await api('world-engine-overlay', {enabled: $('#we-overlay').checked}); });
- $('#we-capture').onclick = () => guarded(async () => { const r = await api('world-engine-capture'); toast('Captura del motor: ' + r.path); });
+ $('#we-capture').onclick = () => guarded(async () => { const r = await api('world-engine-capture'); toast('Engine capture: ' + r.path); });
 
  return {
   show: async () => {

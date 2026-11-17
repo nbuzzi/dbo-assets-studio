@@ -24,10 +24,10 @@ internal sealed class UiLayout
     public static UiLayout Load(string path)
     {
         path = System.IO.Path.GetFullPath(path);
-        if (!File.Exists(path)) throw new FileNotFoundException("No existe el layout: " + path);
+        if (!File.Exists(path)) throw new FileNotFoundException("Layout not found: " + path);
         var node = JsonNode.Parse(File.ReadAllText(path), documentOptions: new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true }) as JsonObject
-            ?? throw new InvalidDataException("El layout debe ser un objeto JSON.");
-        if ((string?)node["schema"] != Schema) throw new InvalidDataException($"schema debe ser \"{Schema}\".");
+            ?? throw new InvalidDataException("The layout must be a JSON object.");
+        if ((string?)node["schema"] != Schema) throw new InvalidDataException($"schema must be \"{Schema}\".");
         return new UiLayout { Path = path, Root = node };
     }
 
@@ -49,16 +49,16 @@ internal sealed class UiLayout
         var root = (JsonObject)Root.DeepClone();
         if (variant != "default")
         {
-            if (root["variants"] is not JsonObject variants || variants[variant] is not JsonObject overrides) throw new ArgumentException("Variante desconocida: " + variant + ". Disponibles: " + string.Join(", ", VariantNames()));
+            if (root["variants"] is not JsonObject variants || variants[variant] is not JsonObject overrides) throw new ArgumentException("Unknown variant: " + variant + ". Available: " + string.Join(", ", VariantNames()));
             ApplyOverrides(root, overrides);
         }
         else if (root["variants"] is JsonObject variants && variants["default"] is JsonObject defaults) ApplyOverrides(root, defaults);
 
         var screen = root["screen"] as JsonObject;
         int sw = screenW ?? Int(screen?["width"], 1280), sh = screenH ?? Int(screen?["height"], 720);
-        var dialog = root["dialog"] as JsonObject ?? throw new InvalidDataException("Falta dialog.");
+        var dialog = root["dialog"] as JsonObject ?? throw new InvalidDataException("dialog is missing.");
         int dw = Int(dialog["width"], 0), dh = Int(dialog["height"], 0);
-        if (dw <= 0 || dh <= 0) throw new InvalidDataException("dialog.width/height deben ser > 0.");
+        if (dw <= 0 || dh <= 0) throw new InvalidDataException("dialog.width/height must be > 0.");
         int dx = Int(dialog["x"], 0), dy = Int(dialog["y"], 0);
         string anchor = (string?)dialog["anchor"] ?? "center";
         (int ax, int ay) = anchor switch
@@ -72,7 +72,7 @@ internal sealed class UiLayout
             "bottom-left" => (0, sh - dh),
             "bottom" => ((sw - dw) / 2, sh - dh),
             "bottom-right" => (sw - dw, sh - dh),
-            _ => throw new InvalidDataException("dialog.anchor inválido: " + anchor)
+            _ => throw new InvalidDataException("Invalid dialog.anchor: " + anchor)
         };
         var scene = new UiScene
         {
@@ -91,18 +91,18 @@ internal sealed class UiLayout
     {
         foreach (var item in comps)
         {
-            if (item is not JsonObject c) throw new InvalidDataException("Cada componente debe ser un objeto.");
+            if (item is not JsonObject c) throw new InvalidDataException("Each component must be an object.");
             bool hiddenFlag = (bool?)c["hidden"] == true;
             if (hiddenFlag && !_includeHidden) continue;
-            string type = (string?)c["type"] ?? throw new InvalidDataException("Componente sin type.");
-            if (!Types.Contains(type)) throw new InvalidDataException($"type desconocido \"{type}\". Válidos: {string.Join(", ", Types)}");
+            string type = (string?)c["type"] ?? throw new InvalidDataException("Component without type.");
+            if (!Types.Contains(type)) throw new InvalidDataException($"Unknown type \"{type}\". Valid: {string.Join(", ", Types)}");
             string id = Expand((string?)c["id"] ?? "", vars);
             if (type == "repeat")
             {
                 int count = Int(c["count"], 0), cols = Math.Max(1, Int(c["columns"], count));
                 var step = c["step"] as JsonArray; int sx = Int(step?[0], 0), sy = Int(step?[1], 0);
                 var origin = c["origin"] as JsonArray; int rx = Int(origin?[0], 0), ry = Int(origin?[1], 0);
-                if (count < 0 || count > 512) throw new InvalidDataException($"repeat {id}: count fuera de rango.");
+                if (count < 0 || count > 512) throw new InvalidDataException($"repeat {id}: count out of range.");
                 var data = c["data"] as JsonArray;
                 for (int i = 0; i < count; i++)
                 {
@@ -113,10 +113,10 @@ internal sealed class UiLayout
                 continue;
             }
             if (id.Length == 0) id = type + scene.Components.Count.ToString(CultureInfo.InvariantCulture);
-            if (!Regex.IsMatch(id, "^[A-Za-z_][A-Za-z0-9_]*$")) throw new InvalidDataException($"id inválido \"{id}\" (letras, números y _).");
-            if (!ids.Add(id)) throw new InvalidDataException("id duplicado: " + id);
-            var r = c["rect"] as JsonArray ?? throw new InvalidDataException($"{id}: falta rect [x,y,w,h].");
-            if (r.Count != 4) throw new InvalidDataException($"{id}: rect debe ser [x,y,w,h].");
+            if (!Regex.IsMatch(id, "^[A-Za-z_][A-Za-z0-9_]*$")) throw new InvalidDataException($"Invalid id \"{id}\" (letters, digits and _).");
+            if (!ids.Add(id)) throw new InvalidDataException("Duplicate id: " + id);
+            var r = c["rect"] as JsonArray ?? throw new InvalidDataException($"{id}: rect [x,y,w,h] is missing.");
+            if (r.Count != 4) throw new InvalidDataException($"{id}: rect must be [x,y,w,h].");
             int x = ox + Int(r[0], 0, vars), y = oy + Int(r[1], 0, vars), w = Int(r[2], 0, vars), h = Int(r[3], 0, vars);
             var comp = new UiComponent
             {
@@ -165,7 +165,7 @@ internal sealed class UiLayout
         }
         return new UiImage
         {
-            File = ResolveAsset(root, Expand((string?)o["asset"] ?? throw new InvalidDataException("image sin asset."), vars)),
+            File = ResolveAsset(root, Expand((string?)o["asset"] ?? throw new InvalidDataException("image without asset."), vars)),
             SrcX = Int(src?[0], 0, vars), SrcY = Int(src?[1], 0, vars), SrcWidth = Int(src?[2], -1, vars), SrcHeight = Int(src?[3], -1, vars),
             Tint = Color((string?)o["tint"], 0xFFFFFFFF),
             Slice = o["slice"] is JsonArray s && s.Count == 4 ? [Int(s[0], 0), Int(s[1], 0), Int(s[2], 0), Int(s[3], 0)] : null,
@@ -196,7 +196,7 @@ internal sealed class UiLayout
         {
             // "strings.title", "dialog.width", "<componentId>.<prop>"
             int dot = key.IndexOf('.');
-            if (dot <= 0) throw new InvalidDataException("Override inválido (usar id.prop): " + key);
+            if (dot <= 0) throw new InvalidDataException("Invalid override (use id.prop): " + key);
             string head = key[..dot], prop = key[(dot + 1)..];
             JsonObject? target = head switch
             {
@@ -205,7 +205,7 @@ internal sealed class UiLayout
                 "screen" => root["screen"] as JsonObject ?? (JsonObject)(root["screen"] = new JsonObject()),
                 _ => FindComponent(root["components"] as JsonArray, head)
             };
-            if (target is null) throw new InvalidDataException("Override apunta a un id inexistente: " + head);
+            if (target is null) throw new InvalidDataException("Override points to a missing id: " + head);
             target[prop] = value?.DeepClone();
         }
     }
@@ -244,7 +244,7 @@ internal sealed class UiLayout
         string s = vars is null ? node.ToString() : Expand(node.ToString(), vars);
         // Small arithmetic: "12+{i*40}" after expansion → "12+80".
         var m = Regex.Match(s, @"^\s*(-?\d+)\s*(([+\-])\s*(\d+))?\s*$");
-        if (!m.Success) throw new InvalidDataException("Número inválido: " + s);
+        if (!m.Success) throw new InvalidDataException("Invalid number: " + s);
         int a = int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture);
         return m.Groups[2].Success ? (m.Groups[3].Value == "+" ? a + int.Parse(m.Groups[4].Value) : a - int.Parse(m.Groups[4].Value)) : a;
     }
@@ -253,7 +253,7 @@ internal sealed class UiLayout
     public static uint Color(string? s, uint fallback)
     {
         if (string.IsNullOrEmpty(s)) return fallback;
-        if (!Regex.IsMatch(s, "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$")) throw new InvalidDataException("Color inválido (usar #RRGGBB o #RRGGBBAA): " + s);
+        if (!Regex.IsMatch(s, "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$")) throw new InvalidDataException("Invalid color (use #RRGGBB or #RRGGBBAA): " + s);
         uint rgb = uint.Parse(s.AsSpan(1, 6), NumberStyles.HexNumber);
         uint a = s.Length == 9 ? uint.Parse(s.AsSpan(7, 2), NumberStyles.HexNumber) : 255;
         return a << 24 | rgb;

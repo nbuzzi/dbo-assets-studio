@@ -14,16 +14,16 @@ internal static class AssetDependencyCatalog
         string ext = Path.GetExtension(source).ToLowerInvariant();
         if (new FileInfo(source).Length is < 1 or > 128L * 1024 * 1024 ||
             (mode == "model-dependencies" ? ext != ".dff" : mode == "sound" ? ext is not (".wav" or ".mp3" or ".ogg") : ext is not (".dds" or ".png" or ".bmp")))
-            throw new InvalidDataException("Modelo DFF o textura DDS/PNG/BMP requerida; límite128MiB.");
+            throw new InvalidDataException("DFF model or DDS/PNG/BMP texture required; limit 128 MiB.");
         string before = ContentSafety.Hash(source);
         string helper = Path.Combine(AppContext.BaseDirectory, "media-helper.exe"); ContentSafety.NoLinks(helper);
         string helperHash = ContentSafety.Hash(helper);
         byte[] raw = await File.ReadAllBytesAsync(source);
         if (Convert.ToHexString(SHA256.HashData(raw)) != before || ContentSafety.Hash(source) != before)
-            throw new IOException("Fuente modificada durante snapshot.");
+            throw new IOException("Source modified during snapshot.");
         byte[] native = await NativeMedia.ConvertAsync(mode == "sound" ? "audio" : mode, raw, ext);
         if (ContentSafety.Hash(source) != before || ContentSafety.Hash(helper) != helperHash)
-            throw new IOException("Fuente/helper modificados durante inspección.");
+            throw new IOException("Source/helper modified during inspection.");
         if (mode == "sound")
         {
             // The pinned native helper emits a complete, canonical PCM16 WAV
@@ -47,12 +47,12 @@ internal static class AssetDependencyCatalog
         if (mode == "texture-pixels")
         {
             if (native.Length < 40 || !native.AsSpan(0, 4).SequenceEqual("OTR1"u8))
-                throw new InvalidDataException("Snapshot RGBA nativo inválido.");
+                throw new InvalidDataException("Invalid native RGBA snapshot.");
             uint Word(int index) => BinaryPrimitives.ReadUInt32LittleEndian(native.AsSpan(4 + index * 4, 4));
             uint width = Word(0), height = Word(1), levels = Word(4), bytes = Word(8);
             if (width is < 1 or > 16384 || height is < 1 or > 16384 || levels is < 1 or > 15 ||
                 (ulong)width * height * 4 != bytes || (ulong)bytes + 40 != (ulong)native.Length)
-                throw new InvalidDataException("Dimensiones/EOF RGBA nativos inválidos.");
+                throw new InvalidDataException("Invalid native RGBA dimensions/EOF.");
             return new { source, sourceSha256 = before, helperSha256 = helperHash,
                 nativeReaderPass = true, nativePixelReadback = true, width, height,
                 depth = Word(2), format = Word(3), levels, filter = Word(5), addressU = Word(6), addressV = Word(7),
@@ -67,7 +67,7 @@ internal static class AssetDependencyCatalog
         {
             int width = root.GetProperty("width").GetInt32(), height = root.GetProperty("height").GetInt32();
             if (width is < 1 or > 16384 || height is < 1 or > 16384 || !root.GetProperty("nativeReaderPass").GetBoolean())
-                throw new InvalidDataException("Metadata de textura nativa inválida.");
+                throw new InvalidDataException("Invalid native texture metadata.");
             return new { source, sourceSha256 = before, helperSha256 = helperHash, nativeReaderPass = true,
                 width, height, depth = root.GetProperty("depth").GetInt32(), format = root.GetProperty("format").GetInt32(),
                 levels = root.GetProperty("levels").GetInt32(), sourcePreserved = true, renderingTested = false };
@@ -78,7 +78,7 @@ internal static class AssetDependencyCatalog
             string n = item.GetProperty("nameHex").GetString()!, m = item.GetProperty("maskHex").GetString()!;
             string name = Encoding.Latin1.GetString(Convert.FromHexString(n)), mask = Encoding.Latin1.GetString(Convert.FromHexString(m));
             if ((!rawNames && name.Length == 0) || name.Length > 127 || mask.Length > 127 || requests.Count >= 16384)
-                throw new InvalidDataException("Referencia de textura fuera de límites.");
+                throw new InvalidDataException("Texture reference out of bounds.");
             bool safe = name.Length > 0;
             try { ContentSafety.ResourcePath(name); if (mask.Length > 0) ContentSafety.ResourcePath(mask); }
             catch (InvalidDataException) { if (!rawNames) throw; safe = false; }

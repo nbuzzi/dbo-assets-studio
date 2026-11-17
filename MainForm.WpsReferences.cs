@@ -43,7 +43,7 @@ internal sealed partial class MainForm
             if (_wpsRdfPath.Length > 0) await LoadWpsReferencesAsync(_wpsRdfPath, _wpsSpawnPath);
             if (_wpsAssetPath.Length > 0) _wpsAssets = await WpsAssetLibrary.OpenAsync(_wpsAssetPath);
         }
-        catch (Exception ex) { _wpsReferencesError = "No se pudo restaurar una fuente: " + ex.Message; }
+        catch (Exception ex) { _wpsReferencesError = "Could not restore a source: " + ex.Message; }
     }
     private object WpsReferencesState() => new
     {
@@ -64,22 +64,22 @@ internal sealed partial class MainForm
                 string mode = S("mode");
                 if (mode == "pak")
                 {
-                    using var dialog = new OpenFileDialog { Filter = "Índice Taiwan de tablas|tbl.pak|Índice PAK Taiwan|*.pak", Title = "Vincular tablas del cliente" };
+                    using var dialog = new OpenFileDialog { Filter = Loc.T("Taiwan table index|tbl.pak|Taiwan PAK index|*.pak", "Índice Taiwan de tablas|tbl.pak|Índice PAK Taiwan|*.pak"), Title = Loc.T("Link client tables", "Vincular tablas del cliente") };
                     if (dialog.ShowDialog(this) != DialogResult.OK) return null;
                     await LoadWpsReferencesAsync(dialog.FileName, _wpsSpawnPath);
                 }
                 else
                 {
-                    using var dialog = new FolderBrowserDialog { Description = mode == "assets" ? "Copia del cliente Taiwan (o carpeta pack) con índices obj.pak y tex.pak y todas sus unidades" : mode == "spawn" ? "Carpeta table/rdf del servidor que contiene spawn_mob*.rdf; los grupos se separan por mundo" : "Carpeta de tablas RDF Taiwan: Item, Mob y World" };
+                    using var dialog = new FolderBrowserDialog { Description = mode == "assets" ? Loc.T("Taiwan client copy (or pack folder) with obj.pak and tex.pak indices and all their units", "Copia del cliente Taiwan (o carpeta pack) con índices obj.pak y tex.pak y todas sus unidades") : mode == "spawn" ? Loc.T("Server table/rdf folder containing spawn_mob*.rdf; groups are split by world", "Carpeta table/rdf del servidor que contiene spawn_mob*.rdf; los grupos se separan por mundo") : Loc.T("Taiwan RDF tables folder: Item, Mob and World", "Carpeta de tablas RDF Taiwan: Item, Mob y World") };
                     if (dialog.ShowDialog(this) != DialogResult.OK) return null;
                     if (mode == "assets") { _wpsAssets = await WpsAssetLibrary.OpenAsync(dialog.SelectedPath); _wpsAssetPath = dialog.SelectedPath; }
                     else if (mode == "spawn")
                     {
-                        if (_wpsRdfPath.Length == 0) throw new IOException("Vinculá primero las tablas RDF o tbl.pak.");
+                        if (_wpsRdfPath.Length == 0) throw new IOException("Link the RDF tables or tbl.pak first.");
                         await LoadWpsReferencesAsync(_wpsRdfPath, dialog.SelectedPath);
                     }
                     else if (mode == "folder") await LoadWpsReferencesAsync(dialog.SelectedPath, _wpsSpawnPath);
-                    else throw new ArgumentException("Fuente desconocida.");
+                    else throw new ArgumentException("Unknown source.");
                 }
                 SaveWpsReferenceSettings(); return WpsReferencesState();
             case "wps-ref-query":
@@ -89,7 +89,7 @@ internal sealed partial class MainForm
                 var rows = _wpsReferences.Query(kind, S("query"), world.Length == 0 ? null : world, Math.Max(0, N("page")), 60);
                 return new { rows = rows.Select(r => new { key = r.Key, kind = r.Kind, id = r.Id, name = r.Name, model = r.Model, icon = r.Icon, table = r.Table, source = r.Source, context = r.Context }), more = rows.Count == 60 };
             case "wps-ref-details":
-                if (_wpsReferences == null) throw new IOException("Vinculá las tablas primero.");
+                if (_wpsReferences == null) throw new IOException("Link the tables first.");
                 var row = _wpsReferences.Get(S("key"));
                 return new { key = row.Key, kind = row.Kind, id = row.Id, name = row.Name, model = row.Model, icon = row.Icon, table = row.Table, source = row.Source, context = row.Context,
                     members = row.Members.Select(m =>
@@ -98,7 +98,7 @@ internal sealed partial class MainForm
                         return new { mobId = m.MobId, quantity = m.Quantity, spawnRowId = m.SpawnRowId, name = mob?.Name, key = mob?.Key };
                     }), assets = _wpsAssets?.Find(row.Model, row.Icon) ?? [] };
             case "wps-ref-preview":
-                if (_wpsAssets == null) throw new IOException("Vinculá la carpeta del cliente para visualizar sus recursos.");
+                if (_wpsAssets == null) throw new IOException("Link the client folder to view its resources.");
                 var (archive, entry) = _wpsAssets.Get(S("key"));
                 byte[] data = await archive.ReadAsync(entry); _media.Clear();
                 string ext = Path.GetExtension(entry.Name).ToLowerInvariant();
@@ -121,7 +121,7 @@ internal sealed partial class MainForm
                     catch (Exception ex) when (ex is IOException or ArgumentException or NotSupportedException) { /* Explicitly reported as missing below. */ }
                 }
                 return new { kind = "model", url = MediaUrl(mesh, "application/octet-stream"), textures, name = entry.Name, missing = model.TextureNames.Where(n => !textures.ContainsKey(n)).ToArray() };
-            default: throw new ArgumentException("Comando de referencias WPS desconocido.");
+            default: throw new ArgumentException("Unknown WPS references command.");
         }
     }
 }

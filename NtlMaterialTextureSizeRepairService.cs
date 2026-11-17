@@ -31,7 +31,7 @@ internal static class NtlMaterialTextureSizeRepairService
         source = Path.GetFullPath(source); byte[] raw = Read(source);
         var issues = new List<DffRepairService.BoundaryIssue>(); var chunks = new List<DffRepairService.ChunkObservation>();
         try { DffRepairService.Inspect(raw, true, boundaryIssues: issues, chunkObservations: chunks); }
-        catch (InvalidDataException error) when (error.Message == "EOF físico/lógico DFF inválido.") { }
+        catch (InvalidDataException error) when (error.Message is "EOF físico/lógico DFF inválido." or "Invalid DFF physical/logical EOF.") { }
         var roots = chunks.Where(c => c.Header == 0 && c.Parent == null).ToArray();
         if (roots.Length != 1 || roots[0].PhysicalEnd != raw.Length - 12 || !raw.AsSpan(raw.Length - 12).SequenceEqual(Convert.FromHexString("03000000000000006500021C"))) throw new InvalidDataException("Observed final empty Clump Extension tail required.");
         var textures = new List<EmbeddedTexture>(); var deltas = new Dictionary<int, int>();

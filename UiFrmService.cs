@@ -18,7 +18,7 @@ internal static class UiFrmService
     {
         foreach (string p in new[] { Path.Combine(AppContext.BaseDirectory, "pak-tool.exe"), UiRenderService.RepoRoot() is string r ? Path.Combine(r, "native", "bin", "pak-tool.exe") : "" })
             if (p.Length > 0 && File.Exists(p)) return p;
-        throw new FileNotFoundException("Falta pak-tool.exe junto al Studio/CLI.");
+        throw new FileNotFoundException("pak-tool.exe is missing next to the Studio/CLI.");
     }
 
     static async Task<string> RunAsync(string exe, IEnumerable<string> args, string? cwd = null, int timeoutSeconds = 300, bool allowFailure = false)
@@ -29,8 +29,8 @@ internal static class UiFrmService
         using var p = Process.Start(psi)!;
         var o = p.StandardOutput.ReadToEndAsync(); var e = p.StandardError.ReadToEndAsync();
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
-        try { await p.WaitForExitAsync(cts.Token); } catch (OperationCanceledException) { try { p.Kill(true); } catch { } throw new TimeoutException(Path.GetFileName(exe) + " no terminó."); }
-        if (p.ExitCode != 0 && !allowFailure) throw new InvalidOperationException($"{Path.GetFileName(exe)} falló ({p.ExitCode}): {(await e).Trim()} {(await o).Trim()}");
+        try { await p.WaitForExitAsync(cts.Token); } catch (OperationCanceledException) { try { p.Kill(true); } catch { } throw new TimeoutException(Path.GetFileName(exe) + " did not finish."); }
+        if (p.ExitCode != 0 && !allowFailure) throw new InvalidOperationException($"{Path.GetFileName(exe)} failed ({p.ExitCode}): {(await e).Trim()} {(await o).Trim()}");
         return await o;
     }
 
@@ -45,7 +45,7 @@ internal static class UiFrmService
             string current = JsonSerializer.Serialize(new[] { "gui.pak", "flash.pak" }.Select(n => Path.Combine(pack, n)).Where(File.Exists).Select(f => new { f, t = File.GetLastWriteTimeUtc(f).Ticks }));
             if (!File.Exists(stamp) || File.ReadAllText(stamp) != current)
             {
-                if (!File.Exists(Path.Combine(pack, "gui.pak"))) throw new FileNotFoundException("No está gui.pak del cliente en " + pack + " (definí DBO_CLIENT_ROOT).");
+                if (!File.Exists(Path.Combine(pack, "gui.pak"))) throw new FileNotFoundException("The client's gui.pak is not in " + pack + " (set DBO_CLIENT_ROOT).");
                 foreach (string pak in new[] { "gui.pak", "flash.pak" })
                     if (File.Exists(Path.Combine(pack, pak))) await RunAsync(PakTool(), ["extract", Path.Combine(pack, pak), pack, root], allowFailure: true);
                 File.WriteAllText(stamp, current);
@@ -131,8 +131,8 @@ internal static class UiFrmService
         string scene = Path.Combine(run, "scene.tsv"); await File.WriteAllTextAsync(scene, sb.ToString(), new UTF8Encoding(false));
         if (File.Exists(outPng)) File.Delete(outPng);
         await RunAsync(UiRenderService.RendererPath(), [scene], root, 90);
-        var warnings = new List<string>(missing.Select(m => "textura no encontrada: " + m));
-        warnings.AddRange(files.Missing.Select(m => "script no encontrado: " + m));
+        var warnings = new List<string>(missing.Select(m => "texture not found: " + m));
+        warnings.AddRange(files.Missing.Select(m => "script not found: " + m));
         if (File.Exists(Path.Combine(run, "m.json")) && JsonNode.Parse(File.ReadAllText(Path.Combine(run, "m.json")))?["warnings"] is JsonArray w) warnings.AddRange(w.Select(x => (string)x!));
         try { Directory.Delete(run, true); } catch { }
         return new FrmRender(outPng, dump, warnings.Distinct().ToList(), files, root);
@@ -166,7 +166,7 @@ internal static class UiFrmService
     public static async Task<object> RenderSwfAsync(string reference, string outPng, int width, int height, int frame, double time, IReadOnlyDictionary<string, string>? vars)
     {
         string root = await GuiRootAsync();
-        string name = await FlashNameAsync(reference.Contains(':') || File.Exists(reference) ? reference : "flash:" + reference) ?? throw new FileNotFoundException("No se encontró el swf: " + reference);
+        string name = await FlashNameAsync(reference.Contains(':') || File.Exists(reference) ? reference : "flash:" + reference) ?? throw new FileNotFoundException("swf not found: " + reference);
         string run = Path.Combine(UiRenderService.CacheRoot, "runs", Guid.NewGuid().ToString("N")); Directory.CreateDirectory(run);
         outPng = Path.GetFullPath(outPng); Directory.CreateDirectory(Path.GetDirectoryName(outPng)!);
         var sb = new StringBuilder();
@@ -188,13 +188,13 @@ internal static class UiFrmService
     public static async Task<object> ImportAsync(string frmName, string outLayout, string? dialog, int width, int height)
     {
         outLayout = ContentSafety.SafeOutput(outLayout);
-        if (File.Exists(outLayout)) throw new IOException("Ya existe: " + outLayout);
+        if (File.Exists(outLayout)) throw new IOException("Already exists: " + outLayout);
         string work = Path.Combine(Path.GetDirectoryName(outLayout)!, "review", Path.GetFileName(outLayout).Replace(".uilayout.json", "") + "-import");
         Directory.CreateDirectory(work);
         var original = await RenderFrmAsync(frmName, Path.Combine(work, "original.png"), width, height, dialog, center: true);
         var tree = JsonNode.Parse(File.ReadAllText(original.Dump))!.AsObject();
         var roots = (tree["components"] as JsonArray)!.OfType<JsonObject>().ToList();
-        var root = roots.FirstOrDefault() ?? throw new InvalidDataException("El .frm no creó ningún componente visible.");
+        var root = roots.FirstOrDefault() ?? throw new InvalidDataException("The .frm did not create any visible component.");
         var blocks = GuiScript.Parse(GuiScript.ReadText(original.Files.Frm));
         var byName = new Dictionary<string, GuiScriptBlock>(StringComparer.Ordinal);
         foreach (var b in blocks.Concat(blocks.SelectMany(x => x.Descendants()))) byName.TryAdd(b.Name, b);
@@ -259,7 +259,7 @@ internal static class UiFrmService
                 if (img["asset"] is null) img["fill"] = (string?)img["tint"] ?? "#FFFFFFFF";
                 list.Add(img);
             }
-            if (list.Count > 0) notes.Add($"{b.Name}: superficies tomadas del .srf (NtlGui no las expone en {b.Type}).");
+            if (list.Count > 0) notes.Add($"{b.Name}: surfaces taken from the .srf (NtlGui does not expose them for {b.Type}).");
             return list;
         }
         // Dynamic dialogs (dynamic = true): NtlGui stretches a 9-piece frame (corners fixed, lines and centre stretched).
@@ -296,7 +296,7 @@ internal static class UiFrmService
             Add("surface_corner_righttop", w - rt.W, 0, rt.W, rt.H);
             Add("surface_corner_leftbottom", 0, h - lb.H, lb.W, lb.H);
             Add("surface_corner_rightbottom", w - rb.W, h - rb.H, rb.W, rb.H);
-            if (list.Count > 0) notes.Add($"{b.Name}: diálogo dinámico reconstruido como 9 piezas desde el .srf.");
+            if (list.Count > 0) notes.Add($"{b.Name}: dynamic dialog rebuilt as 9 pieces from the .srf.");
             return list;
         }
         void ApplyText(JsonObject o, GuiScriptBlock? b, string? liveText, string defaultAlign)
@@ -313,7 +313,7 @@ internal static class UiFrmService
             o["align"] = ti.HasStyle ? ti.Align : defaultAlign;
             o["valign"] = ti.VAlign;
             if (ti.Effect is "shadow" or "outline") o["shadow"] = true;
-            if (ti.Effect == "outline") notes.Add($"{b!.Name}: outline aproximado como sombra.");
+            if (ti.Effect == "outline") notes.Add($"{b!.Name}: outline approximated as a shadow.");
         }
         JsonObject Convert(JsonObject n, int px, int py)
         {
@@ -349,14 +349,14 @@ internal static class UiFrmService
                 {
                     string? file = block?.Get("filename");
                     if (file != null) { o["type"] = "flash"; o["file"] = "flash:" + file; }
-                    else { o["type"] = "group"; notes.Add($"{name}: flash sin película en el .frm (la carga el código); queda como grupo vacío."); }
+                    else { o["type"] = "group"; notes.Add($"{name}: flash without a movie in the .frm (the code loads it); kept as an empty group."); }
                     break;
                 }
                 default:
                     SetImages(Images(surfaces, "base", w, h));
                     if (o["image"] is null && o["images"] is null) o["type"] = "group";
                     if (type is "scrollbar" or "sliderbar" or "listbox" or "htmlbox" or "outputbox" or "progressbar" or "component")
-                        notes.Add($"{name}: {type} importado como {(string)o["type"]!} (estático; el contenido lo llena el código).");
+                        notes.Add($"{name}: {type} imported as {(string)o["type"]!} (static; the code fills in the content).");
                     break;
             }
             if (block?.Bool("clipping", false) == true) o["clip"] = true;
@@ -371,7 +371,7 @@ internal static class UiFrmService
         var rootScreen = (JsonArray)root["screen"]!;
         if ((int)rootScreen[2]! <= 0 || (int)rootScreen[3]! <= 0)
         {
-            notes.Add($"{(string)root["id"]!}: el diálogo raíz no tiene tamaño en el .frm (lo fija el código); se usa la pantalla.");
+            notes.Add($"{(string)root["id"]!}: the root dialog has no size in the .frm (the code sets it); using the screen size.");
             rootScreen = new JsonArray((int)rootScreen[0]!, (int)rootScreen[1]!, width, height);
         }
         int rx = (int)rootScreen[0]!, ry = (int)rootScreen[1]!;
@@ -384,7 +384,7 @@ internal static class UiFrmService
         var doc = new JsonObject
         {
             ["schema"] = UiLayout.Schema, ["name"] = layoutName,
-            ["description"] = $"Importado de {Path.GetFileName(original.Files.Frm)} ({string.Join(", ", original.Files.Srf.Skip(1))}). Fuente original: gui.pak del cliente.",
+            ["description"] = $"Imported from {Path.GetFileName(original.Files.Frm)} ({string.Join(", ", original.Files.Srf.Skip(1))}). Original source: the client's gui.pak.",
             ["source"] = new JsonObject { ["frm"] = Path.GetFileName(original.Files.Frm), ["dialog"] = (string)root["id"]!, ["srf"] = new JsonArray(original.Files.Srf.Select(s => (JsonNode)s!).ToArray()), ["rsr"] = new JsonArray(original.Files.Rsr.Select(s => (JsonNode)s!).ToArray()) },
             ["screen"] = new JsonObject { ["width"] = width, ["height"] = height },
             ["dialog"] = new JsonObject { ["width"] = (int)rootScreen[2]!, ["height"] = (int)rootScreen[3]!, ["anchor"] = "center" },
@@ -397,7 +397,7 @@ internal static class UiFrmService
         var imported = await UiRenderService.RenderAsync(outLayout, "default", Path.Combine(work, "imported.png"), width, height);
         object? diff = null;
         try { diff = JsonNode.Parse(await RunAsync(UiRenderService.RendererPath(), ["--diff", Path.Combine(work, "original.png"), Path.Combine(work, "imported.png"), Path.Combine(work, "diff.png")], original.Root, 60)); }
-        catch (Exception ex) { notes.Add("comparación no disponible: " + ex.Message); }
+        catch (Exception ex) { notes.Add("comparison not available: " + ex.Message); }
         return new
         {
             layout = outLayout, original = original.Png, imported = imported.Png, diffImage = Path.Combine(work, "diff.png"), diff,

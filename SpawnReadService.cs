@@ -21,11 +21,11 @@ internal static class SpawnReadService
         {
             "mob" => "MobSpawn",
             "npc" => "NpcSpawn",
-            _ => throw new ArgumentException("kind debe ser mob o npc.")
+            _ => throw new ArgumentException("kind must be mob or npc.")
         };
         var schemas = RdfSchema.LoadCatalog(RdfCli.LocateCatalog());
         var schema = schemas.Single(s => s.Name == schemaName);
-        if (schema.RowSize != 84) throw new InvalidDataException("El esquema de spawn debe medir 84 bytes.");
+        if (schema.RowSize != 84) throw new InvalidDataException("The spawn schema must be 84 bytes.");
         var doc = RdfDocument.Open(path, schema);
         RdfField F(string name) => schema.Fields.Single(f => f.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
         string refName = kind == "mob" ? "mob_tblidx" : "npc_tblidx";
@@ -107,12 +107,12 @@ internal static class SpawnCli
             return SpawnSelfTest.Run(args[1], KindOf(args, 2), args.Length > 3 && int.TryParse(args[3], out int seedArg) ? seedArg : 12345, args.Length > 4 && int.TryParse(args[4], out int stepsArg) ? stepsArg : 150);
         if (args.Length >= 3 && args[0] == "new")
             return new { path = SpawnEditSession.CreateEmptyFile(args[1], args.Length > 3 ? args[3] : "mob", args[2]), installAllowed = false };
-        if (args.Length < 2) throw new ArgumentException("Falta el archivo de spawns.");
+        if (args.Length < 2) throw new ArgumentException("The spawn file is missing.");
         if (args[0] == "viewer-json")
         {
-            if (args.Length < 3) throw new ArgumentException("Uso: spawn viewer-json <file> <new-output.json> [mob|npc].");
+            if (args.Length < 3) throw new ArgumentException("Usage: spawn viewer-json <file> <new-output.json> [mob|npc].");
             string outPath = ContentSafety.SafeOutput(args[2]);
-            if (File.Exists(outPath) || Directory.Exists(outPath)) throw new IOException("La salida debe ser un archivo nuevo.");
+            if (File.Exists(outPath) || Directory.Exists(outPath)) throw new IOException("The output must be a new file.");
             string k = args.Length > 3 ? args[3] : (Path.GetFileName(args[1]).Contains("npc", StringComparison.OrdinalIgnoreCase) ? "npc" : "mob");
             ContentSafety.WriteJson(outPath, SpawnReadService.ToViewerPayload(SpawnReadService.Load(args[1], k)));
             return new { output = outPath, sha256 = ContentSafety.Hash(outPath) };
@@ -120,14 +120,14 @@ internal static class SpawnCli
         static string KindOf(string[] a, int i) => a.Length > i && a[i] is "mob" or "npc" ? a[i] : (Path.GetFileName(a[1]).Contains("npc", StringComparison.OrdinalIgnoreCase) ? "npc" : "mob");
         if (args[0] == "catalog")
         {
-            if (args.Length < 3) throw new ArgumentException("Uso: spawn catalog <rdf-folder> mob|npc [query] [minLevel] [maxLevel] [limit].");
+            if (args.Length < 3) throw new ArgumentException("Usage: spawn catalog <rdf-folder> mob|npc [query] [minLevel] [maxLevel] [limit].");
             var cat = SpawnCatalog.Load(args[1]);
             int Num(int i, int d) => args.Length > i && int.TryParse(args[i], out int n) ? n : d;
             return cat.ToResult(args[2], cat.Search(args[2], args.Length > 3 ? args[3] : null, Num(4, 0), Num(5, 255), Num(6, 20), 0));
         }
         if (args[0] == "portals")
         {
-            if (args.Length < 2) throw new ArgumentException("Uso: spawn portals <spawn.rdf> [worldId] [mob|npc].");
+            if (args.Length < 2) throw new ArgumentException("Usage: spawn portals <spawn.rdf> [worldId] [mob|npc].");
             var ps = SpawnEditSession.Open(args[1], KindOf(args, 3));
             return ps.Portals(args.Length > 2 && uint.TryParse(args[2], out uint w) ? w : null);
         }
@@ -140,7 +140,7 @@ internal static class SpawnCli
         }
         if (args[0] == "edit")
         {
-            if (args.Length < 4) throw new ArgumentException("Uso: spawn edit <file> <ops.json> <new-candidate-dir> [mob|npc] [also.rdf ...].");
+            if (args.Length < 4) throw new ArgumentException("Usage: spawn edit <file> <ops.json> <new-candidate-dir> [mob|npc] [also.rdf ...].");
             var session = Configure(SpawnEditSession.Open(args[1], KindOf(args, 4)));
             session.TryAttachCatalog();
             using var opsDoc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(args[2]));
@@ -157,7 +157,7 @@ internal static class SpawnCli
             case "list":
                 int limit = args.Length > 3 ? int.Parse(args[3], CultureInfo.InvariantCulture) : 50;
                 return new { file.Path, file.RowCount, rows = file.Rows.Take(limit).ToArray() };
-            default: throw new ArgumentException("Comando spawn desconocido; ver help.");
+            default: throw new ArgumentException("Unknown spawn command; see help.");
         }
     }
 }

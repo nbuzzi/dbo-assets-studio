@@ -36,11 +36,11 @@ internal static class Program
             Directory.CreateDirectory(dir);
             string log = Path.Combine(dir, "startup-error.log");
             File.AppendAllText(log, $"[{DateTime.Now:O}] {ex}\r\n\r\n", Encoding.UTF8);
-            MessageBox.Show($"Table Studio no pudo iniciar.\n\n{ex.Message}\n\nRegistro: {log}", "DBO DBO Assets Studio", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(Loc.T($"Table Studio could not start.\n\n{ex.Message}\n\nLog: {log}", $"Table Studio no pudo iniciar.\n\n{ex.Message}\n\nRegistro: {log}"), "DBO DBO Assets Studio", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
         catch
         {
-            MessageBox.Show($"Table Studio no pudo iniciar.\n\n{ex}", "DBO DBO Assets Studio", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(Loc.T($"Table Studio could not start.\n\n{ex}", $"Table Studio no pudo iniciar.\n\n{ex}"), "DBO DBO Assets Studio", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
 }

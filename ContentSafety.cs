@@ -20,10 +20,10 @@ internal static class ContentSafety
     public static string ResourcePath(string path)
     {
         path = path.Replace('/', '\\'); if (path.StartsWith(".\\")) path = path[2..];
-        if (path.Length == 0 || Path.IsPathRooted(path) || path.Any(c => c < 32 || c > 255 || "<>:\"|?*".Contains(c))) throw new InvalidDataException("Ruta de recurso inválida: " + path);
+        if (path.Length == 0 || Path.IsPathRooted(path) || path.Any(c => c < 32 || c > 255 || "<>:\"|?*".Contains(c))) throw new InvalidDataException("Invalid resource path: " + path);
         foreach (string part in path.Split('\\'))
             if (part.Length == 0 || part is "." or ".." || part.EndsWith(' ') || part.EndsWith('.') || Regex.IsMatch(part, @"^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\.|$)", RegexOptions.IgnoreCase))
-                throw new InvalidDataException("Ruta de recurso insegura: " + path);
+                throw new InvalidDataException("Unsafe resource path: " + path);
         return path;
     }
     public static void NoLinks(string path)
@@ -36,7 +36,7 @@ internal static class ContentSafety
             try { attributes = File.GetAttributes(p); }
             catch (FileNotFoundException) { continue; }
             catch (DirectoryNotFoundException) { continue; }
-            if ((attributes & FileAttributes.ReparsePoint) != 0) throw new IOException("No se admiten enlaces/reparse points: " + p);
+            if ((attributes & FileAttributes.ReparsePoint) != 0) throw new IOException("Links/reparse points are not allowed: " + p);
         }
     }
     public static string SafeOutput(string path)
@@ -47,7 +47,7 @@ internal static class ContentSafety
     public static string FreshDirectory(string destination)
     {
         destination = SafeOutput(destination);
-        if (Directory.Exists(destination) || File.Exists(destination)) throw new IOException("La salida debe ser una carpeta NUEVA: " + destination);
+        if (Directory.Exists(destination) || File.Exists(destination)) throw new IOException("The output must be a NEW folder: " + destination);
         string parent = Path.GetDirectoryName(destination)!; Directory.CreateDirectory(parent);
         string pending = Path.Combine(parent, ".dbo-assets-pending-" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(pending); return pending;
     }

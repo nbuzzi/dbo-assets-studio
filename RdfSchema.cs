@@ -48,7 +48,7 @@ internal sealed class RdfSchema
 
     public static IReadOnlyList<RdfSchema> LoadCatalog(string path, string? onlySchema = null)
     {
-        if (!File.Exists(path)) throw new FileNotFoundException("No encuentro el catálogo Taiwan taiwan.txt.", path);
+        if (!File.Exists(path)) throw new FileNotFoundException("Taiwan catalog taiwan.txt not found.", path);
         var list = new List<RdfSchema>();
         foreach (var original in File.ReadAllLines(path).Concat(TaiwanSupplementalSchemas.Lines()))
         {
@@ -194,7 +194,7 @@ internal sealed class RdfSchema
 
     public void Encode(RdfField field, string? text, Span<byte> target)
     {
-        if (field.IsPadding) throw new InvalidOperationException("El padding reservado no es editable.");
+        if (field.IsPadding) throw new InvalidOperationException("Reserved padding is not editable.");
         // Parse on a copy: a failure midway through an array/string must not
         // leave a partially changed record, even outside the grid UI.
         byte[] working = target.ToArray();
@@ -208,7 +208,7 @@ internal sealed class RdfSchema
         if (field.Type == "string") { EncodeFixedString(text, target.Slice(field.Offset, field.Count)); return; }
         if (field.Type == "wstring") { EncodeFixedWide(text, target.Slice(field.Offset, field.Count * 2)); return; }
         var parts = Regex.Split(text.Trim(), @"[\s,;]+").Where(x => x.Length > 0).ToArray();
-        if (parts.Length != field.Count) throw new FormatException($"{field.Name}: se esperan {field.Count} valores y recibí {parts.Length}.");
+        if (parts.Length != field.Count) throw new FormatException($"{field.Name}: expected {field.Count} values, got {parts.Length}.");
         for (int i = 0; i < parts.Length; i++)
         {
             int p = field.Offset + i * field.Width;
@@ -220,17 +220,17 @@ internal sealed class RdfSchema
                     break;
                 case "float":
                     float f = float.Parse(parts[i], CultureInfo.InvariantCulture);
-                    if (!float.IsFinite(f)) throw new FormatException($"{field.Name}: NaN e infinitos no son valores válidos.");
+                    if (!float.IsFinite(f)) throw new FormatException($"{field.Name}: NaN and infinity are not valid values.");
                     BinaryPrimitives.WriteInt32LittleEndian(target.Slice(p, 4), BitConverter.SingleToInt32Bits(f)); break;
                 case "short": BinaryPrimitives.WriteUInt16LittleEndian(target.Slice(p, 2), ushort.Parse(parts[i], CultureInfo.InvariantCulture)); break;
                 case "byte": target[p] = byte.Parse(parts[i], CultureInfo.InvariantCulture); break;
                 case "bool":
                     byte b = byte.Parse(parts[i], CultureInfo.InvariantCulture);
-                    if (b > 1) throw new FormatException($"{field.Name}: el booleano debe ser 0 o 1.");
+                    if (b > 1) throw new FormatException($"{field.Name}: the boolean must be 0 or 1.");
                     target[p] = b; break;
                 case "double":
                     double d = double.Parse(parts[i], CultureInfo.InvariantCulture);
-                    if (!double.IsFinite(d)) throw new FormatException($"{field.Name}: NaN e infinitos no son valores válidos.");
+                    if (!double.IsFinite(d)) throw new FormatException($"{field.Name}: NaN and infinity are not valid values.");
                     BinaryPrimitives.WriteInt64LittleEndian(target.Slice(p, 8), BitConverter.DoubleToInt64Bits(d)); break;
                 default: throw new InvalidDataException($"Unsupported type {field.Type}");
             }
@@ -254,17 +254,17 @@ internal sealed class RdfSchema
     }
     private static void EncodeFixedString(string text, Span<byte> target)
     {
-        if (text.Any(c => c > 255 || c == '\0')) throw new FormatException("El campo requiere bytes ANSI representables; no admite esos caracteres.");
+        if (text.Any(c => c > 255 || c == '\0')) throw new FormatException("The field requires representable ANSI bytes; those characters are not supported.");
         var bytes = Encoding.Latin1.GetBytes(text);
-        if (bytes.Length >= target.Length) throw new FormatException($"Texto supera el límite de {target.Length - 1} bytes ANSI.");
+        if (bytes.Length >= target.Length) throw new FormatException($"Text exceeds the limit of {target.Length - 1} ANSI bytes.");
         target.Clear();
         bytes.CopyTo(target);
     }
     private static void EncodeFixedWide(string text, Span<byte> target)
     {
-        if (text.Contains('\0')) throw new FormatException("No se permiten terminadores NUL dentro del texto.");
+        if (text.Contains('\0')) throw new FormatException("NUL terminators are not allowed inside the text.");
         var bytes = new UnicodeEncoding(false, false, true).GetBytes(text);
-        if (bytes.Length >= target.Length - 1) throw new FormatException($"Texto supera el límite de {target.Length / 2 - 1} caracteres UTF-16.");
+        if (bytes.Length >= target.Length - 1) throw new FormatException($"Text exceeds the limit of {target.Length / 2 - 1} UTF-16 characters.");
         target.Clear();
         bytes.CopyTo(target);
     }
@@ -291,12 +291,12 @@ internal sealed class RdfDocument
     public static RdfDocument Open(string path, RdfSchema schema)
     {
         var info = new FileInfo(path);
-        if (info.Length < 1 || info.Length > 512L * 1024 * 1024) throw new InvalidDataException("RDF vacío o supera el límite seguro de 512 MiB.");
+        if (info.Length < 1 || info.Length > 512L * 1024 * 1024) throw new InvalidDataException("RDF is empty or exceeds the safe limit of 512 MiB.");
         var bytes = File.ReadAllBytes(path);
-        if (bytes.Length < 1) throw new InvalidDataException("RDF vacío: falta el byte inicial Taiwan.");
+        if (bytes.Length < 1) throw new InvalidDataException("Empty RDF: the Taiwan leading byte is missing.");
         var payload = bytes.Length - 1;
         if (payload % schema.RowSize != 0)
-            throw new InvalidDataException($"Tamaño RDF inválido: bytes luego del margen={payload}, stride Taiwan={schema.RowSize}, resto={payload % schema.RowSize}.");
+            throw new InvalidDataException($"Invalid RDF size: bytes after margin={payload}, Taiwan stride={schema.RowSize}, remainder={payload % schema.RowSize}.");
         int count = payload / schema.RowSize;
         var rows = new List<RdfRow>(count);
         for (int i = 0; i < count; i++)

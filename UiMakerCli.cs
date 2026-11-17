@@ -5,24 +5,24 @@ namespace DboAssetsStudio;
 internal static class UiMakerCli
 {
     public const string Help = """
-UI Maker (ver UI-MAKER.md):
-  ui init <nombre> <salida.uilayout.json>        crea un layout base
-  ui render <layout> [--variant v] [--size 1280x720] [--bg captura.png] [--out salida.png]
+UI Maker (see UI-MAKER.md):
+  ui init <name> <output.uilayout.json>          creates a base layout
+  ui render <layout> [--variant v] [--size 1280x720] [--bg screenshot.png] [--out output.png]
   ui lint <layout> [--variant v|all] [--size WxH]
-  ui review <layout> [--variants a,b] [--sizes 1280x720,1920x1080] [--bg captura.png] [--out carpeta]
-  ui approve <layout> --hash <hash de la revisión> [--by nombre] [--note texto]   (solo con OK explícito del usuario)
+  ui review <layout> [--variants a,b] [--sizes 1280x720,1920x1080] [--bg screenshot.png] [--out folder]
+  ui approve <layout> --hash <review hash> [--by name] [--note text]   (only with the user's explicit OK)
   ui status <layout>
-  ui codegen <layout> <salida.h> [--allow-unapproved]
-  ui assets                                       lista imágenes embedded: del cliente
-  ui frm list [--filter texto]                    ventanas (.frm) y películas Flash del cliente
-  ui frm render <ventana.frm> [--dialog id] [--size WxH] [--out png] [--text id=texto] [--hide id] [--flash-time s] [--no-center]
-                                                  dibuja la ventana original como la arma el cliente desde gui.pak
-  ui import <ventana.frm> <salida.uilayout.json> [--dialog id] [--size WxH]
-                                                  convierte una ventana existente en layout editable y mide la diferencia
-  ui swf <nombre.swf|archivo.swf> [--frame n] [--time s] [--size WxH] [--out png] [--var ruta=valor]
-                                                  dibuja Flash/GFx con el NtlFlasher del cliente
-Assets: archivo relativo al layout | gui:<archivo en texture\gui> | pak:<gui.pak>|<recurso> | embedded:<nombre>
-Render real: ui-render.exe enlaza NtlGui.lib + RenderWare D3D9 (mismas fuentes y corte de texto que el juego).
+  ui codegen <layout> <output.h> [--allow-unapproved]
+  ui assets                                       lists the client's embedded: images
+  ui frm list [--filter text]                     client windows (.frm) and Flash movies
+  ui frm render <window.frm> [--dialog id] [--size WxH] [--out png] [--text id=text] [--hide id] [--flash-time s] [--no-center]
+                                                  draws the original window as the client builds it from gui.pak
+  ui import <window.frm> <output.uilayout.json> [--dialog id] [--size WxH]
+                                                  turns an existing window into an editable layout and measures the difference
+  ui swf <name.swf|file.swf> [--frame n] [--time s] [--size WxH] [--out png] [--var path=value]
+                                                  draws Flash/GFx with the client's NtlFlasher
+Assets: file relative to the layout | gui:<file in texture\gui> | pak:<gui.pak>|<resource> | embedded:<name>
+Real render: ui-render.exe links NtlGui.lib + RenderWare D3D9 (same fonts and text wrapping as the game).
 """;
 
     public static async Task<object> RunAsync(string[] args)
@@ -34,11 +34,11 @@ Render real: ui-render.exe enlaza NtlGui.lib + RenderWare D3D9 (mismas fuentes y
                 if (args[i] is "--allow-unapproved" or "--no-center") { options[args[i]] = "1"; continue; }
                 if (args[i] is "--text" or "--hide" or "--var")
                 {
-                    if (i + 1 >= args.Length) throw new ArgumentException("Falta valor para " + args[i]);
+                    if (i + 1 >= args.Length) throw new ArgumentException("Missing value for " + args[i]);
                     if (!multi.TryGetValue(args[i], out var l)) multi[args[i]] = l = [];
                     l.Add(args[++i]); continue;
                 }
-                if (i + 1 >= args.Length) throw new ArgumentException("Falta valor para " + args[i]);
+                if (i + 1 >= args.Length) throw new ArgumentException("Missing value for " + args[i]);
                 options[args[i]] = args[++i];
             }
             else positional.Add(args[i]);
@@ -48,7 +48,7 @@ Render real: ui-render.exe enlaza NtlGui.lib + RenderWare D3D9 (mismas fuentes y
         {
             if (s == null) return null;
             var p = s.ToLowerInvariant().Split('x');
-            if (p.Length != 2 || !int.TryParse(p[0], out int w) || !int.TryParse(p[1], out int h)) throw new ArgumentException("Tamaño inválido (usar 1280x720): " + s);
+            if (p.Length != 2 || !int.TryParse(p[0], out int w) || !int.TryParse(p[1], out int h)) throw new ArgumentException("Invalid size (use 1280x720): " + s);
             return (w, h);
         }
         void Need(int n) { if (positional.Count != n) throw new ArgumentException(Help); }
@@ -96,7 +96,7 @@ Render real: ui-render.exe enlaza NtlGui.lib + RenderWare D3D9 (mismas fuentes y
             }
             case "approve":
                 Need(2);
-                return UiRenderService.Approve(positional[1], Opt("--hash") ?? throw new ArgumentException("approve requiere --hash (el de la revisión que el usuario vio)."), Opt("--by"), Opt("--note"));
+                return UiRenderService.Approve(positional[1], Opt("--hash") ?? throw new ArgumentException("approve requires --hash (the one from the review the user saw)."), Opt("--by"), Opt("--note"));
             case "status":
                 Need(2);
                 return UiRenderService.Status(positional[1]);
@@ -137,7 +137,7 @@ Render real: ui-render.exe enlaza NtlGui.lib + RenderWare D3D9 (mismas fuentes y
     static object Init(string name, string path)
     {
         path = ContentSafety.SafeOutput(path);
-        if (File.Exists(path)) throw new IOException("Ya existe: " + path);
+        if (File.Exists(path)) throw new IOException("Already exists: " + path);
         var doc = new JsonObject
         {
             ["schema"] = UiLayout.Schema,

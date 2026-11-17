@@ -15,7 +15,7 @@ internal static class WorldEngineWorkspace
     internal static string WorkspacesRoot()
     {
         string root = Path.GetFullPath(Path.Combine(WorldEngineService.CacheRoot(), "..", "..", "workspaces"));
-        WorldEngineService.GuardNotClient(root, "Los workspaces");
+        WorldEngineService.GuardNotClient(root, "The workspaces");
         Directory.CreateDirectory(root);
         return root;
     }
@@ -25,19 +25,19 @@ internal static class WorldEngineWorkspace
     internal static async Task<Workspace> CreateAsync(string world, IProgress<string>? progress = null)
     {
         WorldEngineService.ValidWorld(world);
-        if (!WorldEngineService.IsCached(world)) throw new InvalidOperationException($"{world} no está en la caché.");
+        if (!WorldEngineService.IsCached(world)) throw new InvalidOperationException($"{world} is not in the cache.");
         string cache = WorldEngineService.CacheRoot();
         string id = $"{world}-{DateTime.Now:yyyyMMdd-HHmmss}";
         string root = Path.Combine(WorkspacesRoot(), id);
-        if (Directory.Exists(root)) throw new IOException("El workspace ya existe: " + root);
+        if (Directory.Exists(root)) throw new IOException("The workspace already exists: " + root);
         Directory.CreateDirectory(Path.Combine(root, "world"));
         foreach (string folder in SharedJunctions) Junction(Path.Combine(root, folder), Path.Combine(cache, folder));
         Junction(Path.Combine(root, "world", "mesh"), Path.Combine(cache, "world", "mesh"));
-        progress?.Report("Copiando " + world + " al workspace…");
+        progress?.Report("Copying " + world + " to the workspace…");
         string src = Path.Combine(cache, "world", world), dst = Path.Combine(root, "world", world);
         var robocopy = Process.Start(new ProcessStartInfo("robocopy", $"\"{src}\" \"{dst}\" /E /MT:16 /NFL /NDL /NJH /NJS /NP /R:1 /W:1") { UseShellExecute = false, CreateNoWindow = true })!;
         await robocopy.WaitForExitAsync();
-        if (robocopy.ExitCode >= 8) throw new IOException("robocopy falló (" + robocopy.ExitCode + ") copiando el mundo al workspace.");
+        if (robocopy.ExitCode >= 8) throw new IOException("robocopy failed (" + robocopy.ExitCode + ") while copying the world to the workspace.");
         // Logs the engine writes into the world folders are not world data.
         foreach (var trace in Directory.EnumerateFiles(dst, "*Trace.txt", SearchOption.AllDirectories)) File.Delete(trace);
         var created = DateTime.UtcNow;
@@ -47,10 +47,10 @@ internal static class WorldEngineWorkspace
 
     internal static Workspace Open(string id)
     {
-        if (id.Contains('/') || id.Contains('\\') || id.Contains("..")) throw new InvalidDataException("Id de workspace inválido.");
+        if (id.Contains('/') || id.Contains('\\') || id.Contains("..")) throw new InvalidDataException("Invalid workspace id.");
         string root = Path.Combine(WorkspacesRoot(), id);
         string meta = Path.Combine(root, "workspace.json");
-        if (!File.Exists(meta)) throw new FileNotFoundException("Workspace inexistente.", meta);
+        if (!File.Exists(meta)) throw new FileNotFoundException("Workspace not found.", meta);
         using var doc = System.Text.Json.JsonDocument.Parse(File.ReadAllBytes(meta));
         return new Workspace(id, root, doc.RootElement.GetProperty("world").GetString()!, doc.RootElement.GetProperty("createdUtc").GetDateTime());
     }
@@ -60,11 +60,11 @@ internal static class WorldEngineWorkspace
     internal static void DeleteWorkspace(Workspace ws)
     {
         string root = Path.GetFullPath(ws.Root);
-        if (!root.StartsWith(Path.GetFullPath(WorkspacesRoot()) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException("No es un workspace: " + root);
+        if (!root.StartsWith(Path.GetFullPath(WorkspacesRoot()) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException("Not a workspace: " + root);
         foreach (string link in SharedJunctions.Select(f => Path.Combine(root, f)).Append(Path.Combine(root, "world", "mesh")))
             if (Directory.Exists(link) && new DirectoryInfo(link).Attributes.HasFlag(FileAttributes.ReparsePoint)) Directory.Delete(link, false);
         if (Directory.EnumerateDirectories(root, "*", SearchOption.AllDirectories).Any(d => new DirectoryInfo(d).Attributes.HasFlag(FileAttributes.ReparsePoint)))
-            throw new IOException("El workspace todavía tiene junctions; no se borra: " + root);
+            throw new IOException("The workspace still has junctions; not deleting it: " + root);
         Directory.Delete(root, true);
     }
 
@@ -73,7 +73,7 @@ internal static class WorldEngineWorkspace
         if (!Directory.Exists(target)) return;
         var p = Process.Start(new ProcessStartInfo("cmd.exe", $"/d /c mklink /J \"{link}\" \"{target}\"") { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true })!;
         p.WaitForExit();
-        if (p.ExitCode != 0 || !Directory.Exists(link)) throw new IOException("No se pudo crear el junction " + link);
+        if (p.ExitCode != 0 || !Directory.Exists(link)) throw new IOException("Could not create the junction " + link);
     }
 
     /// <summary>Copies the files that differ from the base cache into a NEW candidate folder and writes audit.json.</summary>
@@ -81,8 +81,8 @@ internal static class WorldEngineWorkspace
     {
         string cache = WorldEngineService.CacheRoot();
         string full = Path.GetFullPath(candidateDir);
-        WorldEngineService.GuardNotClient(full, "El candidato");
-        if (Directory.Exists(full) && Directory.EnumerateFileSystemEntries(full).Any()) throw new IOException("El candidato debe ser una carpeta nueva o vacía: " + full);
+        WorldEngineService.GuardNotClient(full, "The candidate");
+        if (Directory.Exists(full) && Directory.EnumerateFileSystemEntries(full).Any()) throw new IOException("The candidate must be a new or empty folder: " + full);
         string wsWorld = Path.Combine(ws.Root, "world", ws.World), baseWorld = Path.Combine(cache, "world", ws.World);
         var changed = new List<object>(); var changedPaths = new List<string>(); int rewrittenIdentical = 0, scanned = 0;
         var changedFields = new SortedSet<int>();

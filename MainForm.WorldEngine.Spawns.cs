@@ -25,7 +25,7 @@ internal sealed partial class MainForm
         double N(string name, double fallback) => args.TryGetProperty(name, out var v) && v.TryGetDouble(out var n) && double.IsFinite(n) ? n : fallback;
         bool B(string name, bool fallback = false) => args.TryGetProperty(name, out var v) ? v.ValueKind == JsonValueKind.True : fallback;
         string Kind() { string k = S("kind", "mob"); return k == "npc" ? "npc" : "mob"; }
-        WorldEngineSpawnLayer Layer(string kind) => _worldEngineSpawnLayers.TryGetValue(kind, out var l) ? l : throw new InvalidOperationException($"Cargá una tabla de {(kind == "npc" ? "NPC" : "mobs")} primero.");
+        WorldEngineSpawnLayer Layer(string kind) => _worldEngineSpawnLayers.TryGetValue(kind, out var l) ? l : throw new InvalidOperationException($"Load the {(kind == "npc" ? "NPC" : "mob")} table first.");
         int[] Uids() => args.TryGetProperty("uids", out var u) && u.ValueKind == JsonValueKind.Array ? u.EnumerateArray().Select(x => x.GetInt32()).ToArray() : [];
 
         switch (action)
@@ -33,7 +33,7 @@ internal sealed partial class MainForm
             case "world-engine-spawn-tables":
                 return WorldEngineService.SpawnTables(WorldEngineService.ValidWorld(S("world", _worldEngine.World)));
             case "world-engine-spawns-pick":
-                using (var dialog = new OpenFileDialog { Filter = "Spawn Taiwan (spawn_mob_*.rdf;spawn_npc_*.rdf)|spawn_mob_*.rdf;spawn_npc_*.rdf|RDF (*.rdf)|*.rdf", Title = "Elegí una tabla de spawns (solo lectura)", InitialDirectory = WorldEngineService.ServerRdfFolder() ?? "" })
+                using (var dialog = new OpenFileDialog { Filter = "Spawn Taiwan (spawn_mob_*.rdf;spawn_npc_*.rdf)|spawn_mob_*.rdf;spawn_npc_*.rdf|RDF (*.rdf)|*.rdf", Title = Loc.T("Choose a spawn table (read-only)", "Elegí una tabla de spawns (solo lectura)"), InitialDirectory = WorldEngineService.ServerRdfFolder() ?? "" })
                     return dialog.ShowDialog(this) == DialogResult.OK ? new { path = dialog.FileName } : null;
             case "world-engine-spawns-open":
             case "world-engine-spawn-load":
@@ -62,14 +62,14 @@ internal sealed partial class MainForm
             case "world-engine-spawn-catalog":
                 {
                     var session = SpawnEditSession.Get(Layer(Kind()).SessionId);
-                    if (session.Catalog == null) return new { kind = Kind(), total = 0, notes = new[] { session.CatalogNote ?? "Catálogo no disponible." }, rows = Array.Empty<object>() };
+                    if (session.Catalog == null) return new { kind = Kind(), total = 0, notes = new[] { session.CatalogNote ?? "Catalog not available." }, rows = Array.Empty<object>() };
                     return session.Catalog.ToResult(Kind(), session.Catalog.Search(Kind(), S("query"), (int)N("minLevel", 0), (int)N("maxLevel", 255), (int)N("limit", 80), 0));
                 }
             case "world-engine-spawn-add":
                 {
                     string kind = Kind(); var session = SpawnEditSession.Get(Layer(kind).SessionId);
-                    uint refId = (uint)N("ref", 0); if (refId == 0) throw new InvalidDataException("Elegí qué " + (kind == "npc" ? "NPC" : "mob") + " spawnear.");
-                    if (session.Catalog != null && !session.Catalog.For(kind).ContainsKey(refId)) throw new InvalidDataException($"{refId} no existe en la tabla de {(kind == "npc" ? "NPC" : "mobs")}.");
+                    uint refId = (uint)N("ref", 0); if (refId == 0) throw new InvalidDataException("Choose which " + (kind == "npc" ? "NPC" : "mob") + " to spawn.");
+                    if (session.Catalog != null && !session.Catalog.For(kind).ContainsKey(refId)) throw new InvalidDataException($"{refId} does not exist in the {(kind == "npc" ? "NPC" : "mob")} table.");
                     double yaw = N("yaw", 0) * Math.PI / 180;
                     int? template = args.TryGetProperty("template", out var t) && t.ValueKind == JsonValueKind.Number ? t.GetInt32() : null;
                     var result = session.Add([new SpawnEditSession.NewSpawn(refId, (float)N("x", 0), (float)N("y", 0), (float)N("z", 0), (float)Math.Cos(yaw), (float)Math.Sin(yaw), template)]);
@@ -87,7 +87,7 @@ internal sealed partial class MainForm
                         "set" => session.SetFields(Uids(), args.GetProperty("fields").EnumerateObject().ToDictionary(p => p.Name, p => p.Value.GetDouble(), StringComparer.OrdinalIgnoreCase)),
                         "undo" => session.Undo(),
                         "redo" => session.Redo(),
-                        _ => throw new InvalidDataException("Operación de spawn desconocida."),
+                        _ => throw new InvalidDataException("Unknown spawn operation."),
                     };
                     await PushWorldEngineSpawnsAsync(kind);
                     return new { result, stats = session.Stats() };
@@ -116,7 +116,7 @@ internal sealed partial class MainForm
             case "world-engine-spawn-save":
                 {
                     string kind = Kind(); var session = SpawnEditSession.Get(Layer(kind).SessionId);
-                    using var dialog = new FolderBrowserDialog { Description = "Elegí la carpeta donde crear el candidato de spawns (se crea una subcarpeta NUEVA; no se toca el original ni el runtime)", UseDescriptionForTitle = true };
+                    using var dialog = new FolderBrowserDialog { Description = Loc.T("Choose the folder where the spawn candidate will be created (a NEW subfolder is created; the original and the runtime are not touched)", "Elegí la carpeta donde crear el candidato de spawns (se crea una subcarpeta NUEVA; no se toca el original ni el runtime)"), UseDescriptionForTitle = true };
                     if (dialog.ShowDialog(this) != DialogResult.OK) return null;
                     return session.SaveCandidate(Path.Combine(dialog.SelectedPath, $"spawn-edit-{kind}-{DateTime.Now:yyyyMMdd-HHmmss}"));
                 }

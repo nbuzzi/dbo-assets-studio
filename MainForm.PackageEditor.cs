@@ -18,16 +18,16 @@ internal sealed partial class MainForm
         }
         if (action == "rdf-export")
         {
-            if (_document == null) throw new IOException("Abrí una tabla RDF.");
-            if (_document.ModifiedRows > 0) throw new IOException("Guardá y abrí la revisión antes de exportar sus cambios.");
-            using var dialog = new SaveFileDialog { Filter = "JSON|*.json|XML de intercambio|*.xml", FileName = Path.GetFileNameWithoutExtension(_document.Path) + ".json" };
+            if (_document == null) throw new IOException("Open an RDF table.");
+            if (_document.ModifiedRows > 0) throw new IOException("Save and open the revision before exporting its changes.");
+            using var dialog = new SaveFileDialog { Filter = Loc.T("JSON|*.json|Exchange XML|*.xml", "JSON|*.json|XML de intercambio|*.xml"), FileName = Path.GetFileNameWithoutExtension(_document.Path) + ".json" };
             return dialog.ShowDialog(this) == DialogResult.OK ? await Task.Run(() => RdfCli.Run(["export", _document.Path, dialog.FileName])) : null;
         }
         if (action == "rdf-patch")
         {
-            if (_document == null) throw new IOException("Abrí una tabla RDF.");
-            if (_document.ModifiedRows > 0) throw new IOException("Guardá y abrí la revisión antes de aplicar operaciones por ID.");
-            using var dialog = new OpenFileDialog { Filter = "Operaciones RDF JSON|*.json", Title = "Update, clone y delete por ID · Ver rdf-cli.md" };
+            if (_document == null) throw new IOException("Open an RDF table.");
+            if (_document.ModifiedRows > 0) throw new IOException("Save and open the revision before applying operations by ID.");
+            using var dialog = new OpenFileDialog { Filter = Loc.T("RDF JSON operations|*.json", "Operaciones RDF JSON|*.json"), Title = Loc.T("Update, clone and delete by ID · See rdf-cli.md", "Update, clone y delete por ID · Ver rdf-cli.md") };
             if (dialog.ShowDialog(this) != DialogResult.OK) return null;
             string destination = Path.Combine(DefaultStagingFolder(), "rdf-operations-" + Guid.NewGuid().ToString("N")[..8]);
             object result = await Task.Run(() => RdfCli.Run(["apply", _document.Path, dialog.FileName, destination]));
@@ -42,21 +42,21 @@ internal sealed partial class MainForm
             else archive = _editArchive ?? (_selectedResourceKey == null ? null : ResolveModernPakResource(_selectedResourceKey).Archive);
         }
         else if (action == "pak-queue" && S("op") != "add") selectedEntry = ResolveModernPakResource(S("key")).Entry;
-        if (archive == null) throw new IOException("Elegí el PAK de destino en el selector del editor o seleccioná un recurso de la biblioteca.");
-        if (_editArchive != null && _editArchive != archive) throw new IOException("Hay operaciones de otro PAK. Exportá su plan o descartalas antes de continuar.");
-        if (S("archive").Length > 0 && !archive.Prefix.Equals(S("archive"), StringComparison.OrdinalIgnoreCase)) throw new IOException("El recurso seleccionado pertenece a otro PAK. Elegí ese PAK en el editor antes de reemplazar/quitar.");
+        if (archive == null) throw new IOException("Choose the target PAK in the editor picker or select a resource from the library.");
+        if (_editArchive != null && _editArchive != archive) throw new IOException("There are operations for another PAK. Export their plan or discard them before continuing.");
+        if (S("archive").Length > 0 && !archive.Prefix.Equals(S("archive"), StringComparison.OrdinalIgnoreCase)) throw new IOException("The selected resource belongs to another PAK. Choose that PAK in the editor before replacing/removing.");
         switch (action)
         {
             case "pak-queue":
                 string op = S("op");
-                string name = ContentSafety.ResourcePath(op == "add" ? S("path") : selectedEntry?.Name ?? throw new IOException("Seleccioná un recurso del PAK."));
-                if (_pakEdits.Any(c => c.Path.Equals(name, StringComparison.OrdinalIgnoreCase))) throw new IOException("Ya hay una operación para esta ruta; quitála de la lista para cambiarla.");
-                if (op == "add" && archive.Entries.Any(e => e.Name.Equals(name, StringComparison.OrdinalIgnoreCase))) throw new IOException("Esa ruta ya existe. Usá Reemplazar.");
-                if (op is not ("add" or "replace" or "remove")) throw new IOException("Operación inválida.");
+                string name = ContentSafety.ResourcePath(op == "add" ? S("path") : selectedEntry?.Name ?? throw new IOException("Select a resource from the PAK."));
+                if (_pakEdits.Any(c => c.Path.Equals(name, StringComparison.OrdinalIgnoreCase))) throw new IOException("There is already an operation for this path; remove it from the list to change it.");
+                if (op == "add" && archive.Entries.Any(e => e.Name.Equals(name, StringComparison.OrdinalIgnoreCase))) throw new IOException("That path already exists. Use Replace.");
+                if (op is not ("add" or "replace" or "remove")) throw new IOException("Invalid operation.");
                 string? file = null;
                 if (op != "remove")
                 {
-                    using var dialog = new OpenFileDialog { Title = op == "add" ? "Elegir recurso para agregar" : "Elegir reemplazo", Filter = "Recursos|*.*" };
+                    using var dialog = new OpenFileDialog { Title = op == "add" ? Loc.T("Choose resource to add", "Elegir recurso para agregar") : Loc.T("Choose replacement", "Elegir reemplazo"), Filter = Loc.T("Resources|*.*", "Recursos|*.*") };
                     if (dialog.ShowDialog(this) != DialogResult.OK) return null;
                     file = dialog.FileName;
                 }
@@ -73,7 +73,7 @@ internal sealed partial class MainForm
                     if (dialog.ShowDialog(this) != DialogResult.OK) return null;
                     ContentSafety.WriteJson(dialog.FileName, plan); return new { output = dialog.FileName };
                 }
-                using (var dialog = new FolderBrowserDialog { Description = "Carpeta contenedora: se creará un candidato nuevo dentro" })
+                using (var dialog = new FolderBrowserDialog { Description = Loc.T("Container folder: a new candidate will be created inside", "Carpeta contenedora: se creará un candidato nuevo dentro") })
                 {
                     if (dialog.ShowDialog(this) != DialogResult.OK) return null;
                     string output = Path.Combine(dialog.SelectedPath, "assets-" + plan.Prefix + "-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + "-" + Guid.NewGuid().ToString("N")[..6]);
@@ -81,7 +81,7 @@ internal sealed partial class MainForm
                     if (_workspace != null) { await Task.Run(() => _workspace.ImportPakAsync(output)); _workspaceDirty = true; }
                     return result;
                 }
-            default: throw new IOException("Acción de paquete desconocida.");
+            default: throw new IOException("Unknown package action.");
         }
     }
 }

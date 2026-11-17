@@ -13,21 +13,21 @@ internal static class RdfSaveService
         Directory.CreateDirectory(root);
         using var original = new FileStream(document.Path, FileMode.Open, FileAccess.Read, FileShare.Read);
         if (Convert.ToHexString(SHA256.HashData(original)) != document.OriginalHash)
-            throw new IOException("El origen cambió desde que se abrió. Recargalo antes de guardar.");
+            throw new IOException("The source changed since it was opened. Reload it before saving.");
         byte[] output = document.BuildBytes();
         if (output.Length != document.OriginalBytes.Length || output[0] != document.Margin)
-            throw new InvalidDataException("Cambió la estructura de la tabla.");
+            throw new InvalidDataException("The table structure changed.");
         var key = document.Schema.Fields.First(f => f.Name.Equals("tblidx", StringComparison.OrdinalIgnoreCase));
         var ids = new HashSet<string>();
         foreach (var row in document.Rows)
         {
             string id = document.Schema.Decode(key, row.Current);
-            if (id is "0" or "4294967295" || !ids.Add(id)) throw new InvalidDataException("ID inválido o duplicado: " + id);
+            if (id is "0" or "4294967295" || !ids.Add(id)) throw new InvalidDataException("Invalid or duplicate ID: " + id);
             if (id != document.Schema.Decode(key, row.Original))
-                throw new InvalidDataException("IDs existentes inmutables: usar clone del motor RDF conservando la fila original.");
+                throw new InvalidDataException("Existing IDs are immutable: use the RDF engine clone and keep the original row.");
             foreach (var field in document.Schema.Fields.Where(f => f.IsPadding))
                 if (!row.Current.AsSpan(field.Offset, field.Size).SequenceEqual(row.Original.AsSpan(field.Offset, field.Size)))
-                    throw new InvalidDataException("Se modificó padding reservado.");
+                    throw new InvalidDataException("Reserved padding was modified.");
         }
         string revision = DateTime.UtcNow.ToString("yyyyMMdd-HHmmss") + "-" + Guid.NewGuid().ToString("N")[..8];
         string pending = Path.Combine(root, ".pending-" + revision), destination = Path.Combine(root, revision);
@@ -38,7 +38,7 @@ internal static class RdfSaveService
             WriteFlushed(rdf, output);
             var reread = RdfDocument.Open(rdf, document.Schema);
             if (!reread.OriginalBytes.AsSpan().SequenceEqual(output) || reread.Rows.Count != document.Rows.Count)
-                throw new IOException("La relectura del RDF desde disco difiere de lo editado.");
+                throw new IOException("The RDF read back from disk differs from the edited data.");
             WriteFlushed(Path.Combine(pending, name + ".original.bak"), document.OriginalBytes);
             var changes = document.Rows.Where(r => r.Modified).SelectMany(row => document.Schema.Fields
                 .Where(f => !row.Original.AsSpan(f.Offset, f.Size).SequenceEqual(row.Current.AsSpan(f.Offset, f.Size)))
@@ -59,7 +59,7 @@ internal static class RdfSaveService
                 planSha256 = Convert.ToHexString(SHA256.HashData(planBytes)),
                 rowCount = document.Rows.Count, document.Margin, schema = document.Schema.Name,
                 schemaFields = document.Schema.Fields, diskReadback = "byte-exact",
-                validationNotes = validationNotes ?? ["Guardado estructural; referencias externas no comprobadas por este servicio."], changes };
+                validationNotes = validationNotes ?? ["Structural save; external references are not checked by this service."], changes };
             WriteFlushed(Path.Combine(pending, "audit.json"), JsonSerializer.SerializeToUtf8Bytes(audit, new JsonSerializerOptions { WriteIndented = true }));
             Directory.Move(pending, destination);
             return Path.Combine(destination, name);

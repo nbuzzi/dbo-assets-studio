@@ -28,9 +28,9 @@ internal static class PortalReadService
     {
         note = null;
         string path = Path.Combine(folder, "Table_Portal_Data.rdf");
-        if (!File.Exists(path)) { note = "Falta Table_Portal_Data.rdf junto al archivo de spawns; no hay portales para mostrar."; return []; }
+        if (!File.Exists(path)) { note = "Table_Portal_Data.rdf is missing next to the spawn file; there are no portals to show."; return []; }
         var schema = RdfSchema.LoadCatalog(RdfCli.LocateCatalog()).FirstOrDefault(s => s.Name == "Portal");
-        if (schema == null) { note = "No hay esquema registrado para Portal."; return []; }
+        if (schema == null) { note = "No schema registered for Portal."; return []; }
         RdfField F(string n) => schema.Fields.First(f => f.Name.Equals(n, StringComparison.OrdinalIgnoreCase));
         var id = F("tblidx"); var name = F("szPointNameText"); var world = F("worldId"); var grade = F("byGrade"); var loc = F("vLoc"); var dir = F("vDir");
         var doc = RdfDocument.Open(path, schema);

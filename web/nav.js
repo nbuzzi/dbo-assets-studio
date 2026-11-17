@@ -1,5 +1,6 @@
 // Navegación del Studio: menú lateral agrupado y plegable, ruta Área › Herramienta › Pestaña
 // y paleta de comandos (Ctrl+K). No reemplaza showView(): solo la llama.
+import {t as tr} from './i18n.js';
 const RAIL_KEY='dbo-assets.studio.rail-collapsed';
 const TAB_SELECTOR='.studio-tabs button,.mc-tabs button';
 
@@ -37,7 +38,7 @@ export function installNav({showView,getView,focusSearch,icon,toast}){
  const writePref=value=>{try{localStorage.setItem(RAIL_KEY,value)}catch{}};
  function setCollapsed(collapsed,remember=true){
   app.classList.toggle('rail-collapsed',collapsed);
-  const label=collapsed?'Expandir menú':'Plegar menú';
+  const label=collapsed?'Expand menu':'Collapse menu';
   toggle.title=label;toggle.setAttribute('aria-label',label);toggle.setAttribute('aria-expanded',String(!collapsed));
   if(remember)writePref(collapsed?'1':'0');
   window.dispatchEvent(new Event('resize'));
@@ -69,7 +70,7 @@ export function installNav({showView,getView,focusSearch,icon,toast}){
  // --- paleta de comandos
  const scrim=document.createElement('div');
  scrim.className='palette-scrim hidden';
- scrim.innerHTML=`<div class="palette" role="dialog" aria-modal="true" aria-label="Paleta de comandos"><div class="palette-input">${icon('search')}<input id="palette-query" type="text" autocomplete="off" spellcheck="false" placeholder="Ir a una herramienta, pestaña o acción…" aria-controls="palette-list"></div><div class="palette-list" id="palette-list" role="listbox"></div><div class="palette-foot"><span><kbd>↑</kbd> <kbd>↓</kbd> moverse</span><span><kbd>Enter</kbd> abrir</span><span><kbd>Ctrl</kbd>+<kbd>1</kbd>…<kbd>${areas.length}</kbd> áreas</span><span><kbd>Esc</kbd> cerrar</span></div></div>`;
+ scrim.innerHTML=`<div class="palette" role="dialog" aria-modal="true" aria-label="Command palette"><div class="palette-input">${icon('search')}<input id="palette-query" type="text" autocomplete="off" spellcheck="false" placeholder="Go to a tool, tab or action…" aria-controls="palette-list"></div><div class="palette-list" id="palette-list" role="listbox"></div><div class="palette-foot"><span><kbd>↑</kbd> <kbd>↓</kbd> move</span><span><kbd>Enter</kbd> open</span><span><kbd>Ctrl</kbd>+<kbd>1</kbd>…<kbd>${areas.length}</kbd> areas</span><span><kbd>Esc</kbd> close</span></div></div>`;
  document.body.appendChild(scrim);
  const input=scrim.querySelector('input'),list=scrim.querySelector('.palette-list');
  let rows=[],selected=0,lastFocus=null;
@@ -78,15 +79,16 @@ export function installNav({showView,getView,focusSearch,icon,toast}){
  function commands(){
   const view=getView(),current=toolFor(view);
   const out=[];
-  if(focusSearch.has(view))out.push({section:'Acciones',label:`Buscar en ${current?.label||'esta vista'}`,icon:'search',hint:'en la vista',run:query=>focusSearch.run(view,query)});
-  for(const t of tools)out.push({section:'Herramientas',label:t.label,icon:t.icon,hint:t.area,current:t.view===view,run:()=>go(t.view)});
+  if(focusSearch.has(view))out.push({section:'Actions',label:tr(`Search in ${current?.label||'this view'}`),icon:'search',hint:'in view',run:query=>focusSearch.run(view,query)});
+  for(const t of tools)out.push({section:'Tools',label:t.label,icon:t.icon,hint:t.area,current:t.view===view,run:()=>go(t.view)});
   for(const t of tools)for(const button of viewTabs(t.view)){
    const label=tabLabel(button);if(!label)continue;
-   out.push({section:'Pestañas',label:`${t.label} › ${label}`,icon:t.icon,hint:'pestaña',run:async()=>{try{await go(t.view)}finally{button.click()}}});
+   out.push({section:'Tabs',label:`${t.label} › ${label}`,icon:t.icon,hint:'tab',run:async()=>{try{await go(t.view)}finally{button.click()}}});
   }
-  out.push({section:'Acciones',label:'Abrir archivo…',icon:'plus',hint:'Ctrl+O',run:()=>document.getElementById('open')?.click()});
-  out.push({section:'Acciones',label:'Guardar captura del workspace',icon:'camera',hint:'',run:()=>document.getElementById('capture')?.click()});
-  out.push({section:'Acciones',label:app.classList.contains('rail-collapsed')?'Expandir menú lateral':'Plegar menú lateral',icon:'panel',hint:'',run:()=>toggle.click()});
+  out.push({section:'Actions',label:'Switch language (English / Español)',icon:'globe',hint:'',run:()=>document.getElementById('lang-toggle')?.click()});
+  out.push({section:'Actions',label:tr('Open file…'),icon:'plus',hint:'Ctrl+O',run:()=>document.getElementById('open')?.click()});
+  out.push({section:'Actions',label:tr('Save workspace screenshot'),icon:'camera',hint:'',run:()=>document.getElementById('capture')?.click()});
+  out.push({section:'Actions',label:app.classList.contains('rail-collapsed')?tr('Expand side menu'):tr('Collapse side menu'),icon:'panel',hint:'',run:()=>toggle.click()});
   return out;
  }
  function render(){
@@ -96,14 +98,14 @@ export function installNav({showView,getView,focusSearch,icon,toast}){
    rows=all.map(c=>({...c,m:match(c.label,query)})).filter(c=>c.m).sort((a,b)=>b.m.score-a.m.score).slice(0,40);
   }else{
    // Sin texto: buscar en la vista, herramientas y acciones (las pestañas aparecen al escribir)
-   rows=all.filter(c=>c.section!=='Pestañas').map(c=>({...c,m:{ranges:[]}}));
+   rows=all.filter(c=>c.section!=='Tabs').map(c=>({...c,m:{ranges:[]}}));
   }
   selected=Math.min(selected,Math.max(rows.length-1,0));
-  if(!rows.length){list.innerHTML=`<div class="palette-empty">Sin resultados para “${escapeHtml(query)}”.</div>`;return}
+  if(!rows.length){list.innerHTML=`<div class="palette-empty">No results for “${escapeHtml(query)}”.</div>`;return}
   let html='',section='';
   rows.forEach((row,i)=>{
    if(!query.trim()&&row.section!==section){section=row.section;html+=`<div class="palette-section">${escapeHtml(section)}</div>`}
-   html+=`<button type="button" class="palette-row${i===selected?' selected':''}" role="option" aria-selected="${i===selected}" data-index="${i}">${icon(row.icon)}<span>${highlight(row.label,row.m.ranges)}</span><small>${escapeHtml(row.current?'actual':row.hint||'')}</small></button>`;
+   html+=`<button type="button" class="palette-row${i===selected?' selected':''}" role="option" aria-selected="${i===selected}" data-index="${i}">${icon(row.icon)}<span>${highlight(row.label,row.m.ranges)}</span><small>${escapeHtml(row.current?'current':row.hint||'')}</small></button>`;
   });
   list.innerHTML=html;
   list.querySelector('.palette-row.selected')?.scrollIntoView({block:'nearest'});

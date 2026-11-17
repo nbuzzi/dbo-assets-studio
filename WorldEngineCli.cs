@@ -39,7 +39,7 @@ internal static class WorldEngineCli
                     var a = BaseArgs(world, flags, switches);
                     a.AddRange(["--capture", output, "--stats", Path.ChangeExtension(output, ".json"), "--frames", F("frames") ?? "150"]);
                     var events = await RunHostAsync(a, null);
-                    if (!File.Exists(output)) throw new IOException("world-host no produjo la captura. " + string.Join(" | ", events.TakeLast(3)));
+                    if (!File.Exists(output)) throw new IOException("world-host did not produce the capture. " + string.Join(" | ", events.TakeLast(3)));
                     return new { world, output, sha256 = ContentSafety.Hash(output), stats = Path.ChangeExtension(output, ".json"), engine = LastStats(events), clientWritten = false };
                 }
             case "pick":
@@ -47,7 +47,7 @@ internal static class WorldEngineCli
                     if (plain.Count < 3 || F("spawns") == null) throw new ArgumentException(Usage);
                     string world = WorldEngineService.ValidWorld(plain[1]);
                     double[] p = plain[2].Split(',').Select(s => double.Parse(s, CultureInfo.InvariantCulture)).ToArray();
-                    if (p.Length != 3) throw new ArgumentException("Posición x,y,z.");
+                    if (p.Length != 3) throw new ArgumentException("Position x,y,z.");
                     flags["pos"] = plain[2];
                     var a = BaseArgs(world, flags, switches, ground: false);
                     // Interactive session over the JSON protocol: load spawns, wait for the world, click the screen centre.
@@ -61,7 +61,7 @@ internal static class WorldEngineCli
                     });
                     var pick = events.Select(e => { try { return JsonDocument.Parse(e).RootElement.Clone(); } catch { return default; } })
                         .LastOrDefault(e => e.ValueKind == JsonValueKind.Object && e.TryGetProperty("event", out var ev) && ev.GetString() == "pick");
-                    return new { world, position = p, pick = pick.ValueKind == JsonValueKind.Undefined ? (object)"sin pick" : pick };
+                    return new { world, position = p, pick = pick.ValueKind == JsonValueKind.Undefined ? (object)"no pick" : pick };
                 }
             case "export":
                 {   // export <workspace-id> <new-candidate-dir> [--fields 1,2]: diff an existing workspace against the cache
@@ -92,7 +92,7 @@ internal static class WorldEngineCli
                     await using var host = new WorldEngineHostProcess();
                     await host.StartAsync(ws.World, ws.Root, 0, 1280, 720, pos, "free", edit: false);
                     for (int i = 0; i < 360 && !host.WorldReady; i++) await Task.Delay(500);
-                    if (!host.WorldReady) throw new TimeoutException("El mundo no terminó de cargar.");
+                    if (!host.WorldReady) throw new TimeoutException("The world did not finish loading.");
                     if (script.TryGetProperty("camera", out var cam)) await host.SendAsync("camera", cam);
                     await Task.Delay(1500);
                     var replies = new List<object?>();
@@ -115,8 +115,8 @@ internal static class WorldEngineCli
                     using var scriptDoc = JsonDocument.Parse(File.ReadAllBytes(plain[2]));
                     var script = scriptDoc.RootElement;
                     string candidate = Path.GetFullPath(plain[3]);
-                    WorldEngineService.GuardNotClient(candidate, "El candidato");
-                    if (Directory.Exists(candidate) && Directory.EnumerateFileSystemEntries(candidate).Any()) throw new IOException("El candidato debe ser una carpeta nueva: " + candidate);
+                    WorldEngineService.GuardNotClient(candidate, "The candidate");
+                    if (Directory.Exists(candidate) && Directory.EnumerateFileSystemEntries(candidate).Any()) throw new IOException("The candidate must be a new folder: " + candidate);
                     var ws = await WorldEngineWorkspace.CreateAsync(world, new Progress<string>(n => Console.Error.WriteLine(n)));
                     Console.Error.WriteLine("workspace: " + ws.Root);
                     double[]? pos = script.TryGetProperty("pos", out var pe) ? pe.EnumerateArray().Select(x => x.GetDouble()).ToArray() : null;
@@ -124,7 +124,7 @@ internal static class WorldEngineCli
                     await using var host = new WorldEngineHostProcess();
                     await host.StartAsync(world, ws.Root, 0, 1280, 720, pos, "free", edit: true);
                     for (int i = 0; i < 360 && !host.WorldReady; i++) await Task.Delay(500);
-                    if (!host.WorldReady) throw new TimeoutException("El mundo no terminó de cargar.");
+                    if (!host.WorldReady) throw new TimeoutException("The world did not finish loading.");
                     if (script.TryGetProperty("camera", out var cam)) await host.SendAsync("camera", cam);
                     await Task.Delay(1500);
                     string before = Path.Combine(temp, "before.png"), after = Path.Combine(temp, "after.png");
@@ -153,7 +153,7 @@ internal static class WorldEngineCli
                     await using var host = new WorldEngineHostProcess();
                     await host.StartAsync(ws.World, ws.Root, 0, 1280, 720, pos, "free", edit: false);
                     for (int i = 0; i < 360 && !host.WorldReady; i++) await Task.Delay(500);
-                    if (!host.WorldReady) throw new TimeoutException("El mundo no terminó de cargar.");
+                    if (!host.WorldReady) throw new TimeoutException("The world did not finish loading.");
                     if (script.TryGetProperty("camera", out var cam)) await host.SendAsync("camera", cam);
                     await Task.Delay(1500);
                     var replies = new List<JsonElement>();
@@ -188,7 +188,7 @@ internal static class WorldEngineCli
                             string rel = Path.GetRelativePath(candWorld, file), dst = Path.Combine(wsWorld, rel);
                             Directory.CreateDirectory(Path.GetDirectoryName(dst)!); File.Copy(file, dst, true); applied.Add(rel);
                         }
-                    Console.Error.WriteLine($"verify workspace: {ws.Root} ({applied.Count} archivos del candidato)");
+                    Console.Error.WriteLine($"verify workspace: {ws.Root} ({applied.Count} candidate files)");
                     double[]? pos = script.TryGetProperty("pos", out var pe) ? pe.EnumerateArray().Select(x => x.GetDouble()).ToArray() : null;
                     string evidence = Path.Combine(ws.Root, "captures"); Directory.CreateDirectory(evidence);
                     var host = new WorldEngineHostProcess();
@@ -198,7 +198,7 @@ internal static class WorldEngineCli
                     {
                         await host.StartAsync(world, ws.Root, 0, 1280, 720, pos, "free", edit: false);
                         for (int i = 0; i < 360 && !host.WorldReady; i++) await Task.Delay(500);
-                        if (!host.WorldReady) throw new TimeoutException("El mundo no terminó de cargar.");
+                        if (!host.WorldReady) throw new TimeoutException("The world did not finish loading.");
                         if (script.TryGetProperty("camera", out var cam)) await host.SendAsync("camera", cam);
                         await Task.Delay(1500);
                         replies = await RunStepsAsync(host, script);
@@ -209,7 +209,7 @@ internal static class WorldEngineCli
                     string? copied = null;
                     if (F("evidence") is string ev)
                     {
-                        string dir = Path.GetFullPath(ev); WorldEngineService.GuardNotClient(dir, "La evidencia");
+                        string dir = Path.GetFullPath(ev); WorldEngineService.GuardNotClient(dir, "The evidence");
                         Directory.CreateDirectory(dir); copied = Path.Combine(dir, "verify.png"); File.Copy(shot, copied, false);
                     }
                     bool kept = switches.Contains("--keep");
@@ -239,7 +239,7 @@ internal static class WorldEngineCli
             try
             {
                 var reply = await host.SendAsync(cmd, values, stepTimeout);
-                if (expectError) throw new InvalidOperationException($"El paso '{cmd}' debía fallar y no falló: {reply}");
+                if (expectError) throw new InvalidOperationException($"Step '{cmd}' was expected to fail but did not: {reply}");
                 replies.Add(reply);
             }
             catch (IOException ex) when (expectError)
@@ -250,11 +250,11 @@ internal static class WorldEngineCli
         return replies;
     }
 
-    private const string Usage = "Uso: world-engine worlds | prepare <world> | edit <world> <script.json> <candidato-nuevo> | export <workspace> <candidato-nuevo> [--fields a,b] | inspect <workspace> <script.json> <nueva.png> | verify <candidato> <script.json> [--keep] [--evidence dir] | workspaces | spawn-tables <world> | query <workspace> <script.json> [--capture nueva.png] | capture <world> <nueva.png> [--pos x,y,z] [--camera top] [--dist m] [--spawns spawn.rdf] | pick <world> <x,y,z> --spawns spawn.rdf";
+    private const string Usage = "Usage: world-engine worlds | prepare <world> | edit <world> <script.json> <new-candidate> | export <workspace> <new-candidate> [--fields a,b] | inspect <workspace> <script.json> <new.png> | verify <candidate> <script.json> [--keep] [--evidence dir] | workspaces | spawn-tables <world> | query <workspace> <script.json> [--capture new.png] | capture <world> <new.png> [--pos x,y,z] [--camera top] [--dist m] [--spawns spawn.rdf] | pick <world> <x,y,z> --spawns spawn.rdf";
 
     private static List<string> BaseArgs(string world, Dictionary<string, string> flags, HashSet<string> switches, bool ground = true)
     {
-        if (!WorldEngineService.IsCached(world)) throw new InvalidOperationException($"{world} no está en la caché: corré 'world-engine prepare {world}'.");
+        if (!WorldEngineService.IsCached(world)) throw new InvalidOperationException($"{world} is not in the cache: run 'world-engine prepare {world}'.");
         var a = new List<string> { "--root", WorldEngineService.CacheRoot(), "--world", world, "--hidden" };
         foreach (string k in new[] { "camera", "yaw", "pitch", "dist", "size" }) if (flags.TryGetValue(k, out var v)) a.AddRange(["--" + k, v]);
         if (flags.TryGetValue("pos", out var pos)) { a.AddRange(["--pos", pos]); if (ground) a.Add("--ground"); }
@@ -270,9 +270,9 @@ internal static class WorldEngineCli
     private static string FreshOutput(string path, string extension)
     {
         string full = ContentSafety.SafeOutput(path);
-        if (!full.EndsWith(extension, StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("La salida debe terminar en " + extension);
-        if (File.Exists(full)) throw new IOException("La salida debe ser un archivo nuevo: " + full);
-        WorldEngineService.GuardNotClient(full, "La salida");
+        if (!full.EndsWith(extension, StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("The output must end in " + extension);
+        if (File.Exists(full)) throw new IOException("The output must be a new file: " + full);
+        WorldEngineService.GuardNotClient(full, "The output");
         Directory.CreateDirectory(Path.GetDirectoryName(full)!);
         return full;
     }
@@ -288,7 +288,7 @@ internal static class WorldEngineCli
     {
         var start = new ProcessStartInfo(WorldEngineService.HostPath()) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true };
         foreach (string a in arguments) start.ArgumentList.Add(a);
-        using var process = Process.Start(start) ?? throw new IOException("No se pudo iniciar world-host.exe.");
+        using var process = Process.Start(start) ?? throw new IOException("Could not start world-host.exe.");
         var events = new List<string>();
         var signal = new SemaphoreSlim(0);
         var errors = process.StandardError.ReadToEndAsync();
@@ -305,19 +305,19 @@ internal static class WorldEngineCli
                 while (DateTime.UtcNow < until)
                 {
                     lock (events) if (events.Any(e => e.Contains("\"event\":\"" + evt + "\"", StringComparison.Ordinal))) return;
-                    if (process.HasExited) throw new IOException("world-host terminó: " + string.Join(" | ", events.TakeLast(3)));
+                    if (process.HasExited) throw new IOException("world-host exited: " + string.Join(" | ", events.TakeLast(3)));
                     await signal.WaitAsync(TimeSpan.FromMilliseconds(250));
                 }
-                throw new TimeoutException("world-host no emitió " + evt);
+                throw new TimeoutException("world-host did not emit " + evt);
             }
             await session(Send, Wait);
             process.StandardInput.Close();
         }
-        if (!process.WaitForExit(600_000)) { process.Kill(true); throw new TimeoutException("world-host no terminó."); }
+        if (!process.WaitForExit(600_000)) { process.Kill(true); throw new TimeoutException("world-host did not finish."); }
         await reader;
         string err = await errors;
         if (process.ExitCode != 0)
-            throw new IOException($"world-host salió con {process.ExitCode}: " + string.Join(" | ", events.TakeLast(2)) + " " + string.Join(" ", err.Split('\n').Where(l => l.Contains("[world-host]")).TakeLast(8)));
+            throw new IOException($"world-host exited with {process.ExitCode}: " + string.Join(" | ", events.TakeLast(2)) + " " + string.Join(" ", err.Split('\n').Where(l => l.Contains("[world-host]")).TakeLast(8)));
         return events;
     }
 }

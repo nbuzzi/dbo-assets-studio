@@ -13,61 +13,61 @@ internal static class SwfPreviewAdapter
     // All changes exist only in this generated preview; the original PAK/SWF is untouched.
     public static async Task<SwfPreview> PrepareAsync(byte[] source, Func<string, Task<Bitmap?>> imageLoader, CancellationToken token)
     {
-        if (source.Length < 9 || source.Length > Limit) throw new InvalidDataException("SWF truncado o demasiado grande.");
+        if (source.Length < 9 || source.Length > Limit) throw new InvalidDataException("SWF truncated or too large.");
         string signature = Encoding.ASCII.GetString(source, 0, 3);
         uint declared = BitConverter.ToUInt32(source, 4);
-        if (declared < 9 || declared > Limit) throw new InvalidDataException("Tamaño SWF descomprimido fuera de límites.");
+        if (declared < 9 || declared > Limit) throw new InvalidDataException("Uncompressed SWF size out of bounds.");
         if (signature == "ZWS") return new SwfPreview(source, 0, [], []);
-        if (signature is not ("FWS" or "CWS")) throw new InvalidDataException("Cabecera SWF no compatible.");
+        if (signature is not ("FWS" or "CWS")) throw new InvalidDataException("Unsupported SWF header.");
         byte[] body;
         if (signature == "CWS")
         {
             body = new byte[declared - 8]; using var input = new MemoryStream(source, 8, source.Length - 8);
             using var zip = new ZLibStream(input, CompressionMode.Decompress); await zip.ReadExactlyAsync(body, token);
-            if (zip.ReadByte() != -1) throw new InvalidDataException("El contenido SWF supera el tamaño declarado.");
+            if (zip.ReadByte() != -1) throw new InvalidDataException("SWF content exceeds the declared size.");
         }
-        else { if (source.Length != declared) throw new InvalidDataException("La longitud SWF no coincide con la cabecera."); body = source[8..]; }
+        else { if (source.Length != declared) throw new InvalidDataException("SWF length does not match the header."); body = source[8..]; }
         int header = (5 + 4 * (body[0] >> 3) + 7) / 8 + 4;
-        if (header > body.Length) throw new InvalidDataException("Stage SWF truncado.");
+        if (header > body.Length) throw new InvalidDataException("Truncated SWF stage.");
         int embedded = 0; long pixelBudget = 32L * 1024 * 1024;
         var missing = new List<string>(); var unsupported = new HashSet<int>();
         async Task<byte[]> Rewrite(byte[] input, int start, int depth)
         {
-            if (depth > 32) throw new InvalidDataException("Anidamiento SWF excesivo.");
+            if (depth > 32) throw new InvalidDataException("Excessive SWF nesting.");
             using var output = new MemoryStream(); output.Write(input, 0, start);
             int p = start;
             while (p < input.Length)
             {
                 token.ThrowIfCancellationRequested();
-                if (p + 2 > input.Length) throw new InvalidDataException("Tag SWF truncado.");
+                if (p + 2 > input.Length) throw new InvalidDataException("Truncated SWF tag.");
                 ushort record = BitConverter.ToUInt16(input, p); p += 2; int tag = record >> 6; uint length = (uint)(record & 63);
-                if (length == 63) { if (p + 4 > input.Length) throw new InvalidDataException("Tag SWF truncado."); length = BitConverter.ToUInt32(input, p); p += 4; }
-                if ((long)p + length > input.Length) throw new InvalidDataException("Tag SWF fuera del archivo.");
+                if (length == 63) { if (p + 4 > input.Length) throw new InvalidDataException("Truncated SWF tag."); length = BitConverter.ToUInt32(input, p); p += 4; }
+                if ((long)p + length > input.Length) throw new InvalidDataException("SWF tag outside the file.");
                 byte[] payload = input.AsSpan(p, (int)length).ToArray(); p += (int)length;
                 if (tag == 1001)
                 {
-                    if (payload.Length < 10) throw new InvalidDataException("DefineExternalImage truncado.");
+                    if (payload.Length < 10) throw new InvalidDataException("Truncated DefineExternalImage.");
                     ushort id = BitConverter.ToUInt16(payload, 0), width = BitConverter.ToUInt16(payload, 4), height = BitConverter.ToUInt16(payload, 6);
                     int q = 8;
-                    string ReadName() { if (q >= payload.Length) throw new InvalidDataException("Nombre GFx truncado."); int len = payload[q++]; if (q + len > payload.Length) throw new InvalidDataException("Nombre GFx truncado."); string value = Encoding.Latin1.GetString(payload, q, len); q += len; return value; }
+                    string ReadName() { if (q >= payload.Length) throw new InvalidDataException("Truncated GFx name."); int len = payload[q++]; if (q + len > payload.Length) throw new InvalidDataException("Truncated GFx name."); string value = Encoding.Latin1.GetString(payload, q, len); q += len; return value; }
                     ReadName(); string file = ReadName();
-                    if (q != payload.Length || width < 1 || height < 1 || width > 8192 || height > 8192 || (long)width * height > 16_777_216) throw new InvalidDataException("DefineExternalImage no compatible.");
+                    if (q != payload.Length || width < 1 || height < 1 || width > 8192 || height > 8192 || (long)width * height > 16_777_216) throw new InvalidDataException("Unsupported DefineExternalImage.");
                     using var image = await imageLoader(file);
                     if (image == null) missing.Add(file);
                     else
                     {
                         pixelBudget -= (long)width * height;
-                        if (pixelBudget < 0) throw new InvalidDataException("Las imágenes del SWF exceden el límite de vista previa.");
+                        if (pixelBudget < 0) throw new InvalidDataException("SWF images exceed the preview limit.");
                         using var resized = new Bitmap(width, height, PixelFormat.Format32bppArgb);
                         using (var graphics = Graphics.FromImage(resized)) { graphics.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy; graphics.DrawImage(image, new Rectangle(0, 0, width, height)); }
                         payload = EncodeLossless(id, resized); tag = 36; embedded++;
                     }
                 }
-                else if (tag == 39) { if (payload.Length < 4) throw new InvalidDataException("Sprite SWF truncado."); payload = await Rewrite(payload, 4, depth + 1); }
+                else if (tag == 39) { if (payload.Length < 4) throw new InvalidDataException("Truncated SWF sprite."); payload = await Rewrite(payload, 4, depth + 1); }
                 else if (tag > 1000) unsupported.Add(tag);
                 using (var writer = new BinaryWriter(output, Encoding.UTF8, true)) { writer.Write((ushort)((tag << 6) | 63)); writer.Write((uint)payload.Length); writer.Write(payload); }
-                if (output.Length > Limit - 8) throw new InvalidDataException("Vista previa SWF mayor a 128 MiB.");
-                if (tag == 0) { if (output.Length + input.Length - p > Limit - 8) throw new InvalidDataException("Vista SWF demasiado grande."); if (p != input.Length) output.Write(input, p, input.Length - p); break; }
+                if (output.Length > Limit - 8) throw new InvalidDataException("SWF preview larger than 128 MiB.");
+                if (tag == 0) { if (output.Length + input.Length - p > Limit - 8) throw new InvalidDataException("SWF preview too large."); if (p != input.Length) output.Write(input, p, input.Length - p); break; }
             }
             return output.ToArray();
         }

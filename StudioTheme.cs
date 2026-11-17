@@ -30,8 +30,8 @@ internal sealed partial class MainForm
         body.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 185)); body.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         shell.Controls.Add(body, 0, 1);
         var navigation = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown, WrapContents = false, BackColor = Panel, Padding = new Padding(12, 24, 10, 0) };
-        navigation.Controls.Add(new Label { Text = "CONTENIDO", ForeColor = Color.FromArgb(126, 150, 158), Width = 155, Height = 36, Font = new Font(Font, FontStyle.Bold) });
-        string[] labels = ["01   Tablas RDF", "02   Recursos locales", "03   PAK · 3D · Audio", "04   Revisar cambios"];
+        navigation.Controls.Add(new Label { Text = Loc.T("CONTENT", "CONTENIDO"), ForeColor = Color.FromArgb(126, 150, 158), Width = 155, Height = 36, Font = new Font(Font, FontStyle.Bold) });
+        string[] labels = [Loc.T("01   RDF tables", "01   Tablas RDF"), Loc.T("02   Local resources", "02   Recursos locales"), "03   PAK · 3D · Audio", Loc.T("04   Review changes", "04   Revisar cambios")];
         var buttons = new List<Button>();
         for (int i = 0; i < labels.Length; ++i)
         {
@@ -42,7 +42,7 @@ internal sealed partial class MainForm
             button.Click += (_, _) => _tabs.SelectedIndex = index;
             navigation.Controls.Add(button); buttons.Add(button);
         }
-        navigation.Controls.Add(new Label { Text = "TAIWAN 2.0\n\nRevisiones con respaldo\ny auditoría de cambios", ForeColor = Color.FromArgb(137, 161, 173), Width = 155, Height = 130, Margin = new Padding(4, 40, 0, 0) });
+        navigation.Controls.Add(new Label { Text = Loc.T("TAIWAN 2.0\n\nBacked-up revisions\nand change audit", "TAIWAN 2.0\n\nRevisiones con respaldo\ny auditoría de cambios"), ForeColor = Color.FromArgb(137, 161, 173), Width = 155, Height = 130, Margin = new Padding(4, 40, 0, 0) });
         void Highlight()
         {
             for (int i = 0; i < buttons.Count; i++) { buttons[i].BackColor = i == _tabs.SelectedIndex ? Panel2 : Panel; buttons[i].ForeColor = i == _tabs.SelectedIndex ? Accent : Fg; }

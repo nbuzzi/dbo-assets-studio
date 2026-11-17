@@ -47,8 +47,8 @@ internal sealed partial class MainForm
                     // Runs in the background and returns at once: the bridge answers one call at a time, so a long
                     // extraction would otherwise block the progress polls (world-engine-state) and look frozen.
                     string world = WorldEngineService.ValidWorld(S("world"));
-                    if (!await _worldEnginePrepare.WaitAsync(0)) throw new InvalidOperationException("Ya hay una preparación de caché en curso (" + _worldEnginePrepareWorld + ").");
-                    _worldEnginePrepareWorld = world; _worldEnginePrepareError = null; _worldEnginePrepareResult = null; _worldEnginePrepareNote = "leyendo los índices de los paks…";
+                    if (!await _worldEnginePrepare.WaitAsync(0)) throw new InvalidOperationException("A cache preparation is already running (" + _worldEnginePrepareWorld + ").");
+                    _worldEnginePrepareWorld = world; _worldEnginePrepareError = null; _worldEnginePrepareResult = null; _worldEnginePrepareNote = "reading the pak indices…";
                     _worldEnginePrepareTask = Task.Run(async () =>
                     {
                         try { _worldEnginePrepareResult = await WorldEngineService.PrepareAsync(world, null, new InlineProgress(note => _worldEnginePrepareNote = note)); }
@@ -60,10 +60,10 @@ internal sealed partial class MainForm
             case "world-engine-open":
                 {
                     string world = WorldEngineService.ValidWorld(S("world"));
-                    if (!WorldEngineService.IsCached(world)) throw new InvalidOperationException("El mundo " + world + " no está en la caché. Prepará la caché primero.");
+                    if (!WorldEngineService.IsCached(world)) throw new InvalidOperationException("World " + world + " is not in the cache. Prepare the cache first.");
                     if (_worldEngineViewport == null) CreateWorldEngineViewport();
                     double[]? pos = Has("x") && Has("z") ? [N("x", 0), N("y", 0), N("z", 0)] : null;
-                    if (IsDisposed || Disposing) throw new OperationCanceledException("Studio se está cerrando.");
+                    if (IsDisposed || Disposing) throw new OperationCanceledException("Studio is closing.");
                     // Edit mode runs on a workspace copy (never the base cache); the viewer runs read-only on the cache.
                     bool edit = B("edit");
                     string root = WorldEngineService.CacheRoot();
@@ -72,7 +72,7 @@ internal sealed partial class MainForm
                     {
                         _worldEngineWorkspace = S("workspace").Length > 0 ? WorldEngineWorkspace.Open(S("workspace"))
                             : await WorldEngineWorkspace.CreateAsync(world, new Progress<string>(n => _worldEnginePrepareNote = n));
-                        if (!_worldEngineWorkspace.World.Equals(world, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("El workspace es de otro mundo.");
+                        if (!_worldEngineWorkspace.World.Equals(world, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("The workspace belongs to another world.");
                         root = _worldEngineWorkspace.Root;
                         _worldEnginePrepareNote = "";
                     }
@@ -84,7 +84,7 @@ internal sealed partial class MainForm
             case "world-engine-viewport":
                 {
                     double x = N("x", 0), y = N("y", 0), width = N("width", 0), height = N("height", 0);
-                    if (width < 0 || width > 8192 || height < 0 || height > 8192 || Math.Abs(x) > 16384 || Math.Abs(y) > 16384) throw new InvalidDataException("Rectángulo del visor fuera de rango.");
+                    if (width < 0 || width > 8192 || height < 0 || height > 8192 || Math.Abs(x) > 16384 || Math.Abs(y) > 16384) throw new InvalidDataException("Viewport rectangle out of range.");
                     if (_worldEngineViewport == null) CreateWorldEngineViewport();
                     float scale = (_browser?.DeviceDpi ?? DeviceDpi) / 96f;
                     int w = Math.Clamp((int)Math.Round(width * scale), 64, 4096), h = Math.Clamp((int)Math.Round(height * scale), 64, 2160);
@@ -114,7 +114,7 @@ internal sealed partial class MainForm
                     string path = Path.GetFullPath(Path.Combine(dir, $"{_worldEngine.World}-{DateTime.Now:yyyyMMdd-HHmmss-fff}.png"));
                     var reply = await _worldEngine.SendAsync("capture", new { path });
                     bool ok = reply.TryGetProperty("ok", out var okv) && okv.ValueKind == JsonValueKind.True;
-                    if (!ok || !File.Exists(path)) throw new IOException("La captura del motor falló.");
+                    if (!ok || !File.Exists(path)) throw new IOException("The engine capture failed.");
                     return new { path, url = MediaUrl(await File.ReadAllBytesAsync(path), "image/png") };
                 }
             case "world-engine-status":

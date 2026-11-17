@@ -42,7 +42,7 @@ internal static class ContentCli
                 _ => throw new ArgumentException("map plan <recipe.json> <preview-template.html> <media-helper.exe|none> <new-plan.json> | map preview <plan> | map apply <plan> <fresh-candidate>")
             };
             else if (args[0] == "version") result = new { tool = "dbo-assets", version = "5.7.0", planVersion = 1 };
-            else throw new ArgumentException("Comando desconocido. Ejecutá dbo-assets help.");
+            else throw new ArgumentException("Unknown command. Run dbo-assets help.");
             Console.WriteLine(JsonSerializer.Serialize(new { ok = true, result }, ContentSafety.Json));
             return result is RdfComparison comparison && comparison.HasConflicts ? 3 : 0;
         }
@@ -56,14 +56,14 @@ internal static class ContentCli
     {
         var positional = new List<string>(); var options = new Dictionary<string, string>();
         for (int i = 0; i < args.Length; i++)
-            if (args[i].StartsWith("--")) { string key = args[i]; if (i + 1 >= args.Length || args[i + 1].StartsWith("--") || !options.TryAdd(key, args[++i])) throw new ArgumentException("Opción inválida: " + key); }
+            if (args[i].StartsWith("--")) { string key = args[i]; if (i + 1 >= args.Length || args[i + 1].StartsWith("--") || !options.TryAdd(key, args[++i])) throw new ArgumentException("Invalid option: " + key); }
             else positional.Add(args[i]);
         string Opt(string key, string fallback) => options.TryGetValue(key, out var value) ? value : fallback;
-        if (positional.Count == 0) throw new ArgumentException("Falta comando pak.");
+        if (positional.Count == 0) throw new ArgumentException("Missing pak command.");
         string command = positional[0];
         string[] allowed = command == "library" ? ["--filter"] : command is "list" or "inspect" or "extract" or "extract-many" ? ["--format", "--family", "--filter"] : command == "fingerprint" ? ["--format", "--family"] : command == "material-references" ? ["--format", "--family"] : command == "plan" ? ["--format", "--family", "--mode", "--prefix", "--unit-mib", "--append-unit"] : command == "repack" ? ["--format", "--family", "--mode", "--prefix", "--unit-mib"] : command == "build" ? ["--unit-mib"] : [];
-        foreach (var key in options.Keys) if (!allowed.Contains(key)) throw new ArgumentException("Opción desconocida para " + command + ": " + key);
-        void Count(int n) { if (positional.Count != n) throw new ArgumentException("Argumentos inválidos para pak " + command + ". Ver help."); }
+        foreach (var key in options.Keys) if (!allowed.Contains(key)) throw new ArgumentException("Unknown option for " + command + ": " + key);
+        void Count(int n) { if (positional.Count != n) throw new ArgumentException("Invalid arguments for pak " + command + ". See help."); }
         async Task<PakArchive> Open() => await PakArchive.OpenAsync(positional[1], Opt("--format", "taiwan"), options.GetValueOrDefault("--family"));
         switch (command)
         {
@@ -90,7 +90,7 @@ internal static class ContentCli
                 recipe.Operations = SealChanges(recipe.Operations);
                 if (options.TryGetValue("--append-unit", out var appendNumber))
                 {
-                    if (recipe.Mode != "append-overlay") throw new ArgumentException("--append-unit exige --mode append-overlay.");
+                    if (recipe.Mode != "append-overlay") throw new ArgumentException("--append-unit requires --mode append-overlay.");
                     recipe.Version = 2; recipe.AppendUnit = ContentPakService.SealAppendUnit(source, int.Parse(appendNumber));
                 }
                 object preview = await ContentPakService.InspectAsync(recipe);
@@ -101,15 +101,15 @@ internal static class ContentCli
             case "repack":
                 Count(3); var original = await Open();
                 return await ContentPakService.ApplyAsync(new PakPlan { Source = original.IndexPath, SourceSha256 = original.IndexHash, Format = original.Format, Family = original.Prefix,
-                    Prefix = Opt("--prefix", original.Prefix), Mode = "repack", UnitMaxMiB = int.Parse(Opt("--unit-mib", "1900")), Reason = "Compactación/reconstrucción completa del contenedor" }, positional[2]);
+                    Prefix = Opt("--prefix", original.Prefix), Mode = "repack", UnitMaxMiB = int.Parse(Opt("--unit-mib", "1900")), Reason = "Full container compaction/rebuild" }, positional[2]);
             case "build":
                 Count(4); string root = Path.GetFullPath(positional[2]); ContentSafety.NoLinks(root);
-                if (Path.GetFullPath(positional[3]).StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) throw new IOException("Salida fuera de la carpeta de recursos requerida.");
+                if (Path.GetFullPath(positional[3]).StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) throw new IOException("Output must be outside the resource folder.");
                 var files = Walk(root).ToArray();
-                var build = new PakPlan { Prefix = positional[1], Mode = "repack", UnitMaxMiB = int.Parse(Opt("--unit-mib", "1900")), Reason = "Build desde carpeta explícita" };
+                var build = new PakPlan { Prefix = positional[1], Mode = "repack", UnitMaxMiB = int.Parse(Opt("--unit-mib", "1900")), Reason = "Build from explicit folder" };
                 build.Operations = SealChanges(files.Select(f => new PakChange("add", ContentSafety.ResourcePath(Path.GetRelativePath(root, f)), f)).ToList());
                 return await ContentPakService.ApplyAsync(build, positional[3]);
-            default: throw new ArgumentException("Comando pak desconocido: " + command);
+            default: throw new ArgumentException("Unknown pak command: " + command);
         }
     }
     private static IEnumerable<string> Walk(string directory)
@@ -223,10 +223,10 @@ internal static class ContentCli
         if (args.Length == 3 && args[0] == "model-repair-apply") return DffRepairService.Apply(args[1], args[2]);
         if (args.Length != 3 || args[0] is not ("model" or "audio")) throw new ArgumentException("asset model <input.dff> <new.mesh> | asset audio <input.ogg|mp3|wav> <new.wav>");
         string output = ContentSafety.SafeOutput(args[2]);
-        if (File.Exists(output) || Directory.Exists(output)) throw new IOException("El destino ya existe.");
-        if (new FileInfo(args[1]).Length > 128L * 1024 * 1024) throw new IOException("Límite multimedia: 128 MiB.");
+        if (File.Exists(output) || Directory.Exists(output)) throw new IOException("The destination already exists.");
+        if (new FileInfo(args[1]).Length > 128L * 1024 * 1024) throw new IOException("Media limit: 128 MiB.");
         string ext = Path.GetExtension(args[1]).ToLowerInvariant();
-        if (args[0] == "model" ? ext != ".dff" : ext is not (".wav" or ".ogg" or ".mp3")) throw new ArgumentException("Extensión no compatible.");
+        if (args[0] == "model" ? ext != ".dff" : ext is not (".wav" or ".ogg" or ".mp3")) throw new ArgumentException("Unsupported extension.");
         byte[] input = await File.ReadAllBytesAsync(args[1]);
         byte[] result = await NativeMedia.ConvertAsync(args[0], input, ext);
         Directory.CreateDirectory(Path.GetDirectoryName(output)!);
@@ -236,15 +236,15 @@ internal static class ContentCli
     public static List<PakChange> SealChanges(IEnumerable<PakChange> changes) => changes.Select(c => c.File == null ? c : c with { File = Path.GetFullPath(c.File), Sha256 = ContentSafety.Hash(c.File) }).ToList();
     private const string Help = """
     DBO Assets CLI 5.7 — Taiwan 2.0
-    ui init | render | lint | review | approve | status | codegen | assets | frm list | frm render | import | swf   (UI Maker; detalle: dbo-assets ui help)
+    ui init | render | lint | review | approve | status | codegen | assets | frm list | frm render | import | swf   (UI Maker; details: dbo-assets ui help)
     world-engine worlds | prepare <world> | capture <world> <new.png> [--pos x,y,z] [--camera top|front|free] [--dist m] [--spawns spawn.rdf] | pick <world> <x,y,z> --spawns spawn.rdf | edit ... (World Editor, real engine)
-    spawn read|... (spawn tables; detalle: dbo-assets spawn help)
+    spawn read|... (spawn tables; details: dbo-assets spawn help)
     mob status | list | configure <kit-folder>
     mob import <model.glb> <name> | generate <prompt.txt> <name> --allow-paid
     mob run <job-id> | allow-rig <job-id> | recover <job-id> <phase> <task-id>
     mob key-set <meshy|openai> (stdin) | key-import-meshy <DPAPI-file>
     mob snapshot <pipeline-options> | rebind <pipeline-options>
-    Salida JSON en stdout, error JSON en stderr. Exit: 0 éxito, 1 operación, 2 argumentos.
+    JSON output on stdout, JSON error on stderr. Exit: 0 success, 1 operation, 2 arguments.
     originals are read-only; all output folders must be NEW. No deployment.
 
     dbo-assets version
@@ -252,17 +252,17 @@ internal static class ContentCli
     dbo-assets encounter help
     dbo-assets tqs help
     dbo-assets quest help
-    dbo-assets wps refs <RDF-folder|tbl.pak> <item|mob|group> [--query texto] [--spawns folder] [--context exact-context] [--page 0]
+    dbo-assets wps refs <RDF-folder|tbl.pak> <item|mob|group> [--query text] [--spawns folder] [--context exact-context] [--page 0]
     dbo-assets wps export <file.wps> <new.json>
     dbo-assets wps validate <file.wps>
     dbo-assets wps plan <file.wps> <new-plan.json>
     dbo-assets wps apply <file.wps> <plan.json> <new-candidate-dir>
-    WPS: edición estructurada sin ejecutar Lua; ver WPS-EDITOR.md y WPS-GM.md.
-    dbo-assets pak library <pack-folder|client-root> [--filter texto]
+    WPS: structured editing without running Lua; see WPS-EDITOR.md and WPS-GM.md.
+    dbo-assets pak library <pack-folder|client-root> [--filter text]
     dbo-assets pak preview <plan.json>
-    dbo-assets pak apply <plan.json> <carpeta-nueva>
-    dbo-assets pak verify <carpeta-candidato>
-    dbo-assets pak build <prefix> <carpeta-recursos> <carpeta-nueva> [--unit-mib 1900]
+    dbo-assets pak apply <plan.json> <new-folder>
+    dbo-assets pak verify <candidate-folder>
+    dbo-assets pak build <prefix> <resource-folder> <new-folder> [--unit-mib 1900]
 
     dbo-assets asset item-owned-effect-alias-plan <mapping.json> <new-plan.json>
     dbo-assets asset item-owned-effect-alias-preview <sealed-plan.json>
@@ -272,10 +272,10 @@ internal static class ContentCli
       {"op":"add","path":"item/mesh_costume/new.dff","file":"new.dff"},
       {"op":"replace","path":"texture/item/example.dds","file":"example.dds"},
       {"op":"add","path":"new/example.dds","file":"candidate/example.dds"}]}
-    Rutas file relativas al JSON; plan sella hashes y rutas absolutas. preview no escribe.
-    Overlay genera índice + unidades nuevas y audit.json con dependencias originales.
-    Repack genera todas las unidades de nuevo (más espacio/tiempo). No adapta modelos/tablas.
-    Append-unit exige appendUnit/appendUnitBytes/appendUnitSha256 en la receta, sólo altas y sin rollover. Conserva preimagen/prefijo completos.
+    file paths are relative to the JSON; plan seals hashes and absolute paths. preview does not write.
+    Overlay writes a new index + units and audit.json with the original dependencies.
+    Repack rewrites every unit (more space/time). It does not adapt models/tables.
+    Append-unit requires appendUnit/appendUnitBytes/appendUnitSha256 in the recipe, additions only and no rollover. Keeps the full preimage/prefix.
 
     dbo-assets pak compare <base/tbl.pak> <ours/tbl.pak> <theirs/tbl.pak>
     dbo-assets rdf schemas
@@ -283,14 +283,14 @@ internal static class ContentCli
     dbo-assets rdf reconcile-plan <base.rdf> <ours.rdf> <theirs.rdf> <decisions.json> <new-plan.json>
     dbo-assets rdf reconcile-preview <plan.json>
     dbo-assets rdf reconcile-apply <plan.json> <new-output-dir>
-    dbo-assets rdf identities <tabla.rdf>
-    dbo-assets rdf inspect <tabla.rdf>
-    dbo-assets rdf export <tabla.rdf> <nuevo.json|xml>
-    dbo-assets rdf apply <tabla.rdf> <patch.json> <carpeta-nueva>
-    dbo-assets rdf map-clone <table_text_all_data.rdf> <patch.json> <carpeta-nueva>
+    dbo-assets rdf identities <table.rdf>
+    dbo-assets rdf inspect <table.rdf>
+    dbo-assets rdf export <table.rdf> <new.json|xml>
+    dbo-assets rdf apply <table.rdf> <patch.json> <new-folder>
+    dbo-assets rdf map-clone <table_text_all_data.rdf> <patch.json> <new-folder>
     dbo-assets rdf text-add <table_text_all_data.rdf> <reviewed-plan.json> <new-candidate-folder>
     Text add: sealed target SHA, reason, category item|mob|skill|map|title, records [{id:"123",text:"..."}]. Additive only.
-    RDF: update/clone por IDs, sin bajas ni renombres implícitos; codecs Taiwan y backup/auditoría.
+    RDF: update/clone by ID, no implicit deletions or renames; Taiwan codecs and backup/audit.
     dbo-assets asset model <input.dff> <new.mesh>
     dbo-assets asset gwp-resource-plan <project/#######.gwp> 6001 <new-plan.json>
     dbo-assets asset gwp-inspection-plan <project/#######.gwp> <new-plan.json>
@@ -415,12 +415,12 @@ internal static class ContentCli
     dbo-assets asset model-toon-apply <sealed-plan.json> <new-folder>
     dbo-assets asset model-repair-preview <plan.json>
     dbo-assets asset model-repair-apply <plan.json> <new-folder>
-    DFF repair: headers omitidos auditados; plan sellado/candidato, sin instalar. Ver DFF-REPAIR.md.
+    DFF repair: audited omitted headers; sealed plan/candidate, no install. See DFF-REPAIR.md.
     dbo-assets asset audio <input.ogg|mp3|wav> <new.wav>
     dbo-assets asset sound <input.wav>
-    model exporta geometría estática OSM1 para inspección, no edita/reconstruye DFF.
+    model exports static OSM1 geometry for inspection; it does not edit/rebuild DFF.
     dbo-assets asset model-geometry-compare <source.mesh> <current.mesh>
-    Ver CONTENT-CLI.md y rdf-cli.md para contratos y límites. XML es intercambio, no runtime.
+    See CONTENT-CLI.md and rdf-cli.md for contracts and limits. XML is for interchange, not runtime.
     Workspace: workspace init|status|add|import-pak|import-mob|commit|restore|export|verify (see WORKSPACE.md)
     Meshy: meshy-creative status|actions|list|image|retexture|animate|run|recover|files (see MESHY-CREATIVE.md)
     Map Workshop: map plan <recipe.json> <preview-template.html> <media-helper.exe|none> <new-plan.json>

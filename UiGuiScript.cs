@@ -84,7 +84,7 @@ internal static class GuiScript
             return hit ?? "";
         }
         string frm = File.Exists(frmName) ? Path.GetFullPath(frmName) : Find(frmName.EndsWith(".frm", StringComparison.OrdinalIgnoreCase) ? frmName : frmName + ".frm");
-        if (frm.Length == 0) throw new FileNotFoundException("No existe el .frm en gui.pak: " + frmName);
+        if (frm.Length == 0) throw new FileNotFoundException(".frm not found in gui.pak: " + frmName);
         var missing = new List<string>();
         var blocks = Parse(ReadText(frm));
         // Always include the global pages the client loads at startup.

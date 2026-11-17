@@ -16,13 +16,13 @@ internal sealed class WpsAssetLibrary
         foreach (string family in new[] { "obj", "tex" })
         {
             string path = Path.Combine(root, family + ".pak");
-            if (!File.Exists(path)) { library.Notes.Add("Falta " + family + ".pak; conservar el índice y sus unidades."); continue; }
+            if (!File.Exists(path)) { library.Notes.Add("Missing " + family + ".pak; keep the index and its units."); continue; }
             var archive = await PakArchive.OpenAsync(path);
             library._archives[family] = archive;
             foreach (var entry in archive.Entries)
                 library._entries[family + ":" + entry.Number] = (archive, entry);
         }
-        if (library._archives.Count == 0) throw new IOException("Elegí una copia del cliente Taiwan con pack/obj.pak o pack/tex.pak.");
+        if (library._archives.Count == 0) throw new IOException("Choose a Taiwan client copy with pack/obj.pak or pack/tex.pak.");
         return library;
     }
     public object[] Find(string model, string icon)
@@ -36,7 +36,7 @@ internal sealed class WpsAssetLibrary
                 : (ext is ".dds" or ".png" or ".bmp" or ".tga" or ".jpg") && iconStem.Length > 0 && stem.Equals(iconStem, StringComparison.OrdinalIgnoreCase);
         }).Take(50).Select(p => (object)new { key = p.Key, name = p.Value.Entry.Name, kind = Path.GetExtension(p.Value.Entry.Name).Equals(".dff", StringComparison.OrdinalIgnoreCase) ? "model" : "image", status = p.Value.Entry.Status }).ToArray();
     }
-    public (PakArchive Archive, PakEntry Entry) Get(string key) => _entries.TryGetValue(key, out var entry) ? entry : throw new ArgumentException("Recurso ajeno a la biblioteca vinculada.");
+    public (PakArchive Archive, PakEntry Entry) Get(string key) => _entries.TryGetValue(key, out var entry) ? entry : throw new ArgumentException("Resource is not in the linked library.");
     public async Task<Dictionary<string, byte[]>> ReadTexturesAsync(StudioModel model)
     {
         var result = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);

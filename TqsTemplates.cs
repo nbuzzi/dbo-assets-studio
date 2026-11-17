@@ -8,12 +8,12 @@ internal static class TqsTemplates
 {
     public static WpsDocument Create(int id, string newPath)
     {
-        if (id is < 1 or > 99999) throw new ArgumentOutOfRangeException(nameof(id), "El ID TQS debe ser 1..99999.");
+        if (id is < 1 or > 99999) throw new ArgumentOutOfRangeException(nameof(id), "The TQS ID must be 1..99999.");
         string output = ContentSafety.SafeOutput(newPath);
         string expected = id.ToString("D5", CultureInfo.InvariantCulture) + ".tqs";
         if (!Path.GetFileName(output).Equals(expected, StringComparison.OrdinalIgnoreCase))
-            throw new ArgumentException("El nombre debe ser " + expected + "; el servidor deriva el ID del nombre.");
-        if (File.Exists(output) || Directory.Exists(output)) throw new IOException("El borrador debe ser un archivo nuevo.");
+            throw new ArgumentException("The name must be " + expected + "; the server derives the ID from the name.");
+        if (File.Exists(output) || Directory.Exists(output)) throw new IOException("The draft must be a new file.");
         Directory.CreateDirectory(Path.GetDirectoryName(output)!);
         const string text = "-- DRAFT TQS: configure world, mobs, objectives, success/failure and rewards before playtesting.\n" +
             "-- UD/TMQ party maximum remains 5. This draft does not change party limits or complete a TMQ.\n" +

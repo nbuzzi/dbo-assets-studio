@@ -22,7 +22,7 @@ internal static class SpawnSelfTest
 
         // 1) round trip: open + serialize without edits must be byte-identical
         var session = SpawnEditSession.Open(path, kind);
-        Add("roundtrip-bytes", session.CurrentBytes().AsSpan().SequenceEqual(original), $"{original.Length} bytes, {session.LiveUids().Length} filas");
+        Add("roundtrip-bytes", session.CurrentBytes().AsSpan().SequenceEqual(original), $"{original.Length} bytes, {session.LiveUids().Length} rows");
 
         // 2) seeded fuzz of every op; invariants after each step
         var rng = new Random(seed);
@@ -31,7 +31,7 @@ internal static class SpawnSelfTest
         uint refId = 0;
         {
             var ids0 = session.LiveIds();
-            if (ids0.Length == 0) Add("fuzz", true, "archivo vacío: sin filas que editar");
+            if (ids0.Length == 0) Add("fuzz", true, "empty file: no rows to edit");
         }
         if (session.LiveUids().Length > 0)
         {
@@ -60,33 +60,33 @@ internal static class SpawnSelfTest
                 }
                 catch (Exception ex) when (ex is ArgumentException or InvalidOperationException) { rejected++; }
                 var ids = session.LiveIds();
-                if (ids.Distinct().Count() != ids.Length) invariantFailure = $"paso {i}: IDs duplicados";
-                else if (session.CurrentBytes().Length != 1 + ids.Length * 84) invariantFailure = $"paso {i}: tamaño de bytes incoherente";
+                if (ids.Distinct().Count() != ids.Length) invariantFailure = $"step {i}: duplicate IDs";
+                else if (session.CurrentBytes().Length != 1 + ids.Length * 84) invariantFailure = $"step {i}: inconsistent byte size";
             }
-            Add("fuzz-invariants", invariantFailure == null, invariantFailure ?? $"{steps} pasos ({applied} aplicados, {rejected} rechazados): IDs únicos y tamaño coherente");
+            Add("fuzz-invariants", invariantFailure == null, invariantFailure ?? $"{steps} steps ({applied} applied, {rejected} rejected): unique IDs and consistent size");
 
             // 3) undo everything -> original; redo everything -> same state as before
             byte[] before = session.CurrentBytes();
             int undone = 0; while (session.CanUndo) { session.Undo(); undone++; }
-            Add("undo-all-restores-original", session.CurrentBytes().AsSpan().SequenceEqual(original), $"{undone} pasos deshechos");
+            Add("undo-all-restores-original", session.CurrentBytes().AsSpan().SequenceEqual(original), $"{undone} steps undone");
             int redone = 0; while (session.CanRedo) { session.Redo(); redone++; }
-            Add("redo-all-restores-state", session.CurrentBytes().AsSpan().SequenceEqual(before), $"{redone} pasos rehechos");
+            Add("redo-all-restores-state", session.CurrentBytes().AsSpan().SequenceEqual(before), $"{redone} steps redone");
 
             // 4) candidate: written to a fresh temp folder, re-read, source untouched
             string temp = Path.Combine(Path.GetTempPath(), "dbo-spawn-selftest-" + Guid.NewGuid().ToString("N"));
             try
             {
-                if (session.Validate().Any(i => i.Severity == "error")) Add("candidate", true, "omitido: la edición aleatoria dejó errores de validación (esperado sin catálogo no ocurre)");
+                if (session.Validate().Any(i => i.Severity == "error")) Add("candidate", true, "skipped: the random edit left validation errors (not expected without a catalog)");
                 else
                 {
                     var counts = session.NetChanges;
-                    if (counts == 0) Add("candidate", true, "omitido: sin cambios netos");
+                    if (counts == 0) Add("candidate", true, "skipped: no net changes");
                     else
                     {
                         session.SaveCandidate(temp);
                         string cand = Path.Combine(temp, "candidate", Path.GetFileName(path));
                         var reread = SpawnEditSession.Open(cand, kind);
-                        Add("candidate-readback", reread.CurrentBytes().AsSpan().SequenceEqual(session.CurrentBytes()), $"{reread.LiveUids().Length} filas releídas");
+                        Add("candidate-readback", reread.CurrentBytes().AsSpan().SequenceEqual(session.CurrentBytes()), $"{reread.LiveUids().Length} rows read back");
                     }
                 }
             }
@@ -111,7 +111,7 @@ internal static class SpawnSelfTest
         const int Rows = 100_000;
         byte[] src = File.ReadAllBytes(path);
         int srcRows = (src.Length - 1) / 84;
-        if (srcRows < 1) { yield return new Check("perf-100k", true, "omitido: archivo vacío"); yield break; }
+        if (srcRows < 1) { yield return new Check("perf-100k", true, "skipped: empty file"); yield break; }
         var big = new byte[1 + Rows * 84]; big[0] = src[0];
         for (int i = 0; i < Rows; i++)
         {
@@ -137,11 +137,11 @@ internal static class SpawnSelfTest
             long validateMs = sw.ElapsedMilliseconds; sw.Restart();
             s.Undo();
             long undoMs = sw.ElapsedMilliseconds;
-            results.Add(new Check("perf-100k-open", openMs < 5000, $"{openMs} ms (presupuesto 5000)"));
-            results.Add(new Check("perf-100k-viewer-payload", payloadMs < 8000, $"{payloadMs} ms (presupuesto 8000)"));
-            results.Add(new Check("perf-100k-move-5000", moveMs < 2000, $"{moveMs} ms (presupuesto 2000)"));
-            results.Add(new Check("perf-100k-validate", validateMs < 5000, $"{validateMs} ms (presupuesto 5000)"));
-            results.Add(new Check("perf-100k-undo", undoMs < 2000, $"{undoMs} ms (presupuesto 2000)"));
+            results.Add(new Check("perf-100k-open", openMs < 5000, $"{openMs} ms (budget 5000)"));
+            results.Add(new Check("perf-100k-viewer-payload", payloadMs < 8000, $"{payloadMs} ms (budget 8000)"));
+            results.Add(new Check("perf-100k-move-5000", moveMs < 2000, $"{moveMs} ms (budget 2000)"));
+            results.Add(new Check("perf-100k-validate", validateMs < 5000, $"{validateMs} ms (budget 5000)"));
+            results.Add(new Check("perf-100k-undo", undoMs < 2000, $"{undoMs} ms (budget 2000)"));
             GC.KeepAlive(payload);
         }
         finally { try { Directory.Delete(temp, true); } catch { } }

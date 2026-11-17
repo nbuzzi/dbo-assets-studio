@@ -98,7 +98,7 @@ internal sealed partial class MainForm : Form
 
         var header = new Panel { Dock = DockStyle.Fill, BackColor = Panel, Padding = new Padding(22, 12, 22, 10) };
         var title = new Label { Text = "DBO  /  ASSETS STUDIO", ForeColor = Fg, Font = new Font("Segoe UI Semibold", 17f), AutoSize = true, Location = new Point(22, 12) };
-        var subtitle = new Label { Text = "WORKSPACE  /  Tablas, tiendas y recursos del juego  /  Taiwan 2.0", ForeColor = Color.FromArgb(157, 179, 199), Font = new Font("Segoe UI", 9.5f), AutoSize = true, Location = new Point(24, 48) };
+        var subtitle = new Label { Text = Loc.T("WORKSPACE  /  Game tables, shops and resources  /  Taiwan 2.0", "WORKSPACE  /  Tablas, tiendas y recursos del juego  /  Taiwan 2.0"), ForeColor = Color.FromArgb(157, 179, 199), Font = new Font("Segoe UI", 9.5f), AutoSize = true, Location = new Point(24, 48) };
         var badge = new Label { Text = "STUDIO 03   •   GM WORKSPACE", Dock = DockStyle.Right, Width = 270, TextAlign = ContentAlignment.MiddleRight, ForeColor = Accent };
         header.Controls.Add(badge);
         header.Controls.Add(title); header.Controls.Add(subtitle); shell.Controls.Add(header, 0, 0);
@@ -116,7 +116,7 @@ internal sealed partial class MainForm : Form
 
     private void BuildTableTab()
     {
-        var page = new TabPage("Tablas RDF") { BackColor = Ink, Padding = new Padding(12) };
+        var page = new TabPage(Loc.T("RDF tables", "Tablas RDF")) { BackColor = Ink, Padding = new Padding(12) };
         _tabs.TabPages.Add(page);
         var root = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3, BackColor = Ink };
         root.RowStyles.Add(new RowStyle(SizeType.Absolute, 112));
@@ -125,15 +125,15 @@ internal sealed partial class MainForm : Form
         page.Controls.Add(root);
 
         var toolbar = new FlowLayoutPanel { Dock = DockStyle.Fill, BackColor = Panel, Padding = new Padding(10), WrapContents = true, AutoScroll = true };
-        toolbar.Controls.Add(MakeButton("Abrir RDF", OpenRdf, Accent, Ink));
-        toolbar.Controls.Add(MakeButton("Validar", () => ValidateDocument(true), Panel2, Fg));
-        toolbar.Controls.Add(MakeButton("Guardar revisión…", SaveCopy, Accent, Ink));
-        toolbar.Controls.Add(MakeButton("Deshacer", UndoEdit, Panel2, Fg));
-        toolbar.Controls.Add(MakeButton("Rehacer", RedoEdit, Panel2, Fg));
-        toolbar.Controls.Add(MakeButton("Descartar cambios", RevertEdits, Panel2, Fg));
-        _showPadding.Text = "Incluir padding"; _showPadding.ForeColor = Fg; _showPadding.AutoSize = true; _showPadding.Margin = new Padding(14, 12, 10, 0); _showPadding.CheckedChanged += (_, _) => RebuildGrid();
+        toolbar.Controls.Add(MakeButton(Loc.T("Open RDF", "Abrir RDF"), OpenRdf, Accent, Ink));
+        toolbar.Controls.Add(MakeButton(Loc.T("Validate", "Validar"), () => ValidateDocument(true), Panel2, Fg));
+        toolbar.Controls.Add(MakeButton(Loc.T("Save revision…", "Guardar revisión…"), SaveCopy, Accent, Ink));
+        toolbar.Controls.Add(MakeButton(Loc.T("Undo", "Deshacer"), UndoEdit, Panel2, Fg));
+        toolbar.Controls.Add(MakeButton(Loc.T("Redo", "Rehacer"), RedoEdit, Panel2, Fg));
+        toolbar.Controls.Add(MakeButton(Loc.T("Discard changes", "Descartar cambios"), RevertEdits, Panel2, Fg));
+        _showPadding.Text = Loc.T("Include padding", "Incluir padding"); _showPadding.ForeColor = Fg; _showPadding.AutoSize = true; _showPadding.Margin = new Padding(14, 12, 10, 0); _showPadding.CheckedChanged += (_, _) => RebuildGrid();
         toolbar.Controls.Add(_showPadding);
-        _tableFilter.Width = 230; _tableFilter.Margin = new Padding(8, 8, 4, 0); _tableFilter.PlaceholderText = "Filtrar filas / IDs…"; _tableFilter.TextChanged += (_, _) => RebuildGrid();
+        _tableFilter.Width = 230; _tableFilter.Margin = new Padding(8, 8, 4, 0); _tableFilter.PlaceholderText = Loc.T("Filter rows / IDs…", "Filtrar filas / IDs…"); _tableFilter.TextChanged += (_, _) => RebuildGrid();
         toolbar.Controls.Add(_tableFilter);
         AddFieldPreset(toolbar);
         root.Controls.Add(toolbar, 0, 0);
@@ -159,47 +159,47 @@ internal sealed partial class MainForm : Form
         _tableGrid.DataError += (_, e) => { e.ThrowException = false; e.Cancel = true; };
         center.Panel1.Controls.Add(_tableGrid);
         var previewPanel = new Panel { Dock = DockStyle.Fill, BackColor = Panel, Padding = new Padding(14) };
-        var inspectHeading = new Label { Text = "VISTA DEL REGISTRO", ForeColor = Accent, Font = new Font("Segoe UI Semibold", 10), Dock = DockStyle.Top, Height = 28 };
+        var inspectHeading = new Label { Text = Loc.T("RECORD VIEW", "VISTA DEL REGISTRO"), ForeColor = Accent, Font = new Font("Segoe UI Semibold", 10), Dock = DockStyle.Top, Height = 28 };
         _tableIcon.SizeMode = PictureBoxSizeMode.Zoom; _tableIcon.BackColor = Color.FromArgb(11, 18, 28); _tableIcon.Dock = DockStyle.Top; _tableIcon.Height = 240;
-        _tableIconName.Text = "Seleccioná una fila para ver su icono y referencias."; _tableIconName.ForeColor = Color.FromArgb(177, 193, 208); _tableIconName.Dock = DockStyle.Top; _tableIconName.Height = 150; _tableIconName.Padding = new Padding(0, 10, 0, 0);
+        _tableIconName.Text = Loc.T("Select a row to see its icon and references.", "Seleccioná una fila para ver su icono y referencias."); _tableIconName.ForeColor = Color.FromArgb(177, 193, 208); _tableIconName.Dock = DockStyle.Top; _tableIconName.Height = 150; _tableIconName.Padding = new Padding(0, 10, 0, 0);
         previewPanel.Controls.Add(_tableIconName); previewPanel.Controls.Add(_tableIcon); previewPanel.Controls.Add(inspectHeading);
         center.Panel2.Controls.Add(previewPanel);
 
         var lower = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2, BackColor = Panel };
         lower.RowStyles.Add(new RowStyle(SizeType.Absolute, 31)); lower.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-        _tableInfo.Text = "Abrí una tabla RDF Taiwan para empezar."; _tableInfo.ForeColor = Color.FromArgb(165, 183, 201); _tableInfo.Dock = DockStyle.Fill; _tableInfo.Padding = new Padding(10, 5, 0, 0);
+        _tableInfo.Text = Loc.T("Open a Taiwan RDF table to start.", "Abrí una tabla RDF Taiwan para empezar."); _tableInfo.ForeColor = Color.FromArgb(165, 183, 201); _tableInfo.Dock = DockStyle.Fill; _tableInfo.Padding = new Padding(10, 5, 0, 0);
         ConfigureGrid(_validationGrid); _validationGrid.Dock = DockStyle.Fill; _validationGrid.AllowUserToAddRows = false; _validationGrid.ReadOnly = true;
-        _validationGrid.Columns.Add(new DataGridViewTextBoxColumn { Name = "level", HeaderText = "Nivel", Width = 95 });
-        _validationGrid.Columns.Add(new DataGridViewTextBoxColumn { Name = "check", HeaderText = "Validación", Width = 230 });
-        _validationGrid.Columns.Add(new DataGridViewTextBoxColumn { Name = "message", HeaderText = "Detalle", AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill });
+        _validationGrid.Columns.Add(new DataGridViewTextBoxColumn { Name = "level", HeaderText = Loc.T("Level", "Nivel"), Width = 95 });
+        _validationGrid.Columns.Add(new DataGridViewTextBoxColumn { Name = "check", HeaderText = Loc.T("Check", "Validación"), Width = 230 });
+        _validationGrid.Columns.Add(new DataGridViewTextBoxColumn { Name = "message", HeaderText = Loc.T("Detail", "Detalle"), AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill });
         lower.Controls.Add(_tableInfo, 0, 0); lower.Controls.Add(_validationGrid, 0, 1); root.Controls.Add(lower, 0, 2);
     }
 
     private void BuildAssetsTab()
     {
-        var page = new TabPage("Recursos e iconos") { BackColor = Ink, Padding = new Padding(12) };
+        var page = new TabPage(Loc.T("Resources and icons", "Recursos e iconos")) { BackColor = Ink, Padding = new Padding(12) };
         _tabs.TabPages.Add(page);
         var root = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3, BackColor = Ink };
         root.RowStyles.Add(new RowStyle(SizeType.Absolute, 72)); root.RowStyles.Add(new RowStyle(SizeType.Percent, 100)); root.RowStyles.Add(new RowStyle(SizeType.Absolute, 34)); page.Controls.Add(root);
         var bar = new FlowLayoutPanel { Dock = DockStyle.Fill, BackColor = Panel, Padding = new Padding(10), WrapContents = false, AutoScroll = true };
-        bar.Controls.Add(MakeButton("Carpeta de recursos…", ChooseAssetRoot, Accent, Ink));
-        bar.Controls.Add(MakeButton("Buscar archivos", SearchAssets, Panel2, Fg));
-        bar.Controls.Add(MakeButton("Explorar un PAK…", async () => { _tabs.SelectedIndex = 2; await OpenPakAsync(); }, Panel2, Fg));
-        _assetRoot.Width = 490; _assetRoot.Margin = new Padding(8, 9, 8, 0); _assetRoot.PlaceholderText = "Elegí una carpeta de texturas o recursos extraídos"; bar.Controls.Add(_assetRoot);
-        _assetFilter.Width = 220; _assetFilter.Margin = new Padding(8, 9, 8, 0); _assetFilter.PlaceholderText = "Nombre, extensión o icono…"; bar.Controls.Add(_assetFilter);
+        bar.Controls.Add(MakeButton(Loc.T("Resource folder…", "Carpeta de recursos…"), ChooseAssetRoot, Accent, Ink));
+        bar.Controls.Add(MakeButton(Loc.T("Search files", "Buscar archivos"), SearchAssets, Panel2, Fg));
+        bar.Controls.Add(MakeButton(Loc.T("Browse a PAK…", "Explorar un PAK…"), async () => { _tabs.SelectedIndex = 2; await OpenPakAsync(); }, Panel2, Fg));
+        _assetRoot.Width = 490; _assetRoot.Margin = new Padding(8, 9, 8, 0); _assetRoot.PlaceholderText = Loc.T("Choose a folder of extracted textures or resources", "Elegí una carpeta de texturas o recursos extraídos"); bar.Controls.Add(_assetRoot);
+        _assetFilter.Width = 220; _assetFilter.Margin = new Padding(8, 9, 8, 0); _assetFilter.PlaceholderText = Loc.T("Name, extension or icon…", "Nombre, extensión o icono…"); bar.Controls.Add(_assetFilter);
         root.Controls.Add(bar, 0, 0);
         var split = new SplitContainer { Dock = DockStyle.Fill, Orientation = Orientation.Vertical, BackColor = Ink };
         root.Controls.Add(split, 0, 1);
         _assetList.Dock = DockStyle.Fill; _assetList.View = View.Details; _assetList.FullRowSelect = true; _assetList.HideSelection = false; _assetList.BackColor = Panel; _assetList.ForeColor = Fg;
-        _assetList.Columns.Add("Recurso", 330); _assetList.Columns.Add("Tipo", 90); _assetList.Columns.Add("Tamaño", 110); _assetList.Columns.Add("Dimensiones", 120);
+        _assetList.Columns.Add(Loc.T("Resource", "Recurso"), 330); _assetList.Columns.Add(Loc.T("Type", "Tipo"), 90); _assetList.Columns.Add(Loc.T("Size", "Tamaño"), 110); _assetList.Columns.Add(Loc.T("Dimensions", "Dimensiones"), 120);
         _assetList.SelectedIndexChanged += (_, _) => ShowAssetPreview();
         split.Panel1.Controls.Add(_assetList);
         var detail = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2, BackColor = Panel, Padding = new Padding(12) };
         detail.RowStyles.Add(new RowStyle(SizeType.Percent, 73)); detail.RowStyles.Add(new RowStyle(SizeType.Percent, 27));
         _assetPreview.Dock = DockStyle.Fill; _assetPreview.SizeMode = PictureBoxSizeMode.Zoom; _assetPreview.BackColor = Color.FromArgb(9, 15, 23);
-        _assetDetails.Dock = DockStyle.Fill; _assetDetails.ForeColor = Color.FromArgb(174, 192, 209); _assetDetails.Padding = new Padding(2, 10, 2, 0); _assetDetails.Text = "Elegí un recurso para ver su vista previa y metadatos.";
+        _assetDetails.Dock = DockStyle.Fill; _assetDetails.ForeColor = Color.FromArgb(174, 192, 209); _assetDetails.Padding = new Padding(2, 10, 2, 0); _assetDetails.Text = Loc.T("Select a resource to see its preview and metadata.", "Elegí un recurso para ver su vista previa y metadatos.");
         detail.Controls.Add(_assetPreview, 0, 0); detail.Controls.Add(_assetDetails, 0, 1); split.Panel2.Controls.Add(detail);
-        _assetCount.Text = "Vista previa de imágenes PNG, JPG, BMP y DDS (DXT1/3/5); otros recursos muestran metadatos."; _assetCount.Dock = DockStyle.Fill; _assetCount.ForeColor = Color.FromArgb(151, 172, 191); _assetCount.Padding = new Padding(8, 6, 0, 0); root.Controls.Add(_assetCount, 0, 2);
+        _assetCount.Text = Loc.T("Preview for PNG, JPG, BMP and DDS (DXT1/3/5) images; other resources show metadata.", "Vista previa de imágenes PNG, JPG, BMP y DDS (DXT1/3/5); otros recursos muestran metadatos."); _assetCount.Dock = DockStyle.Fill; _assetCount.ForeColor = Color.FromArgb(151, 172, 191); _assetCount.Padding = new Padding(8, 6, 0, 0); root.Controls.Add(_assetCount, 0, 2);
     }
 
     private static void ConfigureGrid(DataGridView grid)
@@ -220,7 +220,7 @@ internal sealed partial class MainForm : Form
 
     private void OpenRdf()
     {
-        using var dialog = new OpenFileDialog { Filter = "RDF Taiwan (*.rdf)|*.rdf", Title = "Abrir tabla RDF Taiwan", InitialDirectory = DefaultTableFolder() };
+        using var dialog = new OpenFileDialog { Filter = Loc.T("Taiwan RDF (*.rdf)|*.rdf", "RDF Taiwan (*.rdf)|*.rdf"), Title = Loc.T("Open Taiwan RDF table", "Abrir tabla RDF Taiwan"), InitialDirectory = DefaultTableFolder() };
         if (dialog.ShowDialog(this) == DialogResult.OK) LoadRdfPath(dialog.FileName);
     }
 
@@ -229,14 +229,14 @@ internal sealed partial class MainForm : Form
         if (!ConfirmLeaveDocument()) return;
         try
         {
-            var schema = RdfSchema.Detect(path, _schemas) ?? throw new InvalidDataException("Esta tabla todavía no tiene esquema Taiwan registrado.");
+            var schema = RdfSchema.Detect(path, _schemas) ?? throw new InvalidDataException("This table has no registered Taiwan schema yet.");
             var document = RdfDocument.Open(path, schema);
             _document = document; _savedHash = null;
             _workspaceRdfOrigin = null;
             _workspaceRdfHash = null;
             _undo.Clear(); _redo.Clear(); RebuildGrid(); UpdateDocumentState(); ValidateDocument(false);
         }
-        catch (Exception ex) { ShowError("No se pudo abrir el RDF", ex.Message); }
+        catch (Exception ex) { ShowError(Loc.T("Could not open the RDF", "No se pudo abrir el RDF"), ex.Message); }
     }
 
     private static string DefaultTableFolder()
@@ -310,7 +310,7 @@ internal sealed partial class MainForm : Form
         {
             before.CopyTo(row.Current, 0);
             _tableGrid.InvalidateRow(e.RowIndex);
-            ShowError("Valor no válido", ex.Message);
+            ShowError(Loc.T("Invalid value", "Valor no válido"), ex.Message);
         }
     }
 
@@ -327,7 +327,7 @@ internal sealed partial class MainForm : Form
     private void RevertEdits()
     {
         if (_document == null || _document.ModifiedRows == 0) return;
-        if (MessageBox.Show(this, "¿Descartar todas las modificaciones sin guardar?", "Confirmar", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
+        if (MessageBox.Show(this, Loc.T("Discard all unsaved changes?", "¿Descartar todas las modificaciones sin guardar?"), Loc.T("Confirm", "Confirmar"), MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
         foreach (var row in _document.Rows) row.Original.CopyTo(row.Current, 0);
         _undo.Clear(); _redo.Clear(); RebuildGrid(); UpdateDocumentState(); ValidateDocument(false);
     }
@@ -337,11 +337,11 @@ internal sealed partial class MainForm : Form
         RefreshChanges();
         if (_document == null)
         {
-            _tableInfo.Text = "Abrí una tabla RDF Taiwan. El archivo original siempre queda intacto: los cambios se guardan como copia validada.";
-            _tableStatus.Text = "SIN TABLA"; return;
+            _tableInfo.Text = Loc.T("Open a Taiwan RDF table. The original file is never touched: changes are saved as a validated copy.", "Abrí una tabla RDF Taiwan. El archivo original siempre queda intacto: los cambios se guardan como copia validada.");
+            _tableStatus.Text = Loc.T("NO TABLE", "SIN TABLA"); return;
         }
-        _tableInfo.Text = $"{Path.GetFileName(_document.Path)}   ·   {_document.Schema.Name}   ·   {_document.Rows.Count:N0} filas   ·   stride {_document.Schema.RowSize} B   ·   margen {_document.Margin}   ·   modificadas {_document.ModifiedRows:N0}   ·   SHA256 {_document.OriginalHash[..16]}…";
-        _tableStatus.Text = _document.ModifiedRows == 0 ? "SIN CAMBIOS" : $"{_document.ModifiedRows} FILA(S) MODIFICADA(S) · SOLO COPIA";
+        _tableInfo.Text = Loc.T($"{Path.GetFileName(_document.Path)}   ·   {_document.Schema.Name}   ·   {_document.Rows.Count:N0} rows   ·   stride {_document.Schema.RowSize} B   ·   margin {_document.Margin}   ·   modified {_document.ModifiedRows:N0}   ·   SHA256 {_document.OriginalHash[..16]}…", $"{Path.GetFileName(_document.Path)}   ·   {_document.Schema.Name}   ·   {_document.Rows.Count:N0} filas   ·   stride {_document.Schema.RowSize} B   ·   margen {_document.Margin}   ·   modificadas {_document.ModifiedRows:N0}   ·   SHA256 {_document.OriginalHash[..16]}…");
+        _tableStatus.Text = _document.ModifiedRows == 0 ? Loc.T("NO CHANGES", "SIN CAMBIOS") : Loc.T($"{_document.ModifiedRows} ROW(S) MODIFIED · COPY ONLY", $"{_document.ModifiedRows} FILA(S) MODIFICADA(S) · SOLO COPIA");
     }
 
     private void ValidateDocument(bool showDialog)
@@ -350,7 +350,7 @@ internal sealed partial class MainForm : Form
         if (_document == null) return;
         var issues = new List<(string level, string check, string message)>();
         var schema = _document.Schema;
-        if ((_document.OriginalBytes.Length - 1) % schema.RowSize != 0) issues.Add(("ERROR", "Estructura", "El RDF no coincide con el stride del esquema."));
+        if ((_document.OriginalBytes.Length - 1) % schema.RowSize != 0) issues.Add(("ERROR", Loc.T("Structure", "Estructura"), Loc.T("The RDF does not match the schema stride.", "El RDF no coincide con el stride del esquema.")));
         var keyField = schema.Fields.FirstOrDefault(f => f.Name.Equals("tblidx", StringComparison.OrdinalIgnoreCase));
         if (keyField != null)
         {
@@ -358,11 +358,11 @@ internal sealed partial class MainForm : Form
             foreach (var row in _document.Rows)
             {
                 var key = schema.Decode(keyField, row.Current);
-                if (key != "0" && !seen.Add(key)) issues.Add(("ERROR", "Clave duplicada", $"tblidx {key}, fila {row.Index + 1}."));
+                if (key != "0" && !seen.Add(key)) issues.Add(("ERROR", Loc.T("Duplicate key", "Clave duplicada"), Loc.T($"tblidx {key}, row {row.Index + 1}.", $"tblidx {key}, fila {row.Index + 1}.")));
             }
         }
-        try { ValidateReferences(issues); } catch (Exception ex) { issues.Add(("ERROR", "Lectura de referencias", ex.Message)); }
-        if (issues.Count == 0) issues.Add(("OK", "Integridad", "Stride RDF válido; identificadores únicos y referencias verificadas cuando hay tabla destino."));
+        try { ValidateReferences(issues); } catch (Exception ex) { issues.Add(("ERROR", Loc.T("Reading references", "Lectura de referencias"), ex.Message)); }
+        if (issues.Count == 0) issues.Add(("OK", Loc.T("Integrity", "Integridad"), Loc.T("Valid RDF stride; unique IDs and references checked where a target table exists.", "Stride RDF válido; identificadores únicos y referencias verificadas cuando hay tabla destino.")));
         foreach (var issue in issues)
         {
             int i = _validationGrid.Rows.Add(issue.level, issue.check, issue.message);
@@ -371,7 +371,7 @@ internal sealed partial class MainForm : Form
         if (showDialog)
         {
             int errors = issues.Count(i => i.level == "ERROR");
-            MessageBox.Show(this, errors == 0 ? $"Validación completa: {issues.Count} observación(es), sin errores bloqueantes." : $"La validación encontró {errors} error(es). Corregilos antes de guardar.", "Validación RDF", MessageBoxButtons.OK, errors == 0 ? MessageBoxIcon.Information : MessageBoxIcon.Error);
+            MessageBox.Show(this, errors == 0 ? Loc.T($"Validation complete: {issues.Count} note(s), no blocking errors.", $"Validación completa: {issues.Count} observación(es), sin errores bloqueantes.") : Loc.T($"Validation found {errors} error(s). Fix them before saving.", $"La validación encontró {errors} error(es). Corregilos antes de guardar."), Loc.T("RDF validation", "Validación RDF"), MessageBoxButtons.OK, errors == 0 ? MessageBoxIcon.Information : MessageBoxIcon.Error);
         }
     }
 
@@ -381,9 +381,9 @@ internal sealed partial class MainForm : Form
         string dir = Path.GetDirectoryName(_document.Path)!;
         string[] itemNames = ["Table_Item_Data.rdf", "o_table_item_data.rdf"];
         string? itemPath = itemNames.Select(n => Path.Combine(dir, n)).FirstOrDefault(File.Exists);
-        if (itemPath == null) { issues.Add(("WARN", "Referencias de ítems", "No encontré la tabla de ítems hermana; se omitió la validación cruzada.")); return; }
+        if (itemPath == null) { issues.Add(("WARN", Loc.T("Item references", "Referencias de ítems"), Loc.T("Sibling item table not found; cross-validation skipped.", "No encontré la tabla de ítems hermana; se omitió la validación cruzada."))); return; }
         var itemSchema = RdfSchema.Detect(itemPath, _schemas);
-        if (itemSchema == null) { issues.Add(("WARN", "Referencias de ítems", "No hay esquema Taiwan registrado para la tabla hermana.")); return; }
+        if (itemSchema == null) { issues.Add(("WARN", Loc.T("Item references", "Referencias de ítems"), Loc.T("No Taiwan schema is registered for the sibling table.", "No hay esquema Taiwan registrado para la tabla hermana."))); return; }
         var itemDoc = RdfDocument.Open(itemPath, itemSchema);
         var keyField = itemSchema.Fields.First(f => f.Name.Equals("tblidx", StringComparison.OrdinalIgnoreCase));
         var ids = itemDoc.Rows.Select(r => itemSchema.Decode(keyField, r.Current)).ToHashSet(StringComparer.Ordinal);
@@ -391,7 +391,7 @@ internal sealed partial class MainForm : Form
         foreach (var field in candidates)
             foreach (var row in _document.Rows)
                 foreach (var id in _document.Schema.Decode(field, row.Current).Split(' ', StringSplitOptions.RemoveEmptyEntries))
-                    if (id != "0" && id != "4294967295" && !ids.Contains(id)) issues.Add(("ERROR", "Referencia inválida", $"fila {row.Index + 1}, {field.Name}: no existe ítem {id}."));
+                    if (id != "0" && id != "4294967295" && !ids.Contains(id)) issues.Add(("ERROR", Loc.T("Invalid reference", "Referencia inválida"), Loc.T($"row {row.Index + 1}, {field.Name}: item {id} does not exist.", $"fila {row.Index + 1}, {field.Name}: no existe ítem {id}.")));
     }
 
     private void SaveCopy()
@@ -402,34 +402,34 @@ internal sealed partial class MainForm : Form
         {
             ValidateDocument(false);
             if (_validationGrid.Rows.Cast<DataGridViewRow>().Any(r => Convert.ToString(r.Cells[0].Value) == "ERROR"))
-                throw new InvalidDataException("Hay errores bloqueantes. Revisá el panel de validación.");
+                throw new InvalidDataException("There are blocking errors. Check the validation panel.");
             bool warnings = _validationGrid.Rows.Cast<DataGridViewRow>().Any(r => Convert.ToString(r.Cells[0].Value) == "WARN");
-            if (warnings && MessageBox.Show(this, "Hay referencias que no pudieron comprobarse. La revisión se guardará para revisión manual. ¿Continuar?", "Validación incompleta", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
+            if (warnings && MessageBox.Show(this, Loc.T("Some references could not be checked. The revision will be saved for manual review. Continue?", "Hay referencias que no pudieron comprobarse. La revisión se guardará para revisión manual. ¿Continuar?"), Loc.T("Validation incomplete", "Validación incompleta"), MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
             var notes = _validationGrid.Rows.Cast<DataGridViewRow>().Select(r => string.Join(" | ", r.Cells.Cast<DataGridViewCell>().Select(c => Convert.ToString(c.Value)))).ToArray();
             string target = RdfSaveService.SaveRevision(_document, DefaultStagingFolder(), notes);
             _lastSavedRdf = target;
             _savedHash = Convert.ToHexString(SHA256.HashData(_document.BuildBytes()));
             RefreshChanges();
-            MessageBox.Show(this, "Revisión guardada y releída desde disco. Incluye respaldo original y audit.json.\n\n" + target,
-                "Guardado completado", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(this, Loc.T("Revision saved and read back from disk. Includes the original backup and audit.json.\n\n", "Revisión guardada y releída desde disco. Incluye respaldo original y audit.json.\n\n") + target,
+                Loc.T("Save complete", "Guardado completado"), MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
-        catch (Exception ex) { ShowError("No se guardó la revisión", ex.Message); }
+        catch (Exception ex) { ShowError(Loc.T("Revision not saved", "No se guardó la revisión"), ex.Message); }
     }
 
     private void UpdateRowPreview()
     {
         _tableIcon.Image?.Dispose(); _tableIcon.Image = null;
-        if (_document == null || SelectedRdfRow is not RdfRow row) { _tableIconName.Text = "Seleccioná una fila."; return; }
+        if (_document == null || SelectedRdfRow is not RdfRow row) { _tableIconName.Text = Loc.T("Select a row.", "Seleccioná una fila."); return; }
         var icon = _document.Schema.Fields.FirstOrDefault(f => f.Name.Equals("szIcon_Name", StringComparison.OrdinalIgnoreCase));
         var display = new List<string>();
         var key = _document.Schema.Fields.FirstOrDefault(f => f.Name.Equals("tblidx", StringComparison.OrdinalIgnoreCase));
         if (key != null) display.Add("ID " + _document.Schema.Decode(key, row.Current));
         if (icon != null)
         {
-            var iconName = _document.Schema.Decode(icon, row.Current).Trim(); display.Add("Icono: " + (iconName.Length == 0 ? "(vacío)" : iconName));
+            var iconName = _document.Schema.Decode(icon, row.Current).Trim(); display.Add(Loc.T("Icon: ", "Icono: ") + (iconName.Length == 0 ? Loc.T("(empty)", "(vacío)") : iconName));
             var path = FindIcon(iconName);
-            if (path != null) { try { _tableIcon.Image = LoadPreview(path); display.Add("Archivo: " + path); } catch (Exception ex) { display.Add("Preview: " + ex.Message); } }
-            else if (iconName.Length > 0) display.Add("No está suelto en la carpeta seleccionada; buscá el icono en la pestaña Recursos.");
+            if (path != null) { try { _tableIcon.Image = LoadPreview(path); display.Add(Loc.T("File: ", "Archivo: ") + path); } catch (Exception ex) { display.Add("Preview: " + ex.Message); } }
+            else if (iconName.Length > 0) display.Add(Loc.T("Not loose in the selected folder; look for the icon in the Resources tab.", "No está suelto en la carpeta seleccionada; buscá el icono en la pestaña Recursos."));
         }
         _tableIconName.Text = string.Join(Environment.NewLine, display);
     }
@@ -451,17 +451,17 @@ internal sealed partial class MainForm : Form
 
     private void ChooseAssetRoot()
     {
-        using var dialog = new FolderBrowserDialog { Description = "Elegí la carpeta con recursos sueltos o una extracción del PAK tex.pak.", UseDescriptionForTitle = true };
+        using var dialog = new FolderBrowserDialog { Description = Loc.T("Choose the folder with loose resources or a tex.pak extraction.", "Elegí la carpeta con recursos sueltos o una extracción del PAK tex.pak."), UseDescriptionForTitle = true };
         if (dialog.ShowDialog(this) == DialogResult.OK) { _assetRoot.Text = dialog.SelectedPath; SearchAssets(); UpdateRowPreview(); }
     }
 
     private async void SearchAssets()
     {
         string root = _assetRoot.Text.Trim();
-        if (!Directory.Exists(root)) { MessageBox.Show(this, "Seleccioná una carpeta existente de recursos o texturas.", "Recursos", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
+        if (!Directory.Exists(root)) { MessageBox.Show(this, Loc.T("Select an existing resource or texture folder.", "Seleccioná una carpeta existente de recursos o texturas."), Loc.T("Resources", "Recursos"), MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
         if (_rebuildingAssets) return;
         _rebuildingAssets = true;
-        _assetCount.Text = "Buscando recursos…";
+        _assetCount.Text = Loc.T("Searching resources…", "Buscando recursos…");
         try
         {
             _assetList.Items.Clear();
@@ -478,15 +478,15 @@ internal sealed partial class MainForm : Form
                 {
                     var item = new ListViewItem(Path.GetRelativePath(root, file.file));
                     item.SubItems.Add(Path.GetExtension(file.file).TrimStart('.').ToUpperInvariant());
-                    item.SubItems.Add(FormatSize(file.size)); item.SubItems.Add("Al seleccionar"); item.Tag = file.file;
+                    item.SubItems.Add(FormatSize(file.size)); item.SubItems.Add(Loc.T("On select", "Al seleccionar")); item.Tag = file.file;
                     _assetList.Items.Add(item);
                 }
             }
             finally { _assetList.EndUpdate(); }
             int count = files.Length;
-            _assetCount.Text = $"{count:N0} archivo(s) en la vista · máximo 3.000 resultados por búsqueda · imágenes DDS DXT1/3/5, PNG, JPG y BMP";
+            _assetCount.Text = Loc.T($"{count:N0} file(s) in view · up to 3,000 results per search · DDS DXT1/3/5, PNG, JPG and BMP images", $"{count:N0} archivo(s) en la vista · máximo 3.000 resultados por búsqueda · imágenes DDS DXT1/3/5, PNG, JPG y BMP");
         }
-        catch (Exception ex) { ShowError("Falló el índice de recursos", ex.Message); }
+        catch (Exception ex) { ShowError(Loc.T("Resource index failed", "Falló el índice de recursos"), ex.Message); }
         finally { _rebuildingAssets = false; }
     }
 
@@ -509,14 +509,14 @@ internal sealed partial class MainForm : Form
         if (!File.Exists(path)) return;
         _assetPreview.Image?.Dispose(); _assetPreview.Image = null;
         var info = new FileInfo(path);
-        var sb = new StringBuilder().AppendLine(Path.GetFileName(path)).AppendLine($"Formato: {info.Extension.ToUpperInvariant()} · {FormatSize(info.Length)}").AppendLine(path);
+        var sb = new StringBuilder().AppendLine(Path.GetFileName(path)).AppendLine(Loc.T($"Format: {info.Extension.ToUpperInvariant()} · {FormatSize(info.Length)}", $"Formato: {info.Extension.ToUpperInvariant()} · {FormatSize(info.Length)}")).AppendLine(path);
         try
         {
-            if (IsImagePath(path)) { _assetPreview.Image = LoadPreview(path); sb.AppendLine($"Dimensiones: {_assetPreview.Image.Width} × {_assetPreview.Image.Height}"); }
+            if (IsImagePath(path)) { _assetPreview.Image = LoadPreview(path); sb.AppendLine(Loc.T($"Dimensions: {_assetPreview.Image.Width} × {_assetPreview.Image.Height}", $"Dimensiones: {_assetPreview.Image.Width} × {_assetPreview.Image.Height}")); }
             if (info.Length <= 128L * 1024 * 1024) sb.AppendLine("SHA256: " + HashFile(path));
-            else sb.AppendLine("Hash omitido en vista previa para archivos mayores de 128 MiB.");
+            else sb.AppendLine(Loc.T("Hash skipped in preview for files over 128 MiB.", "Hash omitido en vista previa para archivos mayores de 128 MiB."));
         }
-        catch (Exception ex) { sb.AppendLine("Vista previa no disponible: " + ex.Message); }
+        catch (Exception ex) { sb.AppendLine(Loc.T("Preview not available: ", "Vista previa no disponible: ") + ex.Message); }
         _assetDetails.Text = sb.ToString();
     }
 
@@ -530,16 +530,16 @@ internal sealed partial class MainForm : Form
     private static Image LoadPreview(string path)
     {
         if (Path.GetExtension(path).Equals(".dds", StringComparison.OrdinalIgnoreCase)) return DdsPreview.Load(path);
-        if (new FileInfo(path).Length > 128L * 1024 * 1024) throw new InvalidDataException("Imagen demasiado grande para vista previa.");
+        if (new FileInfo(path).Length > 128L * 1024 * 1024) throw new InvalidDataException("Image too large to preview.");
         using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         using var image = Image.FromStream(stream);
-        if ((long)image.Width * image.Height > 16_777_216) throw new InvalidDataException("Dimensiones de imagen demasiado grandes.");
+        if ((long)image.Width * image.Height > 16_777_216) throw new InvalidDataException("Image dimensions too large.");
         return new Bitmap(image);
     }
     private static string AssetDimensions(string path)
     {
         if (!IsImagePath(path)) return "—";
-        try { using var image = LoadPreview(path); return $"{image.Width}×{image.Height}"; } catch { return "sin preview"; }
+        try { using var image = LoadPreview(path); return $"{image.Width}×{image.Height}"; } catch { return Loc.T("no preview", "sin preview"); }
     }
     private static string FormatSize(long bytes) => bytes < 1024 ? $"{bytes} B" : bytes < 1024 * 1024 ? $"{bytes / 1024d:0.0} KB" : $"{bytes / (1024d * 1024):0.0} MB";
     private void ShowError(string title, string message) => MessageBox.Show(this, message, title, MessageBoxButtons.OK, MessageBoxIcon.Error);

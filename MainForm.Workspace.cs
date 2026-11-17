@@ -44,41 +44,41 @@ internal sealed partial class MainForm
         }
         if (action == "workspace-pick-base")
         {
-            using var dialog = new FolderBrowserDialog { Description = S("side") == "client" ? "Raíz del cliente (contiene pack). Se registrará como base de sólo lectura." : "Raíz del servidor (contiene resource). Se registrará como base de sólo lectura." };
+            using var dialog = new FolderBrowserDialog { Description = S("side") == "client" ? Loc.T("Client root (contains pack). It will be registered as a read-only base.", "Raíz del cliente (contiene pack). Se registrará como base de sólo lectura.") : Loc.T("Server root (contains resource). It will be registered as a read-only base.", "Raíz del servidor (contiene resource). Se registrará como base de sólo lectura.") };
             return dialog.ShowDialog(this) == DialogResult.OK ? new { path = dialog.SelectedPath } : null;
         }
         if (action == "workspace-create" || action == "workspace-open")
         {
-            using var dialog = new FolderBrowserDialog { Description = action == "workspace-create" ? "Carpeta contenedora: se creará un proyecto nuevo dentro." : "Abrir proyecto (contiene work y .dbo-assets)." };
+            using var dialog = new FolderBrowserDialog { Description = action == "workspace-create" ? Loc.T("Container folder: a new project will be created inside.", "Carpeta contenedora: se creará un proyecto nuevo dentro.") : Loc.T("Open project (contains work and .dbo-assets).", "Abrir proyecto (contiene work y .dbo-assets).") };
             if (dialog.ShowDialog(this) != DialogResult.OK) return null;
             string selected = dialog.SelectedPath;
             if (action == "workspace-create")
             {
-                string name = S("name"); if (string.IsNullOrWhiteSpace(name)) throw new IOException("Escribí el nombre del proyecto.");
-                string folder = Regex.Replace(name, "[^a-zA-Z0-9_-]", "-").Trim('-'); if (folder.Length == 0) folder = "Proyecto";
+                string name = S("name"); if (string.IsNullOrWhiteSpace(name)) throw new IOException("Enter the project name.");
+                string folder = Regex.Replace(name, "[^a-zA-Z0-9_-]", "-").Trim('-'); if (folder.Length == 0) folder = "Project";
                 selected = Path.Combine(selected, folder + "-" + DateTime.Now.ToString("yyyyMMdd-HHmmss"));
                 SetWorkspace(await Task.Run(() => StudioWorkspace.Create(selected, name, S("client"), S("server"))));
             }
             else SetWorkspace(StudioWorkspace.Open(selected));
             return await Task.Run(_workspace!.Status);
         }
-        if (_workspace == null) throw new IOException("Creá o abrí un proyecto en Entregas.");
+        if (_workspace == null) throw new IOException("Create or open a project in Deliveries.");
         _workspaceDirty = true;
         switch (action)
         {
             case "workspace-commit": return await Task.Run(() => _workspace.Commit(S("message")));
             case "workspace-restore": return await Task.Run(() => _workspace.Restore(S("revision")));
             case "workspace-export":
-                using (var dialog = new SaveFileDialog { Filter = "Entrega DBO Assets ZIP|*.zip", FileName = "DBO Assets-GM-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".zip" })
+                using (var dialog = new SaveFileDialog { Filter = Loc.T("DBO Assets delivery ZIP|*.zip", "Entrega DBO Assets ZIP|*.zip"), FileName = "DBO Assets-GM-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".zip" })
                 { if (dialog.ShowDialog(this) != DialogResult.OK) return null; return await Task.Run(() => _workspace.Export(dialog.FileName)); }
             case "workspace-folder": Process.Start(new ProcessStartInfo(_workspace.Work) { UseShellExecute = true }); return null;
             case "workspace-import-pak": case "workspace-import-mob":
-                using (var dialog = new FolderBrowserDialog { Description = action == "workspace-import-pak" ? "Candidato canónico PAK con audit.json y plan.json." : "Candidato de mob con manifest.json y client-paks." })
+                using (var dialog = new FolderBrowserDialog { Description = action == "workspace-import-pak" ? Loc.T("Canonical PAK candidate with audit.json and plan.json.", "Candidato canónico PAK con audit.json y plan.json.") : Loc.T("Mob candidate with manifest.json and client-paks.", "Candidato de mob con manifest.json y client-paks.") })
                 { if (dialog.ShowDialog(this) != DialogResult.OK) return null; return await Task.Run(() => action == "workspace-import-pak" ? _workspace.ImportPakAsync(dialog.SelectedPath, B("replace")) : _workspace.ImportMobAsync(dialog.SelectedPath, B("replace"))); }
             case "workspace-add":
-                using (var dialog = new OpenFileDialog { Filter = "Contenido servidor|*.rdf;*.wps", Title = "Agregar revisión al proyecto" })
+                using (var dialog = new OpenFileDialog { Filter = Loc.T("Server content|*.rdf;*.wps", "Contenido servidor|*.rdf;*.wps"), Title = Loc.T("Add revision to the project", "Agregar revisión al proyecto") })
                 { if (dialog.ShowDialog(this) != DialogResult.OK) return null; return await Task.Run(() => _workspace.Adopt(dialog.FileName, S("destination"), B("replace"))); }
-            default: throw new ArgumentException("Acción de proyecto desconocida.");
+            default: throw new ArgumentException("Unknown project action.");
         }
     }
     private async Task<object?> TrackRdfRevisionAsync()
@@ -87,15 +87,15 @@ internal sealed partial class MainForm
         if (_workspaceRdfOrigin is { } origin)
         {
             var current = _workspace.CurrentResource(origin.Archive, origin.Entry);
-            if (current != null && Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(current)) != (_workspaceRdfHash ?? _document.OriginalHash)) throw new IOException("La tabla del proyecto cambió desde que se abrió. Reabrila desde Recursos antes de integrar esta revisión.");
+            if (current != null && Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(current)) != (_workspaceRdfHash ?? _document.OriginalHash)) throw new IOException("The project table changed since it was opened. Reopen it from Resources before integrating this revision.");
             var op = new PakChange("replace", origin.Entry.Name, _lastSavedRdf, ContentSafety.Hash(_lastSavedRdf));
             string folder = Path.Combine(DefaultStagingFolder(), "workspace-rdf-" + Guid.NewGuid().ToString("N"));
-            var plan = new PakPlan { Source = origin.Archive.IndexPath, SourceSha256 = origin.Archive.IndexHash, Prefix = origin.Archive.Prefix, Mode = "overlay", Operations = [op], Reason = "Edición RDF en Studio", Dependencies = [origin.Entry.Name] };
+            var plan = new PakPlan { Source = origin.Archive.IndexPath, SourceSha256 = origin.Archive.IndexHash, Prefix = origin.Archive.Prefix, Mode = "overlay", Operations = [op], Reason = "RDF edit in Studio", Dependencies = [origin.Entry.Name] };
             await Task.Run(() => ContentPakService.ApplyAsync(plan, folder));
             var result = await Task.Run(() => _workspace.ImportPakAsync(folder, true)); _workspaceRdfHash = ContentSafety.Hash(_lastSavedRdf); _workspaceDirty = true; return result;
         }
         string? destination = _workspace.ServerDestination(_document.Path);
-        if (destination == null) return new { tracked = false, reason = "Revisión guardada. En Entregas elegí su destino servidor para incluirla." };
+        if (destination == null) return new { tracked = false, reason = "Revision saved. In Deliveries, choose its server destination to include it." };
         var adopted = await Task.Run(() => _workspace.Adopt(_lastSavedRdf, destination, true, _workspaceRdfHash ?? _document.OriginalHash)); _workspaceRdfHash = ContentSafety.Hash(_lastSavedRdf); _workspaceDirty = true; return adopted;
     }
 }

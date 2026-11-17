@@ -23,7 +23,7 @@ internal static partial class WorldEngineService
         string root = Environment.GetEnvironmentVariable("DBO_WORLD_CACHE") is { Length: > 0 } env ? env
             : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "DBO Assets Studio", "World Editor", "cache", "base");
         root = Path.GetFullPath(root);
-        GuardNotClient(root, "La caché del World Editor");
+        GuardNotClient(root, "The World Editor cache");
         Directory.CreateDirectory(root);
         return root;
     }
@@ -39,7 +39,7 @@ internal static partial class WorldEngineService
             string full = Path.GetFullPath(c);
             if (File.Exists(Path.Combine(full, "ter.pak"))) return full;
         }
-        throw new DirectoryNotFoundException("No encontré la carpeta pack del cliente (ter.pak). Pasá --pack o definí DBO_WORLD_PACK.");
+        throw new DirectoryNotFoundException("Client pack folder (ter.pak) not found. Pass --pack or set DBO_WORLD_PACK.");
     }
 
     internal static string HostPath()
@@ -50,7 +50,7 @@ internal static partial class WorldEngineService
         candidates.Add(Path.Combine(AppContext.BaseDirectory, "world-host.exe"));
         if (UiRenderService.RepoRoot() is string repo) candidates.Add(Path.Combine(repo, "native", "bin", "world-host", "world-host.exe"));
         return candidates.FirstOrDefault(File.Exists) ?? throw new FileNotFoundException(
-            "Falta world-host.exe. Compilalo con build-world-host.ps1 o definí DBO_WORLD_HOST.");
+            "world-host.exe is missing. Build it with build-world-host.ps1 or set DBO_WORLD_HOST.");
     }
 
     internal static void GuardNotClient(string path, string label)
@@ -60,19 +60,19 @@ internal static partial class WorldEngineService
         {
             if (string.IsNullOrEmpty(forbidden)) continue;
             string f = Path.GetFullPath(forbidden).TrimEnd('\\') + "\\";
-            if (full.StartsWith(f, StringComparison.OrdinalIgnoreCase)) throw new IOException(label + " no puede estar dentro del cliente (" + f + ").");
+            if (full.StartsWith(f, StringComparison.OrdinalIgnoreCase)) throw new IOException(label + " cannot be inside the client (" + f + ").");
         }
         if (UiRenderService.RepoRoot() is string repo)
         {
             string runtime = Path.Combine(repo, "runtime") + "\\";
-            if (full.StartsWith(runtime, StringComparison.OrdinalIgnoreCase)) throw new IOException(label + " no puede estar dentro de runtime/.");
+            if (full.StartsWith(runtime, StringComparison.OrdinalIgnoreCase)) throw new IOException(label + " cannot be inside runtime/.");
         }
     }
     private static string PackDirectorySafe() { try { return PackDirectory(); } catch { return ""; } }
 
     internal static string ValidWorld(string world)
     {
-        if (!WorldNameRegex().IsMatch(world ?? "")) throw new InvalidDataException("Nombre de mundo inválido: " + world);
+        if (!WorldNameRegex().IsMatch(world ?? "")) throw new InvalidDataException("Invalid world name: " + world);
         return world!;
     }
 
@@ -153,7 +153,7 @@ internal static partial class WorldEngineService
                         Directory.CreateDirectory(Path.GetDirectoryName(dst)!);
                         await File.WriteAllBytesAsync(dst, data, cancel);
                         extracted++; bytes += data.Length;
-                        if (extracted % 250 == 0) progress?.Report($"{folder}: {extracted} de {pending.Count} archivos");
+                        if (extracted % 250 == 0) progress?.Report($"{folder}: {extracted} of {pending.Count} files");
                     });
                 }
                 catch (Exception ex) when (ex is IOException or InvalidDataException)
@@ -163,17 +163,17 @@ internal static partial class WorldEngineService
                     {
                         if (File.Exists(target[entry]) && new FileInfo(target[entry]).Length == entry.Size) continue;
                         try { byte[] data = await archive.ReadAsync(entry); Directory.CreateDirectory(Path.GetDirectoryName(target[entry])!); await File.WriteAllBytesAsync(target[entry], data, cancel); extracted++; bytes += data.Length; }
-                        catch (Exception inner) when (inner is IOException or InvalidDataException) { failed++; progress?.Report($"{folder}: ilegible {entry.Name} ({inner.Message})"); }
+                        catch (Exception inner) when (inner is IOException or InvalidDataException) { failed++; progress?.Report($"{folder}: unreadable {entry.Name} ({inner.Message})"); }
                     }
-                    progress?.Report($"{folder}: lectura en bloque falló ({ex.Message}); se reintentó archivo por archivo");
+                    progress?.Report($"{folder}: batch read failed ({ex.Message}); retried file by file");
                 }
             }
             report.Add(new { pack = packName, folder, extracted, skipped, failed, megabytes = Math.Round(bytes / 1048576.0, 1) });
-            progress?.Report($"{folder}: listo ({extracted} nuevos, {skipped} ya estaban, {failed} ilegibles)");
+            progress?.Report($"{folder}: done ({extracted} new, {skipped} already present, {failed} unreadable)");
         }
         if (!SharedReady())
             ContentSafety.WriteJson(Path.Combine(cache, "shared.json"), new { version = 1, createdUtc = DateTime.UtcNow, pack = packDir, folders = SharedFolders.Select(s => s.Pack + ":" + s.Folder).ToArray(), clientWritten = false });
-        if (!File.Exists(Path.Combine(cache, "world", world, "#######.gwp"))) throw new InvalidDataException("El mundo " + world + " no tiene #######.gwp en ter.pak.");
+        if (!File.Exists(Path.Combine(cache, "world", world, "#######.gwp"))) throw new InvalidDataException("World " + world + " has no #######.gwp in ter.pak.");
         return new { world, cacheRoot = cache, pack = packDir, cached = true, steps = report, clientWritten = false };
     }
 
@@ -208,7 +208,7 @@ internal static partial class WorldEngineService
     /// <summary>World-table rows whose resource folder is this world, with their mob/NPC spawn tables (read-only).</summary>
     internal static object SpawnTables(string world)
     {
-        string folder = ServerRdfFolder() ?? throw new DirectoryNotFoundException("No encontré la carpeta de tablas del servidor (Table_World_Data.rdf). Configurá serverTables en studio.config.json (o DBO_SERVER_TABLES).");
+        string folder = ServerRdfFolder() ?? throw new DirectoryNotFoundException("Server table folder (Table_World_Data.rdf) not found. Set serverTables in studio.config.json (or DBO_SERVER_TABLES).");
         string worldTable = Directory.EnumerateFiles(folder, "*.rdf").First(f => Path.GetFileName(f).Equals("table_world_data.rdf", StringComparison.OrdinalIgnoreCase));
         var (doc, key) = RdfCli.Open(worldTable);
         string V(RdfRow row, string name) { var f = doc.Schema.Fields.FirstOrDefault(x => x.Name == name); return f == null ? "" : doc.Schema.Decode(f, row.Current).Trim(); }

@@ -61,7 +61,7 @@ internal sealed partial class MainForm
             }
             catch (Exception ex)
             {
-                ShowError("Content Studio", "No se pudo iniciar la interfaz. Necesita Microsoft Edge WebView2 Runtime.\n\n" + ex.Message);
+                ShowError("Content Studio", Loc.T("Could not start the interface. Microsoft Edge WebView2 Runtime is required.\n\n", "No se pudo iniciar la interfaz. Necesita Microsoft Edge WebView2 Runtime.\n\n") + ex.Message);
             }
         };
         FormClosed += (_, _) => { _modernPreview?.Cancel(); _modernPreview?.Dispose(); _media.Clear(); };
@@ -129,6 +129,7 @@ internal sealed partial class MainForm
         if (action.StartsWith("workspace-")) return await WorkspaceCommandAsync(action, args);
         switch (action)
         {
+            case "set-language": Loc.Set(S("lang")); return null;
             case "diagnostic": StudioLog("UI " + S("message")[..Math.Min(S("message").Length, 2000)]); return null;
             case "ready":
                 StudioLog("UI ready");
@@ -143,7 +144,7 @@ internal sealed partial class MainForm
                 }
                 return new { workspace = _packLibrary == null && _document != null ? "tables" : "resources", source = _modernSource, initialResource = InitialArguments.Length > 1 ? InitialArguments[1] : null, version = "5.4", schemas = _schemas.Count };
             case "open":
-                using (var dialog = new OpenFileDialog { Filter = "Contenido DBO y Meshy|*.pak;*.rdf;*.swf;*.tga;*.dds;*.png;*.jpg;*.bmp;*.dff;*.glb;*.wav;*.ogg;*.mp3|Todos los archivos|*.*", Title = "Abrir contenido de DBO" })
+                using (var dialog = new OpenFileDialog { Filter = Loc.T("DBO and Meshy content|*.pak;*.rdf;*.swf;*.tga;*.dds;*.png;*.jpg;*.bmp;*.dff;*.glb;*.wav;*.ogg;*.mp3|All files|*.*", "Contenido DBO y Meshy|*.pak;*.rdf;*.swf;*.tga;*.dds;*.png;*.jpg;*.bmp;*.dff;*.glb;*.wav;*.ogg;*.mp3|Todos los archivos|*.*"), Title = Loc.T("Open DBO content", "Abrir contenido de DBO") })
                 {
                     if (dialog.ShowDialog(this) != DialogResult.OK) return null;
                     _modernPreview?.Cancel();
@@ -154,7 +155,7 @@ internal sealed partial class MainForm
                     return new { workspace = "resources", source = _modernSource };
                 }
             case "folder": case "packFolder":
-                using (var dialog = new FolderBrowserDialog { Description = action == "packFolder" ? "Elegí la carpeta pack o una copia completa del cliente. Se abrirán juntos los índices y sus recursos." : "Carpeta de recursos. Si contiene índices PAK, se abre como biblioteca unificada." })
+                using (var dialog = new FolderBrowserDialog { Description = action == "packFolder" ? Loc.T("Choose the pack folder or a full client copy. The indices and their resources will be opened together.", "Elegí la carpeta pack o una copia completa del cliente. Se abrirán juntos los índices y sus recursos.") : Loc.T("Resource folder. If it contains PAK indices, it opens as a unified library.", "Carpeta de recursos. Si contiene índices PAK, se abre como biblioteca unificada.") })
                 {
                     if (dialog.ShowDialog(this) != DialogResult.OK) return null;
                     if (action == "packFolder" || PackLibrary.HasIndices(dialog.SelectedPath)) return await OpenPackLibraryAsync(dialog.SelectedPath);
@@ -181,7 +182,7 @@ internal sealed partial class MainForm
                 }
             case "table": return ModernTablePage(S("query"), S("preset"), N("page"));
             case "edit":
-                if (_document == null) throw new InvalidOperationException("Abrí una tabla RDF.");
+                if (_document == null) throw new InvalidOperationException("Open an RDF table.");
                 var row = _document.Rows[N("row")]; var field = _document.Schema.Fields.Single(f => f.Name == S("field") && !f.IsPadding);
                 byte[] before = row.Current.ToArray(); _document.Schema.Encode(field, S("value"), row.Current);
                 if (!before.AsSpan().SequenceEqual(row.Current)) { _undo.Push((row.Index, before, row.Current.ToArray())); _redo.Clear(); }
@@ -202,7 +203,7 @@ internal sealed partial class MainForm
                     if (dialog.ShowDialog(this) != DialogResult.OK) return null;
                     using var file = File.Create(dialog.FileName); await _browser!.CoreWebView2.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Png, file); return dialog.FileName;
                 }
-            default: throw new InvalidOperationException("Acción desconocida.");
+            default: throw new InvalidOperationException("Unknown action.");
         }
     }
 
@@ -229,8 +230,8 @@ internal sealed partial class MainForm
     {
         var (archive, entry) = ResolveModernPakResource(key);
         if (archive != null && entry != null) return (entry.Name, _workspace?.CurrentResource(archive, entry) ?? await archive.ReadAsync(entry));
-        if (!int.TryParse(key, out int n) || n < 0 || n >= _looseResources.Length) throw new InvalidDataException("Selección de archivo inválida.");
-        string path = _looseResources[n]; if (new FileInfo(path).Length > 128L * 1024 * 1024) throw new IOException("Recurso mayor a 128 MiB.");
+        if (!int.TryParse(key, out int n) || n < 0 || n >= _looseResources.Length) throw new InvalidDataException("Invalid file selection.");
+        string path = _looseResources[n]; if (new FileInfo(path).Length > 128L * 1024 * 1024) throw new IOException("Resource larger than 128 MiB.");
         return (Path.GetRelativePath(_modernSource, path), await File.ReadAllBytesAsync(path));
     }
     private async Task<object> ModernPreviewAsync(string key)
@@ -248,8 +249,8 @@ internal sealed partial class MainForm
         }
         else if (kind == "flash")
         {
-            if (bytes.Length < 8 || !(Encoding.ASCII.GetString(bytes, 0, 3) is "FWS" or "CWS" or "ZWS")) throw new InvalidDataException("El recurso no tiene una cabecera SWF válida.");
-            if (BitConverter.ToUInt32(bytes, 4) > 128L * 1024 * 1024) throw new InvalidDataException("SWF descomprimido mayor a 128 MiB.");
+            if (bytes.Length < 8 || !(Encoding.ASCII.GetString(bytes, 0, 3) is "FWS" or "CWS" or "ZWS")) throw new InvalidDataException("The resource does not have a valid SWF header.");
+            if (BitConverter.ToUInt32(bytes, 4) > 128L * 1024 * 1024) throw new InvalidDataException("Decompressed SWF larger than 128 MiB.");
             var adapted = await SwfPreviewAdapter.PrepareAsync(bytes, async file =>
             {
                 token.ThrowIfCancellationRequested();

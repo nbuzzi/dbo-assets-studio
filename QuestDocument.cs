@@ -45,18 +45,18 @@ internal sealed class QuestDocument
     public static QuestDocument Load(string path)
     {
         ContentSafety.NoLinks(path);
-        if (new FileInfo(path).Length > 8 * 1024 * 1024) throw new IOException("Límite de entrada quest: 8 MiB.");
+        if (new FileInfo(path).Length > 8 * 1024 * 1024) throw new IOException("Quest input limit: 8 MiB.");
         return new(path, File.ReadAllBytes(path));
     }
     internal static QuestDocument Create(string path, string text)
     {
         ContentSafety.SafeOutput(path);
-        if (File.Exists(path) || Directory.Exists(path)) throw new IOException("El archivo de quest nueva ya existe.");
+        if (File.Exists(path) || Directory.Exists(path)) throw new IOException("The new quest file already exists.");
         return new(path, Utf8.GetBytes(text), true);
     }
     public void ReplaceText(string text)
     {
-        if (text.Length > 8 * 1024 * 1024 || encoding.GetByteCount(text) + (bom ? 3 : 0) > 8 * 1024 * 1024) throw new IOException("Límite de quest codificada: 8 MiB.");
+        if (text.Length > 8 * 1024 * 1024 || encoding.GetByteCount(text) + (bom ? 3 : 0) > 8 * 1024 * 1024) throw new IOException("Encoded quest limit: 8 MiB.");
         Text = text; Parse();
     }
     public void SetField(string nodeId, string key, string literal)
@@ -69,7 +69,7 @@ internal sealed class QuestDocument
     public string AddNode(string? parentId, string kind, IReadOnlyDictionary<string, string> fields)
     {
         EnsureMutable(); CheckIdentifier(kind);
-        if (nodes.Count >= 50000) throw new InvalidDataException("Máximo 50000 nodos.");
+        if (nodes.Count >= 50000) throw new InvalidDataException("Maximum 50000 nodes.");
         foreach (var field in fields) { CheckFieldIdentifier(field.Key); CheckLiteral(field.Value); }
         var parent = parentId == null ? null : Find(parentId);
         int offset = parent?.Close ?? Text.Length;
@@ -86,31 +86,31 @@ internal sealed class QuestDocument
         IReadOnlyList<QuestNode> level = nodes.Where(n => n.ParentId == null).ToArray(); QuestNode? node = null;
         foreach (int index in path)
         {
-            if (index < 0 || index >= level.Count) throw new ArgumentException("nodePath inválido.");
+            if (index < 0 || index >= level.Count) throw new ArgumentException("Invalid nodePath.");
             node = level[index]; level = node.ChildrenIds.Select(Find).ToArray();
         }
-        return node?.Id ?? throw new ArgumentException("nodePath vacío.");
+        return node?.Id ?? throw new ArgumentException("Empty nodePath.");
     }
     public string ResolveContainer(int groupId, int containerId)
     {
-        var group = nodes.SingleOrDefault(x => x.Kind == "CNtlTSGroup" && Integer(x, "gid") == groupId) ?? throw new ArgumentException("Grupo inexistente o ambiguo.");
-        return nodes.SingleOrDefault(x => x.ParentId == group.Id && Integer(x, "cid") == containerId)?.Id ?? throw new ArgumentException("Contenedor inexistente o ambiguo.");
+        var group = nodes.SingleOrDefault(x => x.Kind == "CNtlTSGroup" && Integer(x, "gid") == groupId) ?? throw new ArgumentException("Group missing or ambiguous.");
+        return nodes.SingleOrDefault(x => x.ParentId == group.Id && Integer(x, "cid") == containerId)?.Id ?? throw new ArgumentException("Container missing or ambiguous.");
     }
     public IReadOnlyList<QuestDiagnostic> Validate() { Parse(); return diagnostics.ToArray(); }
     public object SaveCandidate(string outputDirectory, string? candidateName = null, string? note = null)
     {
         EnsureMutable(); var validation = Validate();
-        if (validation.Any(x => x.Severity == "error")) throw new InvalidOperationException("La quest contiene errores de validación; no se guardó candidato.");
+        if (validation.Any(x => x.Severity == "error")) throw new InvalidOperationException("The quest has validation errors; no candidate was saved.");
         string output = ContentSafety.SafeOutput(outputDirectory);
-        if (SourcePath.StartsWith(output + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) || SourcePath.Equals(output, StringComparison.OrdinalIgnoreCase)) throw new IOException("La salida no puede contener la fuente.");
+        if (SourcePath.StartsWith(output + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) || SourcePath.Equals(output, StringComparison.OrdinalIgnoreCase)) throw new IOException("The output cannot contain the source.");
         ContentSafety.NoLinks(SourcePath);
         using var source = isNew ? null : new FileStream(SourcePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-        if (source != null && Convert.ToHexString(SHA256.HashData(source)) != OriginalSha256) throw new IOException("SHA-256 obsoleto: la quest fuente cambió.");
-        if (isNew && (File.Exists(SourcePath) || Directory.Exists(SourcePath))) throw new IOException("La quest nueva ya existe.");
+        if (source != null && Convert.ToHexString(SHA256.HashData(source)) != OriginalSha256) throw new IOException("Stale SHA-256: the source quest changed.");
+        if (isNew && (File.Exists(SourcePath) || Directory.Exists(SourcePath))) throw new IOException("The new quest already exists.");
         byte[] candidateBytes = Encode(); string sha = Convert.ToHexString(SHA256.HashData(candidateBytes));
         string pending = ContentSafety.FreshDirectory(output);
         string name = Path.GetFileName(SourcePath);
-        if (candidateName != null && (candidateName != Path.GetFileName(candidateName) || !Regex.IsMatch(candidateName, @"^[0-9]+\.t$"))) throw new ArgumentException("El candidato requiere nombre <tid>.t."); candidateName ??= name;
+        if (candidateName != null && (candidateName != Path.GetFileName(candidateName) || !Regex.IsMatch(candidateName, @"^[0-9]+\.t$"))) throw new ArgumentException("The candidate requires the name <tid>.t."); candidateName ??= name;
         Directory.CreateDirectory(Path.Combine(pending, "snapshot")); Directory.CreateDirectory(Path.Combine(pending, "candidate"));
         File.WriteAllBytes(Path.Combine(pending, "snapshot", name), originalBytes);
 
@@ -122,21 +122,21 @@ internal sealed class QuestDocument
     private byte[] Encode()
     {
         var strict = (Encoding)encoding.Clone(); strict.EncoderFallback = EncoderFallback.ExceptionFallback;
-        byte[] data = strict.GetBytes(Text); if (data.Length + (bom ? 3 : 0) > 8 * 1024 * 1024) throw new IOException("Límite de quest codificada: 8 MiB."); return bom ? Encoding.UTF8.Preamble.ToArray().Concat(data).ToArray() : data;
+        byte[] data = strict.GetBytes(Text); if (data.Length + (bom ? 3 : 0) > 8 * 1024 * 1024) throw new IOException("Encoded quest limit: 8 MiB."); return bom ? Encoding.UTF8.Preamble.ToArray().Concat(data).ToArray() : data;
     }
-    private QuestNode Find(string id) => nodes.SingleOrDefault(x => x.Id == id) ?? throw new ArgumentException("Nodo quest inexistente.");
-    private void EnsureMutable() { if (!CanMutate) throw new InvalidOperationException("La quest contiene errores; corrija el documento antes de editar o exportar."); }
+    private QuestNode Find(string id) => nodes.SingleOrDefault(x => x.Id == id) ?? throw new ArgumentException("Quest node not found.");
+    private void EnsureMutable() { if (!CanMutate) throw new InvalidOperationException("The quest has errors; fix the document before editing or exporting."); }
     private void Patch(int start, int length, string replacement)
     {
-        if ((long)Text.Length - length + replacement.Length > 8 * 1024 * 1024) throw new IOException("Límite de quest: 8 MiB.");
+        if ((long)Text.Length - length + replacement.Length > 8 * 1024 * 1024) throw new IOException("Quest limit: 8 MiB.");
         ReplaceText(Text.Remove(start, length).Insert(start, replacement));
     }
     private string Indent(QuestNode node) { int start = Text.LastIndexOf('\n', Math.Max(0, node.Start - 1)); string s = Text[(start + 1)..node.Start]; return s.All(c => c is ' ' or '\t') ? s : ""; }
     private int Line(int at) { int index = lineStarts.BinarySearch(Math.Min(at, Text.Length)); return index >= 0 ? index + 1 : ~index; }
     private void Error(string message, int at) => diagnostics.Add(new("error", Line(at), message));
     private void Warn(string message, QuestNode node) => diagnostics.Add(new("warning", node.Line, message));
-    private static void CheckFieldIdentifier(string value) { if (!FieldIdentifier.IsMatch(value)) throw new ArgumentException("Campo quest inválido."); }
-    private static void CheckIdentifier(string value) { if (!Identifier.IsMatch(value)) throw new ArgumentException("Identificador quest inválido."); }
+    private static void CheckFieldIdentifier(string value) { if (!FieldIdentifier.IsMatch(value)) throw new ArgumentException("Invalid quest field."); }
+    private static void CheckIdentifier(string value) { if (!Identifier.IsMatch(value)) throw new ArgumentException("Invalid quest identifier."); }
     private static bool IsLiteral(string value)
     {
         if (Number.IsMatch(value)) return true;
@@ -146,8 +146,8 @@ internal sealed class QuestDocument
     }
     private static void CheckLiteral(string value)
     {
-        if (value.Length > 8 * 1024 * 1024) throw new IOException("Límite de literal quest: 8 MiB.");
-        if (!IsLiteral(value)) throw new ArgumentException("Se requiere entero o string entre comillas; no se ejecuta código.");
+        if (value.Length > 8 * 1024 * 1024) throw new IOException("Quest literal limit: 8 MiB.");
+        if (!IsLiteral(value)) throw new ArgumentException("An integer or quoted string is required; code is not executed.");
     }
     private void Skip()
     {
@@ -155,7 +155,7 @@ internal sealed class QuestDocument
         {
             if (char.IsWhiteSpace(Text[cursor])) { cursor++; continue; }
             if (Text.AsSpan(cursor).StartsWith("//")) { while (cursor < Text.Length && Text[cursor] != '\n') cursor++; continue; }
-            if (Text.AsSpan(cursor).StartsWith("/*")) { int end = Text.IndexOf("*/", cursor + 2, StringComparison.Ordinal); if (end < 0) throw new FormatException("Comentario sin cierre."); cursor = end + 2; continue; }
+            if (Text.AsSpan(cursor).StartsWith("/*")) { int end = Text.IndexOf("*/", cursor + 2, StringComparison.Ordinal); if (end < 0) throw new FormatException("Unclosed comment."); cursor = end + 2; continue; }
             break;
         }
     }
@@ -163,28 +163,28 @@ internal sealed class QuestDocument
     {
         Skip(); int start = cursor;
         while (cursor < Text.Length && (char.IsAsciiLetterOrDigit(Text[cursor]) || Text[cursor] == '_')) cursor++;
-        string id = Text[start..cursor]; if (!(field ? FieldIdentifier : Identifier).IsMatch(id)) throw new FormatException("Se esperaba un identificador."); return id;
+        string id = Text[start..cursor]; if (!(field ? FieldIdentifier : Identifier).IsMatch(id)) throw new FormatException("Expected an identifier."); return id;
     }
-    private void Expect(char token) { Skip(); if (cursor >= Text.Length || Text[cursor] != token) throw new FormatException("Se esperaba '" + token + "'."); cursor++; }
+    private void Expect(char token) { Skip(); if (cursor >= Text.Length || Text[cursor] != token) throw new FormatException("Expected '" + token + "'."); cursor++; }
     private QuestNode ReadNode(string kind, int start, string? parent, int depth)
     {
-        if (depth > 64 || nodes.Count >= 50000) throw new FormatException("Límite de profundidad (64) o nodos (50000).");
+        if (depth > 64 || nodes.Count >= 50000) throw new FormatException("Depth (64) or node (50000) limit.");
         Expect('{'); var node = new QuestNode { Id = "q" + nodes.Count, Kind = kind, Start = start, ParentId = parent, Line = Line(start) }; nodes.Add(node);
         while (true)
         {
-            Skip(); if (cursor >= Text.Length) throw new FormatException("Nodo sin cierre.");
+            Skip(); if (cursor >= Text.Length) throw new FormatException("Unclosed node.");
             if (Text[cursor] == '}') { node.Close = cursor++; node.End = cursor; break; }
             int fieldStart = cursor; string name = ReadIdentifier(true); Skip();
-            if (cursor < Text.Length && Text[cursor] == '{') { if (!Identifier.IsMatch(name)) throw new FormatException("Tipo de nodo inválido."); var child = ReadNode(name, fieldStart, node.Id, depth + 1); node.ChildrenIds.Add(child.Id); continue; }
+            if (cursor < Text.Length && Text[cursor] == '{') { if (!Identifier.IsMatch(name)) throw new FormatException("Invalid node type."); var child = ReadNode(name, fieldStart, node.Id, depth + 1); node.ChildrenIds.Add(child.Id); continue; }
             Expect('='); Skip(); int literalStart = cursor;
             if (cursor < Text.Length && Text[cursor] == '"')
             {
                 cursor++; bool closed = false;
-                while (cursor < Text.Length) { char c = Text[cursor++]; if (c is '\r' or '\n') throw new FormatException("String con salto de línea."); if (c == '\\') { cursor++; continue; } if (c == '"') { closed = true; break; } }
-                if (!closed || cursor > Text.Length) throw new FormatException("String sin cierre.");
+                while (cursor < Text.Length) { char c = Text[cursor++]; if (c is '\r' or '\n') throw new FormatException("String contains a line break."); if (c == '\\') { cursor++; continue; } if (c == '"') { closed = true; break; } }
+                if (!closed || cursor > Text.Length) throw new FormatException("Unclosed string.");
             }
             else { if (cursor < Text.Length && Text[cursor] is '+' or '-') cursor++; while (cursor < Text.Length && char.IsAsciiDigit(Text[cursor])) cursor++; }
-            string literal = Text[literalStart..cursor]; if (!IsLiteral(literal)) throw new FormatException("Literal quest inválido.");
+            string literal = Text[literalStart..cursor]; if (!IsLiteral(literal)) throw new FormatException("Invalid quest literal.");
             node.Fields.Add(new(name, literal, literal.StartsWith('"') ? literal[1..^1] : literal, literal.StartsWith('"') ? "string" : "number", literalStart, literal.Length)); Expect(';');
         }
         return node;
@@ -202,7 +202,7 @@ internal sealed class QuestDocument
     private void ValidateStructure()
     {
         var roots = nodes.Where(x => x.ParentId == null).ToArray();
-        if (roots.Length != 1 || roots[0].Kind != "CNtlTSTrigger") Error("Se requiere exactamente una raíz CNtlTSTrigger.", 0);
+        if (roots.Length != 1 || roots[0].Kind != "CNtlTSTrigger") Error("Exactly one CNtlTSTrigger root is required.", 0);
         var byId = nodes.ToDictionary(x => x.Id, StringComparer.Ordinal);
         foreach (var node in nodes)
         {
@@ -215,46 +215,46 @@ internal sealed class QuestDocument
                 : node.Kind == "CNtlTSGroup" ? parent?.Kind == "CNtlTSTrigger"
                 : IsContainer(node) ? parent?.Kind == "CNtlTSGroup"
                 : parent != null && IsContainer(parent);
-            if (!hierarchyValid) Error("Jerarquía nativa inválida: se requiere Trigger → Group → Contenedor → Entidad; " + node.Kind + " tiene padre " + (parent?.Kind ?? "raíz") + ".", node.Start);
-            foreach (var duplicate in node.Fields.GroupBy(x => x.Key).Where(x => x.Count() > 1)) Error("Campo duplicado: " + duplicate.Key, node.Start);
+            if (!hierarchyValid) Error("Invalid native hierarchy: Trigger → Group → Container → Entity is required; " + node.Kind + " has parent " + (parent?.Kind ?? "root") + ".", node.Start);
+            foreach (var duplicate in node.Fields.GroupBy(x => x.Key).Where(x => x.Count() > 1)) Error("Duplicate field: " + duplicate.Key, node.Start);
             string? identity = node.Kind == "CNtlTSTrigger" ? "tid" : node.Kind == "CNtlTSGroup" ? "gid" : IsContainer(node) ? "cid" : null;
-            if (identity != null && (Integer(node, identity) is not long id || id < 0 || id > (identity == "tid" ? 65534L : 254L))) Error("ID requerido o fuera de rango: " + identity, node.Start);
+            if (identity != null && (Integer(node, identity) is not long id || id < 0 || id > (identity == "tid" ? 65534L : 254L))) Error("ID missing or out of range: " + identity, node.Start);
             foreach (var field in node.Fields.Where(x => x.Key is "tid" or "gid" or "cid" or "yeslnk" or "nolnk" or "nextlnk" or "elnk" or "oklnk" or "cancellnk" or "canclnk" or "taid" or "stdiag" or "minlvl" or "maxlvl"))
-                if (field.Kind != "number" || !long.TryParse(field.Literal, NumberStyles.Integer, CultureInfo.InvariantCulture, out _)) Error("Campo nativo entero requerido: " + field.Key, field.Start);
-            if (node.Kind != "CNtlTSTrigger" && node.Kind != "CNtlTSGroup" && !KnownKinds.Contains(node.Kind)) Warn("Tipo conservado sin esquema de autoría: " + node.Kind + ". Revisar en el motor nativo.", node);
+                if (field.Kind != "number" || !long.TryParse(field.Literal, NumberStyles.Integer, CultureInfo.InvariantCulture, out _)) Error("Native integer field required: " + field.Key, field.Start);
+            if (node.Kind != "CNtlTSTrigger" && node.Kind != "CNtlTSGroup" && !KnownKinds.Contains(node.Kind)) Warn("Type kept without an authoring schema: " + node.Kind + ". Check it in the native engine.", node);
         }
-        foreach (var dup in nodes.Where(x => x.Kind == "CNtlTSGroup").GroupBy(x => Integer(x, "gid")).Where(g => g.Count() > 1)) Error("gid duplicado.", dup.First().Start);
+        foreach (var dup in nodes.Where(x => x.Kind == "CNtlTSGroup").GroupBy(x => Integer(x, "gid")).Where(g => g.Count() > 1)) Error("Duplicate gid.", dup.First().Start);
         foreach (var group in nodes.Where(x => x.Kind == "CNtlTSGroup"))
         {
             var containers = nodes.Where(x => x.ParentId == group.Id && IsContainer(x)).ToArray();
-            foreach (var dup in containers.GroupBy(x => Integer(x, "cid")).Where(g => g.Count() > 1)) Error("cid duplicado dentro del grupo.", dup.First().Start);
+            foreach (var dup in containers.GroupBy(x => Integer(x, "cid")).Where(g => g.Count() > 1)) Error("Duplicate cid within the group.", dup.First().Start);
             var ids = containers.Select(x => Integer(x, "cid")).ToHashSet();
             var byCid = containers.Where(x => Integer(x, "cid").HasValue).GroupBy(x => Integer(x, "cid")!.Value).ToDictionary(g => g.Key, g => g.First());
             foreach (var node in containers)
             {
                 foreach (var field in node.Fields.Where(x => x.Key != "prelnk" && x.Key.EndsWith("lnk", StringComparison.Ordinal)))
                 {
-                    if (Integer(node, field.Key) is not long target || target < 0 || target > 255) Error("Enlace requiere entero 0..255: " + field.Key, field.Start);
-                    else if (target != 255 && !ids.Contains(target)) Error("Enlace " + field.Key + " apunta a cid inexistente " + target + ". 255 es el único sentinel nativo.", field.Start);
+                    if (Integer(node, field.Key) is not long target || target < 0 || target > 255) Error("Link requires an integer 0..255: " + field.Key, field.Start);
+                    else if (target != 255 && !ids.Contains(target)) Error("Link " + field.Key + " points to missing cid " + target + ". 255 is the only native sentinel.", field.Start);
                     else if (target != 255 && byCid.TryGetValue(target, out var targetNode) && Integer(node, "cid") is long sourceId)
                     {
                         var targetPrevious = targetNode.Fields.FirstOrDefault(x => x.Key == "prelnk");
-                        if (targetPrevious == null || !PreviousIds(targetPrevious).Contains(sourceId)) Warn("Revisar reciprocidad: " + field.Key + " hacia cid " + target + " no aparece en prelnk del destino.", node);
+                        if (targetPrevious == null || !PreviousIds(targetPrevious).Contains(sourceId)) Warn("Check reciprocity: " + field.Key + " to cid " + target + " is not in the target's prelnk.", node);
                     }
                 }
                 var previous = node.Fields.FirstOrDefault(x => x.Key == "prelnk");
                 if (previous != null)
                 {
-                    if (previous.Kind != "string" || !Regex.IsMatch(previous.Value, @"^(?:[0-9; ]*)$")) Error("prelnk debe contener IDs separados por punto y coma.", previous.Start);
+                    if (previous.Kind != "string" || !Regex.IsMatch(previous.Value, @"^(?:[0-9; ]*)$")) Error("prelnk must contain semicolon-separated IDs.", previous.Start);
                     else foreach (string part in previous.Value.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
                     {
-                        if (!long.TryParse(part, out long id) || !ids.Contains(id)) Warn("prelnk referencia cid ausente: " + part, node);
-                        else if (byCid.TryGetValue(id, out var predecessor) && Integer(node, "cid") is long targetId && !predecessor.Fields.Any(f => f.Key != "prelnk" && f.Key.EndsWith("lnk", StringComparison.Ordinal) && Integer(predecessor, f.Key) == targetId)) Warn("Revisar reciprocidad: prelnk declara cid " + id + " sin enlace escalar de vuelta; puede requerir lógica dinámica del motor.", node);
+                        if (!long.TryParse(part, out long id) || !ids.Contains(id)) Warn("prelnk references missing cid: " + part, node);
+                        else if (byCid.TryGetValue(id, out var predecessor) && Integer(node, "cid") is long targetId && !predecessor.Fields.Any(f => f.Key != "prelnk" && f.Key.EndsWith("lnk", StringComparison.Ordinal) && Integer(predecessor, f.Key) == targetId)) Warn("Check reciprocity: prelnk declares cid " + id + " without a scalar link back; it may rely on dynamic engine logic.", node);
                     }
                 }
             }
         }
-        if (isNew && roots.Length > 0) Warn("Esqueleto nuevo: faltan textos, evento/condiciones de aceptación, objetivos, recompensas y registro/tabla de quest. No desplegar sin completar y probar.", roots[0]);
+        if (isNew && roots.Length > 0) Warn("New skeleton: texts, accept event/conditions, objectives, rewards and the quest registration/table are missing. Do not deploy without completing and testing.", roots[0]);
     }
     private static IEnumerable<long> PreviousIds(QuestField field) => field.Kind == "string" ? field.Value.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Select(x => long.TryParse(x, out long value) ? (long?)value : null).Where(x => x.HasValue).Select(x => x!.Value) : [];
     // Built-in authoring subset; all other native entities are retained losslessly.

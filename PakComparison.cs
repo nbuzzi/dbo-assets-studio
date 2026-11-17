@@ -18,7 +18,7 @@ internal static class PakComparison
             archives.Add(await PakArchive.OpenAsync(path));
         }
         if (archives.Select(a => a.Prefix).Distinct(StringComparer.OrdinalIgnoreCase).Count() != 1)
-            throw new InvalidDataException("La comparación requiere la MISMA familia Taiwan y todas sus unidades en tres carpetas separadas.");
+            throw new InvalidDataException("The comparison requires the SAME Taiwan family and all its units in three separate folders.");
         // Hold all three index + unit sets simultaneously: no mixed snapshots
         // if another editor writes while we stream potentially large families.
         var locks = new Dictionary<string, FileStream>(StringComparer.OrdinalIgnoreCase);
@@ -43,7 +43,7 @@ internal static class PakComparison
             {
                 FileStream index = locks[archive.IndexPath]; index.Position = 0;
                 if (!Convert.ToHexString(SHA256.HashData(index)).Equals(archive.IndexHash, StringComparison.OrdinalIgnoreCase))
-                    throw new IOException("Índice cambió al abrir: " + archive.IndexPath);
+                    throw new IOException("Index changed while opening: " + archive.IndexPath);
                 // The index/unit read locks are held for the WHOLE comparison.
                 // An identical pinned path is the same snapshot, not a third
                 // independent source. Do not reread gigabytes when base==ours.
@@ -55,9 +55,9 @@ internal static class PakComparison
                 foreach (var entry in archive.Entries.OrderBy(e => e.UnitPath, StringComparer.OrdinalIgnoreCase).ThenBy(e => e.Offset).ThenBy(e => e.Size))
                 {
                     string name = ContentSafety.ResourcePath(entry.Name);
-                    if (resources.ContainsKey(name)) throw new InvalidDataException("Ruta interna duplicada/ambigua: " + name);
+                    if (resources.ContainsKey(name)) throw new InvalidDataException("Duplicate/ambiguous internal path: " + name);
                     FileStream unit = locks[entry.UnitPath];
-                    if ((ulong)entry.Offset + entry.Size > (ulong)unit.Length) throw new InvalidDataException("Recurso fuera de límites: " + name);
+                    if ((ulong)entry.Offset + entry.Size > (ulong)unit.Length) throw new InvalidDataException("Resource out of bounds: " + name);
                     if (unit.Position != entry.Offset) unit.Position = entry.Offset;
                     using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
                     long remaining = entry.Size;
@@ -86,7 +86,7 @@ internal static class PakComparison
                 wouldLoseOurs = changes.Where(c => c.status == "ours_only").Select(c => c.path).ToArray(),
                 removedPaths = changes.Where(c => c.theirs == null && (c.baseline != null || c.ours != null)).Select(c => c.path).ToArray(),
                 safeToReplaceOurs = changes.All(c => c.theirs != null && (c.status is "same_change" or "theirs_only")),
-                note = "Solo informe. No fusiona ni instala. RDF modificado por ambos es conflicto de recurso; resolver por esquema/filas con revisión. La carga en cliente sigue pendiente." };
+                note = "Report only. Does not merge or install. An RDF changed by both sides is a resource conflict; resolve it by schema/rows with review. Client loading is still pending." };
         }
         finally { foreach (var stream in locks.Values) stream.Dispose(); }
     }

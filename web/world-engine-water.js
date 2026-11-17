@@ -4,6 +4,7 @@
 //   (Shift+clic suma/quita), or select every loaded sector inside a radius around the camera target.
 //   "Actualizar" only sends the fields you touched since the last "Leer", so you can change just the colour of many
 //   sectors without flattening their heights. Every apply is one undo step (shared "undo" of the edit workspace).
+import {t as tr} from './i18n.js';
 const BLEND = [[1, 'ZERO'], [2, 'ONE'], [3, 'SRCCOLOR'], [4, 'INVSRCCOLOR'], [5, 'SRCALPHA'], [6, 'INVSRCALPHA'], [7, 'DESTALPHA'],
  [8, 'INVDESTALPHA'], [9, 'DESTCOLOR'], [10, 'INVDESTCOLOR'], [11, 'SRCALPHASAT']];
 const hex = c => '#' + c.map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
@@ -15,41 +16,41 @@ export function installWaterTools(ctx) {
  box.className = 'we-tool wtr-tool';
  const blendOptions = sel => BLEND.map(([v, n]) => `<option value="${v}" ${v === sel ? 'selected' : ''}>${n}</option>`).join('');
  box.innerHTML = `
-  <div class="map-history-heading"><h2>Agua</h2></div>
-  <div class="we-tool-row" role="group" aria-label="Selección de sectores">
-   <button type="button" class="map-button" id="wtr-pick">Elegir con clic</button>
-   <button type="button" class="map-button" id="wtr-radius-sel">Radio</button>
-   <button type="button" class="map-button" id="wtr-clear">Limpiar</button>
-   <button type="button" class="map-button" id="wtr-read">Leer</button>
+  <div class="map-history-heading"><h2>Water</h2></div>
+  <div class="we-tool-row" role="group" aria-label="Sector selection">
+   <button type="button" class="map-button" id="wtr-pick">Pick by click</button>
+   <button type="button" class="map-button" id="wtr-radius-sel">Radius</button>
+   <button type="button" class="map-button" id="wtr-clear">Clear</button>
+   <button type="button" class="map-button" id="wtr-read">Read</button>
   </div>
-  <label>Radio de selección <input id="wtr-radius" type="range" min="32" max="512" step="16" value="160"> <span id="wtr-radius-v">160 m</span></label>
-  <p id="wtr-sel" class="map-path">Sin sectores seleccionados.</p>
+  <label>Selection radius <input id="wtr-radius" type="range" min="32" max="512" step="16" value="160"> <span id="wtr-radius-v">160 m</span></label>
+  <p id="wtr-sel" class="map-path">No sectors selected.</p>
   <div class="wtr-grid">
-   <label>Altura <input id="wtr-height" type="number" step="0.5" value="0"></label>
-   <button type="button" class="map-button" id="wtr-terrain" title="Promedio del terreno de los sectores elegidos">Tomar del terreno</button>
-   <label>Tipo <select id="wtr-type"></select></label>
+   <label>Height <input id="wtr-height" type="number" step="0.5" value="0"></label>
+   <button type="button" class="map-button" id="wtr-terrain" title="Average terrain height of the selected sectors">Take from terrain</button>
+   <label>Type <select id="wtr-type"></select></label>
    <label>Color <input id="wtr-color" type="color" value="#4696d2"></label>
    <label>Alpha <input id="wtr-alpha" type="range" min="0" max="255" value="180"> <span id="wtr-alpha-v">180</span></label>
    <label>Blend src <select id="wtr-src">${blendOptions(5)}</select></label>
    <label>Blend dst <select id="wtr-dst">${blendOptions(6)}</select></label>
-   <label>Rotación <input id="wtr-rot" type="range" min="0" max="360" value="0"> <span id="wtr-rot-v">0°</span></label>
-   <label>Escala UV <input id="wtr-scale" type="number" min="0.1" max="64" step="0.5" value="1"></label>
+   <label>Rotation <input id="wtr-rot" type="range" min="0" max="360" value="0"> <span id="wtr-rot-v">0°</span></label>
+   <label>UV scale <input id="wtr-scale" type="number" min="0.1" max="64" step="0.5" value="1"></label>
   </div>
   <details class="wtr-depth"><summary>Depth map</summary>
-   <label>Tamaño <select id="wtr-dsize">${[16, 32, 64, 128].map(n => `<option ${n === 32 ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
-   <label>Variación de altura <span class="wtr-pair"><input id="wtr-dv0" type="number" value="0"><input id="wtr-dv1" type="number" value="255"></span></label>
+   <label>Size <select id="wtr-dsize">${[16, 32, 64, 128].map(n => `<option ${n === 32 ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+   <label>Height variation <span class="wtr-pair"><input id="wtr-dv0" type="number" value="0"><input id="wtr-dv1" type="number" value="255"></span></label>
    <div class="we-tool-row">
-    <button type="button" class="map-button" id="wtr-depth">Generar</button>
-    <button type="button" class="map-button" id="wtr-nodepth">Quitar</button>
+    <button type="button" class="map-button" id="wtr-depth">Generate</button>
+    <button type="button" class="map-button" id="wtr-nodepth">Remove</button>
    </div>
   </details>
   <div class="map-native-actions">
-   <button type="button" class="map-button" id="wtr-create">Crear</button>
-   <button type="button" class="map-button" id="wtr-update">Actualizar</button>
-   <button type="button" class="map-button" id="wtr-delete">Borrar</button>
-   <button type="button" class="map-button" id="wtr-undo">Deshacer</button>
+   <button type="button" class="map-button" id="wtr-create">Create</button>
+   <button type="button" class="map-button" id="wtr-update">Update</button>
+   <button type="button" class="map-button" id="wtr-delete">Delete</button>
+   <button type="button" class="map-button" id="wtr-undo">Undo</button>
   </div>
-  <p id="wtr-info" class="map-path">Crear usa todos los valores; Actualizar solo los campos que cambiaste. El motor ignora el blend al dibujar (lo guarda igual).</p>`;
+  <p id="wtr-info" class="map-path">Create uses every value; Update only sends the fields you changed. The engine ignores blend when drawing (it still saves it).</p>`;
  container.appendChild(box);
  const $ = s => box.querySelector(s);
  let picking = false, types = [], typesAsked = false, touched = new Set(), selected = [];
@@ -95,21 +96,21 @@ export function installWaterTools(ctx) {
   const lake = types.find(t => /^lake/i.test(t.name)); if (lake) $('#wtr-type').value = String(lake.index);
  }
  async function read() {
-  if (!selected.length) { $('#wtr-info').textContent = 'Elegí al menos un sector.'; return; }
+  if (!selected.length) { $('#wtr-info').textContent = 'Choose at least one sector.'; return; }
   const r = await host('water-get', {sectors: selected});
   const list = r.sectors || [];
   const withWater = list.filter(s => s.water);
   if (withWater[0]) fill(withWater[0].attr);
-  $('#wtr-info').textContent = `${list.length} sectores · con agua: ${withWater.length}` +
-   (withWater[0] ? ` · ${e(withWater[0].attr.typeName || '')} a ${Number(withWater[0].attr.height).toFixed(1)} m${withWater[0].depthMap ? ' · depth map' : ''}` : '') +
-   (list.some(s => !s.loaded) ? ' · hay sectores fuera del anillo cargado (se ignoran)' : '');
+  $('#wtr-info').textContent = `${list.length} sectors · with water: ${withWater.length}` +
+   (withWater[0] ? tr(` · ${e(withWater[0].attr.typeName || '')} at ${Number(withWater[0].attr.height).toFixed(1)} m${withWater[0].depthMap ? ' · depth map' : ''}`) : '') +
+   (list.some(s => !s.loaded) ? tr(' · some sectors are outside the loaded ring (ignored)') : '');
  }
  async function apply(op, payload = {}) {
-  if (!selected.length) { toast('Elegí sectores primero (clic o radio).', true); return; }
+  if (!selected.length) { toast('Choose sectors first (click or radius).', true); return; }
   const r = await host('water-apply', {op, sectors: selected, ...payload});
   const n = (r.changed || []).length, skipped = (r.skipped || []).length;
-  toast(`Agua · ${op}: ${n} sector(es)` + (skipped ? ` · ${skipped} sin cambios` : '') + '.');
-  if (n && op !== 'delete') await read(); else if (op === 'delete') $('#wtr-info').textContent = `Borrada en ${n} sector(es).`;
+  toast(`Water · ${op}: ${n} sector(s)` + (skipped ? ` · ${skipped} unchanged` : '') + '.');
+  if (n && op !== 'delete') await read(); else if (op === 'delete') $('#wtr-info').textContent = `Deleted in ${n} sector(s).`;
   touched = new Set();
  }
  const guard = fn => async () => { try { await fn(); } catch (err) { toast(err.message || String(err), true); } };
@@ -127,14 +128,14 @@ export function installWaterTools(ctx) {
   const r = await host('water-terrain', {sectors: selected});
   if (!r.count) return;
   $('#wtr-height').value = Number(r.avg).toFixed(2); touched.add('height');
-  $('#wtr-info').textContent = `Terreno: mín ${r.min.toFixed(1)} · prom ${r.avg.toFixed(1)} · máx ${r.max.toFixed(1)} m (se usa el promedio).`;
+  $('#wtr-info').textContent = `Terrain: min ${r.min.toFixed(1)} · avg ${r.avg.toFixed(1)} · max ${r.max.toFixed(1)} m (using the average).`;
  });
  $('#wtr-create').onclick = guard(() => apply('create', attrs()));
- $('#wtr-update').onclick = guard(() => touched.size ? apply('update', attrs(touched)) : toast('No cambiaste ningún campo.', true));
+ $('#wtr-update').onclick = guard(() => touched.size ? apply('update', attrs(touched)) : toast('You did not change any field.', true));
  $('#wtr-delete').onclick = guard(() => apply('delete'));
  $('#wtr-depth').onclick = guard(() => apply('depth', attrs(new Set(['alpha', 'dsize', 'dv0', 'dv1']))));
  $('#wtr-nodepth').onclick = guard(() => apply('nodepth'));
- $('#wtr-undo').onclick = guard(async () => { const r = await host('undo'); toast(r.undone ? 'Deshecho.' : 'No hay nada para deshacer.'); if (r.undone) await read(); });
+ $('#wtr-undo').onclick = guard(async () => { const r = await host('undo'); toast(r.undone ? 'Undone.' : 'Nothing to undo.'); if (r.undone) await read(); });
 
  let lastKey = '';
  function render(state) {
@@ -148,7 +149,7 @@ export function installWaterTools(ctx) {
   box.classList.toggle('we-disabled', !editing);
   box.querySelectorAll('button,select,input').forEach(el => el.disabled = !editing);
   $('#wtr-pick').classList.toggle('active', picking);
-  $('#wtr-sel').textContent = selected.length ? `${selected.length} sector(es): ${selected.slice(0, 12).join(', ')}${selected.length > 12 ? '…' : ''}` : 'Sin sectores seleccionados.';
+  $('#wtr-sel').textContent = selected.length ? `${selected.length} sector(s): ${selected.slice(0, 12).join(', ')}${selected.length > 12 ? '…' : ''}` : 'No sectors selected.';
   if (editing && !typesAsked) { typesAsked = true; loadTypes().catch(() => { typesAsked = false; }); }
  }
  labels(); render();

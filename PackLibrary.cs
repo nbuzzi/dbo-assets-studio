@@ -28,8 +28,8 @@ internal sealed class PackLibrary
     {
         var library = new PackLibrary(ResolveRoot(selected));
         var indices = Directory.EnumerateFiles(library.Root, "*.pak", SearchOption.TopDirectoryOnly).Where(IsIndexName).Order(StringComparer.OrdinalIgnoreCase).ToArray();
-        if (indices.Length == 0) throw new IOException("No se encontraron índices PAK. Elegí la carpeta pack con índices como obj.pak/tex.pak y sus unidades.");
-        if (indices.Length > 256) throw new IOException("Demasiados índices en una carpeta (máximo 256). Elegí la carpeta pack del cliente.");
+        if (indices.Length == 0) throw new IOException("No PAK indices found. Choose the pack folder with indices such as obj.pak/tex.pak and their units.");
+        if (indices.Length > 256) throw new IOException("Too many indices in one folder (max 256). Choose the client's pack folder.");
         foreach (string index in indices)
         {
             token.ThrowIfCancellationRequested();
@@ -37,18 +37,18 @@ internal sealed class PackLibrary
             try { archive = await PakArchive.OpenAsync(index); }
             catch (Exception ex) when (ex is IOException or InvalidDataException or ArgumentException)
             { library.Notes.Add(Path.GetFileName(index) + ": " + ex.Message); continue; }
-            if (library.Entries.Count + archive.Entries.Count > 2_000_000) throw new IOException("La biblioteca supera dos millones de recursos; seleccionar una carpeta menor.");
+            if (library.Entries.Count + archive.Entries.Count > 2_000_000) throw new IOException("The library exceeds two million resources; select a smaller folder.");
             library.Archives.Add(archive);
             foreach (var entry in archive.Entries)
             {
                 string key = archive.Prefix + ":" + entry.Number;
                 var row = new PackLibraryEntry(key, archive.Prefix + "\\" + entry.Name, archive, entry);
-                if (!library._keys.TryAdd(key, row)) throw new InvalidDataException("Clave de recurso duplicada: " + key);
+                if (!library._keys.TryAdd(key, row)) throw new InvalidDataException("Duplicate resource key: " + key);
                 library.Entries.Add(row);
             }
         }
-        if (library.Archives.Count == 0) throw new InvalidDataException("No se pudo leer ningún índice Taiwan de la carpeta.\n" + string.Join("\n", library.Notes.Take(10)));
+        if (library.Archives.Count == 0) throw new InvalidDataException("Could not read any Taiwan index in the folder.\n" + string.Join("\n", library.Notes.Take(10)));
         return library;
     }
-    public PackLibraryEntry Get(string key) => _keys.TryGetValue(key, out var row) ? row : throw new ArgumentException("El recurso no pertenece a la biblioteca actual.");
+    public PackLibraryEntry Get(string key) => _keys.TryGetValue(key, out var row) ? row : throw new ArgumentException("The resource does not belong to the current library.");
 }

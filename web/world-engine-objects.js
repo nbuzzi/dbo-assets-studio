@@ -10,42 +10,42 @@ export function installObjectTools(ctx) {
  box.className = 'we-tool wo-tool';
  const vec = (id, label, step) => `<div class="wo-vec"><span>${label}</span>${['x', 'y', 'z'].map(a => `<input id="${id}-${a}" type="number" step="${step}" aria-label="${label} ${a}">`).join('')}</div>`;
  box.innerHTML = `
-  <div class="map-history-heading"><h2>Objetos</h2></div>
-  <div class="we-tool-row" role="group" aria-label="Herramienta de objetos">
-   <button type="button" class="map-button" data-ot="none">Ninguna</button>
-   <button type="button" class="map-button" data-ot="select">Seleccionar</button>
-   <button type="button" class="map-button" data-ot="place">Colocar</button>
+  <div class="map-history-heading"><h2>Objects</h2></div>
+  <div class="we-tool-row" role="group" aria-label="Object tool">
+   <button type="button" class="map-button" data-ot="none">None</button>
+   <button type="button" class="map-button" data-ot="select">Select</button>
+   <button type="button" class="map-button" data-ot="place">Place</button>
   </div>
   <div class="wo-place">
-   <label>Catálogo (objectproperty.rdf) <input id="wo-filter" placeholder="Buscar: tree, house, 01_C_…" autocomplete="off"></label>
-   <select id="wo-catalog" size="8" aria-label="Objetos del catálogo"></select>
+   <label>Catalog (objectproperty.rdf) <input id="wo-filter" placeholder="Search: tree, house, 01_C_…" autocomplete="off"></label>
+   <select id="wo-catalog" size="8" aria-label="Catalog objects"></select>
    <p id="wo-catalog-note" class="map-path"></p>
    <div class="wo-inline">
-    <label>Giro Y <input id="wo-yaw" type="number" step="15" value="0"></label>
-    <label>Escala <input id="wo-scale" type="number" step="0.1" min="0.05" value="1"></label>
+    <label>Yaw <input id="wo-yaw" type="number" step="15" value="0"></label>
+    <label>Scale <input id="wo-scale" type="number" step="0.1" min="0.05" value="1"></label>
    </div>
-   <label class="we-check"><input id="wo-random" type="checkbox"> Giro aleatorio</label>
+   <label class="we-check"><input id="wo-random" type="checkbox"> Random yaw</label>
   </div>
   <div id="wo-sel" class="wo-sel">
-   <p class="map-empty">Sin objeto seleccionado.</p>
+   <p class="map-empty">No object selected.</p>
   </div>
   <div class="wo-fields" hidden>
-   ${vec('wo-pos', 'Posición', '0.1')}
-   ${vec('wo-rot', 'Rotación °', '1')}
-   ${vec('wo-scl', 'Escala', '0.05')}
+   ${vec('wo-pos', 'Position', '0.1')}
+   ${vec('wo-rot', 'Rotation °', '1')}
+   ${vec('wo-scl', 'Scale', '0.05')}
    <div class="map-native-actions">
-    <button id="wo-apply" type="button" class="map-button map-button-primary">Aplicar</button>
-    <button id="wo-ground" type="button" class="map-button">Al suelo</button>
-    <button id="wo-focus" type="button" class="map-button">Enfocar</button>
-    <button id="wo-delete" type="button" class="map-button map-button-secondary">Borrar</button>
+    <button id="wo-apply" type="button" class="map-button map-button-primary">Apply</button>
+    <button id="wo-ground" type="button" class="map-button">Snap to ground</button>
+    <button id="wo-focus" type="button" class="map-button">Focus</button>
+    <button id="wo-delete" type="button" class="map-button map-button-secondary">Delete</button>
    </div>
   </div>
   <div class="map-native-actions">
-   <button id="wo-undo" type="button" class="map-button">Deshacer</button>
-   <button id="wo-near" type="button" class="map-button">Objetos cercanos</button>
+   <button id="wo-undo" type="button" class="map-button">Undo</button>
+   <button id="wo-near" type="button" class="map-button">Nearby objects</button>
   </div>
   <ol id="wo-list" class="wo-list"></ol>
-  <p class="map-path">Seleccionar: clic elige · arrastrar mueve sobre el terreno · Shift+arrastrar sube/baja · Ctrl+arrastrar gira · Supr borra. Colocar: clic en el terreno.</p>`;
+  <p class="map-path">Select: click picks · drag moves on the terrain · Shift+drag raises/lowers · Ctrl+drag rotates · Del deletes. Place: click on the terrain.</p>`;
  container.appendChild(box);
  const $ = s => box.querySelector(s);
  let tool = 'none', lastGen = -1, lastErr = null, selection = null, catalogTimer = null, catalogLoaded = false;
@@ -58,19 +58,19 @@ export function installObjectTools(ctx) {
   const current = $('#wo-catalog').value;
   $('#wo-catalog').innerHTML = (r.items || []).map(i => `<option value="${e(i.name)}" title="${e(i.dff)}">${e(i.name)}</option>`).join('');
   if (current && [...$('#wo-catalog').options].some(o => o.value === current)) $('#wo-catalog').value = current;
-  $('#wo-catalog-note').textContent = `${r.matched} de ${r.total} nombres${r.matched > (r.items || []).length ? ` · mostrando ${(r.items || []).length}` : ''}`;
+  $('#wo-catalog-note').textContent = `${r.matched} of ${r.total} names${r.matched > (r.items || []).length ? ` · showing ${(r.items || []).length}` : ''}`;
   catalogLoaded = true;
  }
  async function pushTool() {
   const args = {tool, yaw: num('#wo-yaw') || 0, scale: num('#wo-scale') || 1, randomYaw: $('#wo-random').checked};
   const name = $('#wo-catalog').value; if (name) args.name = name;
-  if (tool === 'place' && !name) { tool = 'none'; render(); throw new Error('Elegí un objeto del catálogo para colocar.'); }
+  if (tool === 'place' && !name) { tool = 'none'; render(); throw new Error('Choose a catalog object to place.'); }
   await host('objects-tool', args);
  }
  function fill(o) {
   selection = o;
-  $('#wo-sel').innerHTML = o ? `<dl class="we-spawn"><dt>objeto</dt><dd>${e(o.name)}</dd><dt>serial</dt><dd>${e(o.serial)}${o.sid !== 4294967295 ? ' · trigger ' + e(o.sid) : ''}</dd>
-   <dt>sector</dt><dd>${e(o.sector)} · field ${e(o.field)} · #${e(o.index)}</dd><dt>radio</dt><dd>${fmt(o.radius)} m</dd></dl>` : '<p class="map-empty">Sin objeto seleccionado.</p>';
+  $('#wo-sel').innerHTML = o ? `<dl class="we-spawn"><dt>object</dt><dd>${e(o.name)}</dd><dt>serial</dt><dd>${e(o.serial)}${o.sid !== 4294967295 ? ' · trigger ' + e(o.sid) : ''}</dd>
+   <dt>sector</dt><dd>${e(o.sector)} · field ${e(o.field)} · #${e(o.index)}</dd><dt>radius</dt><dd>${fmt(o.radius)} m</dd></dl>` : '<p class="map-empty">No object selected.</p>';
   $('.wo-fields').hidden = !o;
   if (!o) return;
   // keep what the user is typing
@@ -90,21 +90,21 @@ export function installObjectTools(ctx) {
  for (const id of ['#wo-yaw', '#wo-scale', '#wo-random']) $(id).onchange = guard(async () => { if (tool === 'place') await pushTool(); });
  $('#wo-apply').onclick = guard(async () => {
   const r = await host('objects-transform', {...target(), pos: ['x', 'y', 'z'].map(a => num(`#wo-pos-${a}`)), rot: ['x', 'y', 'z'].map(a => num(`#wo-rot-${a}`)), scale: ['x', 'y', 'z'].map(a => num(`#wo-scl-${a}`))});
-  await after(r, r.rebucketed ? `Objeto movido al sector ${r.object.sector} (antes ${r.fromSector}).` : 'Objeto actualizado.');
+  await after(r, r.rebucketed ? `Object moved to sector ${r.object.sector} (was ${r.fromSector}).` : 'Object updated.');
  });
- $('#wo-ground').onclick = guard(async () => { const r = await host('objects-transform', {...target(), ground: true}); await after(r, 'Objeto apoyado en el terreno.'); });
+ $('#wo-ground').onclick = guard(async () => { const r = await host('objects-transform', {...target(), ground: true}); await after(r, 'Object snapped to the terrain.'); });
  $('#wo-focus').onclick = guard(async () => { if (selection) await host('objects-select', {...target(), focus: true}); });
  $('#wo-delete').onclick = guard(async () => {
   if (!selection) return;
   const r = await host('objects-delete', target()); fill(null);
-  toast(`Borrado ${r.deleted?.name} (serial ${r.deleted?.serial}). Deshacer lo restaura.`);
+  toast(`Deleted ${r.deleted?.name} (serial ${r.deleted?.serial}). Undo restores it.`);
  });
- $('#wo-undo').onclick = guard(async () => { const r = await host('undo'); toast(r.undone ? 'Paso deshecho.' : 'No hay nada para deshacer.'); lastGen = -1; });
+ $('#wo-undo').onclick = guard(async () => { const r = await host('undo'); toast(r.undone ? 'Step undone.' : 'Nothing to undo.'); lastGen = -1; });
  $('#wo-near').onclick = guard(async () => {
   const s = ctx.state()?.engine; if (!s?.pos) return;
   const r = await host('objects-list', {x: s.pos[0], z: s.pos[2], radius: 60, limit: 60});
   $('#wo-list').innerHTML = (r.objects || []).map(o => `<li><button type="button" class="wo-item" data-sector="${o.sector}" data-index="${o.index}">${e(o.name)} <small>${fmt(o.pos[0], 0)}, ${fmt(o.pos[2], 0)} · #${e(o.serial)}</small></button></li>`).join('')
-   || '<li class="map-empty">Sin objetos en 60 m.</li>';
+   || '<li class="map-empty">No objects within 60 m.</li>';
   $('#wo-list').querySelectorAll('.wo-item').forEach(b => b.onclick = guard(async () => {
    const r2 = await host('objects-select', {sector: Number(b.dataset.sector), index: Number(b.dataset.index), focus: true}); fill(r2.object);
   }));
@@ -121,7 +121,7 @@ export function installObjectTools(ctx) {
   box.querySelectorAll('[data-ot]').forEach(b => b.classList.toggle('active', b.dataset.ot === tool && !(es?.tool && es.tool !== 'none')));
   $('.wo-place').hidden = tool !== 'place';
   if (es && es.objectGeneration !== lastGen) { lastGen = es.objectGeneration; fill(es.objectSelection || null); }
-  if (es && es.objectErrorGeneration != null) { if (lastErr != null && es.objectErrorGeneration !== lastErr && es.objectError) toast('Objetos: ' + es.objectError, true); lastErr = es.objectErrorGeneration; }
+  if (es && es.objectErrorGeneration != null) { if (lastErr != null && es.objectErrorGeneration !== lastErr && es.objectError) toast('Objects: ' + es.objectError, true); lastErr = es.objectErrorGeneration; }
  }
  render();
  return {render, reset: () => { tool = 'none'; lastGen = -1; fill(null); render(); }};

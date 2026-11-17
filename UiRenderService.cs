@@ -15,7 +15,7 @@ namespace DboAssetsStudio;
 internal static class UiRenderService
 {
     // ---------- configuration ----------
-    public static string ClientRoot => StudioConfig.ClientRoot() ?? throw new DirectoryNotFoundException("Configurá clientRoot en studio.config.json (o DBO_CLIENT_ROOT): la carpeta de tu cliente, la que contiene pack\\.");
+    public static string ClientRoot => StudioConfig.ClientRoot() ?? throw new DirectoryNotFoundException("Set clientRoot in studio.config.json (or DBO_CLIENT_ROOT): your client folder, the one that contains pack\\.");
     public static string CacheRoot
     {
         get
@@ -32,7 +32,7 @@ internal static class UiRenderService
         if (Environment.GetEnvironmentVariable("DBO_UI_RENDER") is { Length: > 0 } env) candidates.Add(env);
         candidates.Add(Path.Combine(AppContext.BaseDirectory, "ui-render.exe"));
         if (RepoRoot() is string repo) candidates.Add(Path.Combine(repo, "native", "bin", "ui-render.exe"));
-        return candidates.FirstOrDefault(File.Exists) ?? throw new FileNotFoundException("Falta ui-render.exe. Compilalo con build-ui-render.ps1 o definí DBO_UI_RENDER.");
+        return candidates.FirstOrDefault(File.Exists) ?? throw new FileNotFoundException("ui-render.exe is missing. Build it with build-ui-render.ps1 or set DBO_UI_RENDER.");
     }
 
     public static string? RepoRoot()
@@ -49,7 +49,7 @@ internal static class UiRenderService
         var candidates = new List<string>();
         if (Environment.GetEnvironmentVariable("DBO_CLIENT_SOURCE") is { Length: > 0 } env) candidates.Add(env);
         return candidates.FirstOrDefault(c => File.Exists(Path.Combine(c, "DBO-Client-2.0", "Client", "Gui", "Assets", "HudEmbeddedPixels.h")))
-            ?? throw new DirectoryNotFoundException("No se encontró el core del cliente para leer embedded:. Definí DBO_CLIENT_SOURCE con la carpeta de tus fuentes del cliente.");
+            ?? throw new DirectoryNotFoundException("Client core not found (needed to read embedded:). Set DBO_CLIENT_SOURCE to your client source folder.");
     }
 
     // ---------- render ----------
@@ -83,9 +83,9 @@ internal static class UiRenderService
         {
             timeout.CancelAfter(TimeSpan.FromSeconds(60));
             try { await proc.WaitForExitAsync(timeout.Token); }
-            catch (OperationCanceledException) { try { proc.Kill(true); } catch { } throw new TimeoutException("ui-render.exe no terminó en 60 s."); }
+            catch (OperationCanceledException) { try { proc.Kill(true); } catch { } throw new TimeoutException("ui-render.exe did not finish within 60 s."); }
         }
-        if (proc.ExitCode != 0 || !File.Exists(outPng)) throw new InvalidOperationException($"ui-render.exe falló ({proc.ExitCode}): {(await stderr).Trim()} {(await stdout).Trim()}");
+        if (proc.ExitCode != 0 || !File.Exists(outPng)) throw new InvalidOperationException($"ui-render.exe failed ({proc.ExitCode}): {(await stderr).Trim()} {(await stdout).Trim()}");
         var metrics = JsonNode.Parse(await File.ReadAllTextAsync(metricsPath, token))!.AsObject();
         if (metrics["warnings"] is JsonArray w) foreach (var x in w) warnings.Add((string)x!);
         string metricsOut = Path.ChangeExtension(outPng, ".metrics.json");
@@ -150,7 +150,7 @@ internal static class UiRenderService
             string? file = await MaterializeAssetAsync(img.File, warnings, token);
             key = "t" + textures.Count.ToString(CultureInfo.InvariantCulture);
             textures[img.File] = key;
-            if (file != null) L("tex", key, file); else warnings.Add("asset no disponible: " + img.File);
+            if (file != null) L("tex", key, file); else warnings.Add("asset not available: " + img.File);
             return file == null ? "-" : key;
         }
         if (scene.Background != null)
@@ -253,7 +253,7 @@ internal static class UiRenderService
                 case "flash":
                 {
                     string? swf = c.File == null ? null : await UiFrmService.FlashNameAsync(c.File);
-                    if (swf == null) { warnings.Add(c.File == null ? $"{c.Id}: flash sin file" : $"{c.Id}: falta el swf {c.File}"); if (c.File != null) await Panel(c.Id, x, y, w, h, null, 0x60FF00FF); break; }
+                    if (swf == null) { warnings.Add(c.File == null ? $"{c.Id}: flash has no file" : $"{c.Id}: swf not found: {c.File}"); if (c.File != null) await Panel(c.Id, x, y, w, h, null, 0x60FF00FF); break; }
                     L("flash", c.Id, x, y, w, h, swf, c.Frame);
                     foreach (var (k, v) in c.FlashVars) L("flashvar", k, Hex(v));
                     break;
@@ -272,7 +272,7 @@ internal static class UiRenderService
         if (asset.StartsWith("pak:", StringComparison.OrdinalIgnoreCase))
         {
             string[] parts = asset[4..].Split('|', 2);
-            if (parts.Length != 2) throw new InvalidDataException("pak: usa pak:<archivo.pak>|<recurso>");
+            if (parts.Length != 2) throw new InvalidDataException("pak: use pak:<file.pak>|<resource>");
             string pak = Path.IsPathRooted(parts[0]) ? parts[0] : Path.Combine(ClientRoot, "pack", parts[0]);
             return await FromPakAsync(pak, parts[1], token);
         }
@@ -291,9 +291,9 @@ internal static class UiRenderService
                     string? got = await FromPakAsync(p, @"texture\gui\" + name, token, quiet: true);
                     if (got != null) return got;
                 }
-                catch (Exception ex) when (ex is not OperationCanceledException) { warnings?.Add($"gui: no se pudo leer {pak}: {ex.Message.Split('\n')[0]}"); }
+                catch (Exception ex) when (ex is not OperationCanceledException) { warnings?.Add($"gui: could not read {pak}: {ex.Message.Split('\n')[0]}"); }
             }
-            warnings?.Add("gui: no encontrado en texture\\gui ni en tex.pak: " + name);
+            warnings?.Add("gui: not found in texture\\gui or tex.pak: " + name);
             return null;
         }
         return File.Exists(asset) ? asset : null;
@@ -309,7 +309,7 @@ internal static class UiRenderService
         lock (Paks) Paks.TryGetValue(pak, out archive);
         if (archive == null) { archive = await PakArchive.OpenAsync(pak); lock (Paks) Paks[pak] = archive; }
         var entry = archive.Entries.FirstOrDefault(e => e.Name.Equals(resource, StringComparison.OrdinalIgnoreCase));
-        if (entry == null) { if (quiet) return null; throw new FileNotFoundException($"{resource} no está en {pak}"); }
+        if (entry == null) { if (quiet) return null; throw new FileNotFoundException($"{resource} is not in {pak}"); }
         Directory.CreateDirectory(Path.GetDirectoryName(cache)!);
         await File.WriteAllBytesAsync(cache, await archive.ReadAsync(entry), token);
         return cache;
@@ -329,14 +329,14 @@ internal static class UiRenderService
             if (!entry.Success) continue;
             int w = int.Parse(entry.Groups[1].Value), h = int.Parse(entry.Groups[2].Value);
             var array = Regex.Match(text, Regex.Escape(entry.Groups[4].Value) + @"\s*\[\s*\d*\s*\]\s*=\s*\{([^}]*)\}");
-            if (!array.Success) throw new InvalidDataException("No se encontró el arreglo " + entry.Groups[4].Value);
+            if (!array.Success) throw new InvalidDataException("Array not found: " + entry.Groups[4].Value);
             var bytes = new List<byte>(int.Parse(entry.Groups[3].Value));
             foreach (Match m in Regex.Matches(array.Groups[1].Value, @"0x([0-9A-Fa-f]{1,2})|\b(\d+)\b"))
                 bytes.Add(m.Groups[1].Success ? Convert.ToByte(m.Groups[1].Value, 16) : byte.Parse(m.Groups[2].Value));
             using var z = new ZLibStream(new MemoryStream(bytes.ToArray()), CompressionMode.Decompress);
             var pixels = new byte[w * h * 4]; int read = 0, n;
             while (read < pixels.Length && (n = z.Read(pixels, read, pixels.Length - read)) > 0) read += n;
-            if (read != pixels.Length) throw new InvalidDataException("Imagen embebida truncada: " + name);
+            if (read != pixels.Length) throw new InvalidDataException("Embedded image truncated: " + name);
             Directory.CreateDirectory(Path.GetDirectoryName(cache)!);
             WriteTga(cache, w, h, pixels);
             return cache;
@@ -366,17 +366,17 @@ internal static class UiRenderService
         var issues = new List<LintIssue>();
         foreach (string w in warnings) issues.Add(new("error", "", "asset", w));
         if (scene.DialogX < 0 || scene.DialogY < 0 || scene.DialogX + scene.DialogWidth > scene.ScreenWidth || scene.DialogY + scene.DialogHeight > scene.ScreenHeight)
-            issues.Add(new("error", "dialog", "offscreen", $"La ventana ({scene.DialogWidth}x{scene.DialogHeight}) no entra en {scene.ScreenWidth}x{scene.ScreenHeight}."));
+            issues.Add(new("error", "dialog", "offscreen", $"The window ({scene.DialogWidth}x{scene.DialogHeight}) does not fit in {scene.ScreenWidth}x{scene.ScreenHeight}."));
         var byId = scene.Components.ToDictionary(c => c.Id);
         foreach (var c in scene.Components)
         {
-            if (c.Width <= 0 || c.Height <= 0) issues.Add(new("error", c.Id, "size", "Ancho/alto deben ser > 0."));
+            if (c.Width <= 0 || c.Height <= 0) issues.Add(new("error", c.Id, "size", "Width/height must be > 0."));
             if (c.X < 0 || c.Y < 0 || c.X + c.Width > scene.DialogWidth || c.Y + c.Height > scene.DialogHeight)
-                issues.Add(new("warning", c.Id, "outside", $"Sale de la ventana: [{c.X},{c.Y},{c.Width},{c.Height}] en {scene.DialogWidth}x{scene.DialogHeight}."));
+                issues.Add(new("warning", c.Id, "outside", $"Outside the window: [{c.X},{c.Y},{c.Width},{c.Height}] in {scene.DialogWidth}x{scene.DialogHeight}."));
             if (c.Parent != null && byId.TryGetValue(c.Parent, out var p) && (c.X < p.X || c.Y < p.Y || c.X + c.Width > p.X + p.Width || c.Y + c.Height > p.Y + p.Height))
-                issues.Add(new("warning", c.Id, "outside-parent", $"Sale de su contenedor {p.Id}."));
-            if (c.Type == "button" && (c.Width < 16 || c.Height < 16)) issues.Add(new("warning", c.Id, "hit-target", "Botón menor a 16 px: difícil de clickear."));
-            if (c.Type is "button" or "label" or "input" && c.Text != null && Regex.IsMatch(c.Text, @"\{[A-Za-z_]+\}")) issues.Add(new("warning", c.Id, "placeholder", "Texto con variable sin resolver: " + c.Text));
+                issues.Add(new("warning", c.Id, "outside-parent", $"Outside its container {p.Id}."));
+            if (c.Type == "button" && (c.Width < 16 || c.Height < 16)) issues.Add(new("warning", c.Id, "hit-target", "Button smaller than 16 px: hard to click."));
+            if (c.Type is "button" or "label" or "input" && c.Text != null && Regex.IsMatch(c.Text, @"\{[A-Za-z_]+\}")) issues.Add(new("warning", c.Id, "placeholder", "Text with an unresolved variable: " + c.Text));
         }
         // Text fit, measured by NtlGui itself.
         if (metrics["components"] is JsonArray comps)
@@ -388,9 +388,9 @@ internal static class UiRenderService
                 string owner = id.Split("__")[0];
                 bool wrapAllowed = byId.TryGetValue(owner, out var oc) && oc.Wrap;
                 // NtlGui skips the whole text when COMP_TEXT_UP/DOWN is set and the box is shorter than the text.
-                if (oc != null && oc.VAlign is "bottom" or "up" && th > h) issues.Add(new("error", owner, "text-hidden", $"Con valign \"{oc.VAlign}\" NtlGui NO dibuja el texto si la caja ({h}px) es más baja que el texto ({th}px). Usá valign top/center o agrandá la caja."));
-                else if (th > h + 1) issues.Add(new("warning", owner, "text-overflow", $"El texto ocupa {th}px de alto y la caja tiene {h}px ({lines} líneas): se dibuja fuera de la caja."));
-                else if (lines > 1 && !wrapAllowed) issues.Add(new("warning", owner, "text-wrap", $"El texto no entra en una línea ({tw}px en {w}px) y NtlGui lo parte en {lines}. Ampliá la caja, achicá el texto o marcá \"wrap\": true."));
+                if (oc != null && oc.VAlign is "bottom" or "up" && th > h) issues.Add(new("error", owner, "text-hidden", $"With valign \"{oc.VAlign}\" NtlGui does NOT draw the text if the box ({h}px) is shorter than the text ({th}px). Use valign top/center or enlarge the box."));
+                else if (th > h + 1) issues.Add(new("warning", owner, "text-overflow", $"The text is {th}px tall and the box is {h}px ({lines} lines): it is drawn outside the box."));
+                else if (lines > 1 && !wrapAllowed) issues.Add(new("warning", owner, "text-wrap", $"The text does not fit on one line ({tw}px in {w}px) and NtlGui splits it into {lines}. Widen the box, shrink the text or set \"wrap\": true."));
             }
         // Overlapping clickable controls.
         var buttons = scene.Components.Where(c => c.Type is "button" or "input").ToList();
@@ -399,7 +399,7 @@ internal static class UiRenderService
             {
                 var a = buttons[i]; var b = buttons[j];
                 if (a.X < b.X + b.Width && b.X < a.X + a.Width && a.Y < b.Y + b.Height && b.Y < a.Y + a.Height)
-                    issues.Add(new("warning", a.Id, "overlap", $"Se superpone con {b.Id}: el click puede ir al control equivocado."));
+                    issues.Add(new("warning", a.Id, "overlap", $"Overlaps {b.Id}: clicks may go to the wrong control."));
             }
         // Collapse repeats (qty0..qty14 with the same finding) into one line.
         return issues
@@ -440,7 +440,7 @@ internal static class UiRenderService
     static string ReviewHtml(string name, string hash, List<RenderResult> renders)
     {
         static string E(string s) => System.Net.WebUtility.HtmlEncode(s);
-        var sb = new StringBuilder($"<!doctype html><meta charset=utf-8><title>UI review · {E(name)}</title><style>body{{background:#111418;color:#e6e1d6;font:14px Segoe UI,Arial;margin:24px}}figure{{margin:0 0 32px}}img{{max-width:100%;border:1px solid #333}}.error{{color:#ff7a6b}}.warning{{color:#f2c14e}}code{{color:#9fc5ff}}</style><h1>{E(name)}</h1><p>Layout <code>{hash}</code>. Aprobar: <code>dbo-assets ui approve &lt;layout&gt; --hash {hash}</code></p>");
+        var sb = new StringBuilder($"<!doctype html><meta charset=utf-8><title>UI review · {E(name)}</title><style>body{{background:#111418;color:#e6e1d6;font:14px Segoe UI,Arial;margin:24px}}figure{{margin:0 0 32px}}img{{max-width:100%;border:1px solid #333}}.error{{color:#ff7a6b}}.warning{{color:#f2c14e}}code{{color:#9fc5ff}}</style><h1>{E(name)}</h1><p>Layout <code>{hash}</code>. Approve: <code>dbo-assets ui approve &lt;layout&gt; --hash {hash}</code></p>");
         foreach (var r in renders)
         {
             sb.Append($"<figure><figcaption><b>{E(r.Variant)}</b> · {r.Width}x{r.Height}</figcaption><img src=\"{E(Path.GetFileName(r.Png))}\"><ul>");
@@ -453,7 +453,7 @@ internal static class UiRenderService
     public static object Approve(string layoutPath, string hash, string? by, string? note)
     {
         string current = LayoutHash(layoutPath);
-        if (!hash.Equals(current, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException($"El layout cambió desde la revisión ({hash} → {current}). Volvé a generar la revisión y pedí aprobación otra vez.");
+        if (!hash.Equals(current, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException($"The layout changed since the review ({hash} → {current}). Generate the review again and ask for approval again.");
         var approval = new { schema = "dbo-ui-approval/1", layoutHash = current, approvedAt = DateTimeOffset.Now.ToString("o"), approvedBy = by ?? Environment.UserName, note };
         File.WriteAllText(ApprovalPath(layoutPath), JsonSerializer.Serialize(approval, ContentSafety.Json));
         return approval;
@@ -462,9 +462,9 @@ internal static class UiRenderService
     public static object Status(string layoutPath)
     {
         string current = LayoutHash(layoutPath), path = ApprovalPath(layoutPath);
-        if (!File.Exists(path)) return new { layout = Path.GetFullPath(layoutPath), layoutHash = current, approved = false, reason = "sin aprobación" };
+        if (!File.Exists(path)) return new { layout = Path.GetFullPath(layoutPath), layoutHash = current, approved = false, reason = "not approved" };
         var a = JsonNode.Parse(File.ReadAllText(path))!;
         bool ok = ((string?)a["layoutHash"])?.Equals(current, StringComparison.OrdinalIgnoreCase) == true;
-        return new { layout = Path.GetFullPath(layoutPath), layoutHash = current, approved = ok, approvedHash = (string?)a["layoutHash"], approvedAt = (string?)a["approvedAt"], approvedBy = (string?)a["approvedBy"], reason = ok ? "aprobado" : "el layout cambió después de aprobarse" };
+        return new { layout = Path.GetFullPath(layoutPath), layoutHash = current, approved = ok, approvedHash = (string?)a["layoutHash"], approvedAt = (string?)a["approvedAt"], approvedBy = (string?)a["approvedBy"], reason = ok ? "approved" : "the layout changed after it was approved" };
     }
 }

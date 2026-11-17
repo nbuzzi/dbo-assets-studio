@@ -10,7 +10,7 @@ internal sealed partial class MainForm
     internal async Task VerifyWorldEditorAsync(string spawnFile, string tablesFolder, string output)
     {
         ContentSafety.SafeOutput(output);
-        if (Directory.Exists(output) || File.Exists(output)) throw new IOException("La evidencia debe usar una carpeta nueva.");
+        if (Directory.Exists(output) || File.Exists(output)) throw new IOException("The evidence must use a new folder.");
         Directory.CreateDirectory(output);
         var checks = new List<object>();
         object? failure = null;
@@ -24,7 +24,7 @@ internal sealed partial class MainForm
             string ready = "";
             while (ready != "\"true\"")
             {
-                if (DateTime.UtcNow > until) { string diag = await _browser.CoreWebView2.ExecuteScriptAsync("JSON.stringify({url:location.href,ready:document.readyState,rail:document.querySelectorAll('[data-view]').length,mw:!!document.querySelector('#map-workshop'),mwHtml:(document.querySelector('#map-workshop')?.innerHTML||'').length,err:document.title})"); throw new IOException("Timeout: la página real no cargó el Map Workshop. " + diag); }
+                if (DateTime.UtcNow > until) { string diag = await _browser.CoreWebView2.ExecuteScriptAsync("JSON.stringify({url:location.href,ready:document.readyState,rail:document.querySelectorAll('[data-view]').length,mw:!!document.querySelector('#map-workshop'),mwHtml:(document.querySelector('#map-workshop')?.innerHTML||'').length,err:document.title})"); throw new IOException("Timeout: the real page did not load the Map Workshop. " + diag); }
                 await Task.Delay(300);
                 await _browser.CoreWebView2.ExecuteScriptAsync("document.querySelector('[data-view=\"map-workshop\"]')?.click()");
                 ready = await _browser.CoreWebView2.ExecuteScriptAsync("String(!!document.querySelector('#native-spawns')&&!!document.querySelector('#native-spawns-new'))");
@@ -50,14 +50,14 @@ window.__rpc=(action,args)=>{const id='we-'+(++window.__n);window.chrome.webview
                     {
                         var root = JsonDocument.Parse(json).RootElement.Clone();
                         bool hasError = root.TryGetProperty("error", out _);
-                        if (hasError != expectError) throw new IOException($"{action}: " + (hasError ? "error inesperado " + root.GetProperty("error") : "debía fallar y no falló"));
+                        if (hasError != expectError) throw new IOException($"{action}: " + (hasError ? "unexpected error " + root.GetProperty("error") : "should have failed and did not"));
                         return expectError ? root : root.GetProperty("result");
                     }
-                    if (DateTime.UtcNow > wait) throw new IOException("Timeout en " + action);
+                    if (DateTime.UtcNow > wait) throw new IOException("Timeout in " + action);
                     await Task.Delay(100);
                 }
             }
-            void Ok(string name, bool cond, string detail = "") { if (!cond) throw new IOException("Falló: " + name + " " + detail); checks.Add(new { name, ok = true, detail }); }
+            void Ok(string name, bool cond, string detail = "") { if (!cond) throw new IOException("Failed: " + name + " " + detail); checks.Add(new { name, ok = true, detail }); }
 
             var open = await Rpc("map-studio-spawns-edit-open", new { path = spawnFile, kind = "mob", tablesFolder });
             sessionId = open.GetProperty("session").GetString();
@@ -95,7 +95,7 @@ window.__rpc=(action,args)=>{const id='we-'+(++window.__n);window.chrome.webview
 
             var row = await Rpc("map-studio-spawns-table-get", new { session = sessionId, id = refId });
             var levelField = row.GetProperty("fields").EnumerateArray().First(f => f.GetProperty("name").GetString() == "byLevel");
-            Ok("bridge-table-get", row.GetProperty("spawnsUsing").GetInt32() > 0 && levelField.GetProperty("editable").GetBoolean(), $"{row.GetProperty("spawnsUsing").GetInt32()} spawns usan la fila");
+            Ok("bridge-table-get", row.GetProperty("spawnsUsing").GetInt32() > 0 && levelField.GetProperty("editable").GetBoolean(), $"{row.GetProperty("spawnsUsing").GetInt32()} spawns use the row");
             string key = levelField.GetProperty("key").GetString()!;
             var tset = await Rpc("map-studio-spawns-table-set", new { session = sessionId, id = refId, fields = new Dictionary<string, string> { [key] = "20" } });
             Ok("bridge-table-set", tset.GetProperty("stats").GetProperty("tableModified").GetInt32() == 1);
@@ -103,7 +103,7 @@ window.__rpc=(action,args)=>{const id='we-'+(++window.__n);window.chrome.webview
             Ok("bridge-table-set-out-of-range-rejected", true);
 
             var portals = await Rpc("map-studio-spawns-portals", new { session = sessionId });
-            Ok("bridge-portals", portals.GetProperty("total").GetInt32() > 0 && portals.GetProperty("rows").GetArrayLength() > 0, $"{portals.GetProperty("total").GetInt32()} portales");
+            Ok("bridge-portals", portals.GetProperty("total").GetInt32() > 0 && portals.GetProperty("rows").GetArrayLength() > 0, $"{portals.GetProperty("total").GetInt32()} portals");
 
             // Save goes through a folder dialog in the UI, so check the same session object directly.
             var session = SpawnEditSession.Get(sessionId!);

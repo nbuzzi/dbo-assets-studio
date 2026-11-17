@@ -24,7 +24,7 @@ internal sealed partial class MainForm
                 {
                     string cmd = S("cmd");
                     if (!WorldEngineHostCommandPrefixes.Any(p => cmd.Equals(p, StringComparison.Ordinal) || (p.EndsWith('-') && cmd.StartsWith(p, StringComparison.Ordinal))))
-                        throw new InvalidDataException("Comando del motor no permitido desde la UI: " + cmd);
+                        throw new InvalidDataException("Engine command not allowed from the UI: " + cmd);
                     var values = args.TryGetProperty("args", out var a) && a.ValueKind == JsonValueKind.Object
                         ? a.EnumerateObject().ToDictionary(p => p.Name, p => p.Value.Clone()) : new Dictionary<string, JsonElement>();
                     var reply = await _worldEngine.SendAsync(cmd, values, 60);
@@ -34,17 +34,17 @@ internal sealed partial class MainForm
                 return new { workspace = _worldEngineWorkspace?.Id, workspaceRoot = _worldEngineWorkspace?.Root, editedFields = _worldEngineEditedFields.OrderBy(x => x).ToArray(), prepare = _worldEnginePrepareNote };
             case "world-engine-save":
                 {
-                    if (_worldEngineWorkspace == null) throw new InvalidOperationException("Abrí el mundo en modo edición (workspace) para guardar.");
+                    if (_worldEngineWorkspace == null) throw new InvalidOperationException("Open the world in edit mode (workspace) to save.");
                     var saved = await _worldEngine.SendAsync("save", null, 120);
                     if (saved.TryGetProperty("editedFields", out var ef)) foreach (var f in ef.EnumerateArray()) _worldEngineEditedFields.Add(f.GetInt32());
                     return saved;
                 }
             case "world-engine-export":
                 {
-                    if (_worldEngineWorkspace == null) throw new InvalidOperationException("No hay workspace de edición abierto.");
+                    if (_worldEngineWorkspace == null) throw new InvalidOperationException("No edit workspace is open.");
                     var saved = await _worldEngine.SendAsync("save", null, 120);
                     if (saved.TryGetProperty("editedFields", out var ef)) foreach (var f in ef.EnumerateArray()) _worldEngineEditedFields.Add(f.GetInt32());
-                    using var dialog = new FolderBrowserDialog { Description = "Elegí dónde crear el candidato del mundo (se crea una subcarpeta NUEVA; nunca el cliente ni runtime)", UseDescriptionForTitle = true };
+                    using var dialog = new FolderBrowserDialog { Description = Loc.T("Choose where to create the world candidate (a NEW subfolder is created; never the client or runtime)", "Elegí dónde crear el candidato del mundo (se crea una subcarpeta NUEVA; nunca el cliente ni runtime)"), UseDescriptionForTitle = true };
                     if (dialog.ShowDialog(this) != DialogResult.OK) return null;
                     string target = Path.Combine(dialog.SelectedPath, $"world-edit-{_worldEngineWorkspace.World}-{DateTime.Now:yyyyMMdd-HHmmss}");
                     string evidence = Path.Combine(_worldEngineWorkspace.Root, "captures"); Directory.CreateDirectory(evidence);
@@ -69,7 +69,7 @@ internal sealed partial class MainForm
                         .OrderBy(n => n, StringComparer.OrdinalIgnoreCase).ToArray() : [];
                     return new { count = names.Length, textures = names };
                 }
-            default: throw new InvalidDataException("Acción de edición del motor desconocida.");
+            default: throw new InvalidDataException("Unknown engine edit action.");
         }
     }
 }

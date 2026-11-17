@@ -8,17 +8,17 @@ internal static class DdsPreview
 {
     public static Bitmap Load(string path)
     {
-        if (new FileInfo(path).Length > 128L * 1024 * 1024) throw new InvalidDataException("Archivo demasiado grande para vista previa (máximo 128 MiB).");
+        if (new FileInfo(path).Length > 128L * 1024 * 1024) throw new InvalidDataException("File too large for preview (max 128 MiB).");
         var bytes = File.ReadAllBytes(path);
         if (bytes.Length < 128 || bytes[0] != 'D' || bytes[1] != 'D' || bytes[2] != 'S' || bytes[3] != ' ')
-            throw new InvalidDataException("El recurso no tiene una cabecera DDS válida.");
+            throw new InvalidDataException("The resource has no valid DDS header.");
         if (BitConverter.ToUInt32(bytes, 4) != 124 || BitConverter.ToUInt32(bytes, 76) != 32)
-            throw new InvalidDataException("Cabecera DDS no compatible.");
+            throw new InvalidDataException("Unsupported DDS header.");
 
         int height = checked((int)BitConverter.ToUInt32(bytes, 12));
         int width = checked((int)BitConverter.ToUInt32(bytes, 16));
         if (width is < 1 or > 8192 || height is < 1 or > 8192 || (long)width * height > 16_777_216)
-            throw new InvalidDataException("Dimensiones DDS rechazadas por seguridad.");
+            throw new InvalidDataException("DDS dimensions rejected for safety.");
         uint pixelFlags = BitConverter.ToUInt32(bytes, 80);
         int data = 128;
         var bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
@@ -29,7 +29,7 @@ internal static class DdsPreview
             if (format is not ("DXT1" or "DXT3" or "DXT5"))
             {
                 bitmap.Dispose();
-                throw new InvalidDataException($"DDS {format} aún no está habilitado para vista previa.");
+                throw new InvalidDataException($"DDS {format} is not enabled for preview yet.");
             }
             try { DecodeBlocks(bytes, data, bitmap, format); } catch { bitmap.Dispose(); throw; }
             return bitmap;
@@ -38,21 +38,21 @@ internal static class DdsPreview
         if ((pixelFlags & 0x40) == 0)
         {
             bitmap.Dispose();
-            throw new InvalidDataException("Vista previa DDS: solo formatos RGBA/BGRA sin compresión o DXT1/3/5.");
+            throw new InvalidDataException("DDS preview: only uncompressed RGBA/BGRA or DXT1/3/5.");
         }
 
         int bpp = checked((int)BitConverter.ToUInt32(bytes, 88));
         if (bpp != 32)
         {
             bitmap.Dispose();
-            throw new InvalidDataException($"DDS sin compresión con {bpp} bpp no está soportado.");
+            throw new InvalidDataException($"Uncompressed DDS with {bpp} bpp is not supported.");
         }
         uint rMask = BitConverter.ToUInt32(bytes, 92), gMask = BitConverter.ToUInt32(bytes, 96), bMask = BitConverter.ToUInt32(bytes, 100), aMask = BitConverter.ToUInt32(bytes, 104);
         int stride = checked(width * 4);
         if (data + (long)stride * height > bytes.Length)
         {
             bitmap.Dispose();
-            throw new InvalidDataException("Payload DDS truncado.");
+            throw new InvalidDataException("Truncated DDS payload.");
         }
         for (int y = 0; y < height; y++) for (int x = 0; x < width; x++)
         {
@@ -74,7 +74,7 @@ internal static class DdsPreview
     {
         int blockBytes = format == "DXT1" ? 8 : 16;
         int blocksX = (output.Width + 3) / 4, blocksY = (output.Height + 3) / 4;
-        if (data + (long)blocksX * blocksY * blockBytes > input.Length) throw new InvalidDataException("Payload DXT truncado.");
+        if (data + (long)blocksX * blocksY * blockBytes > input.Length) throw new InvalidDataException("Truncated DXT payload.");
         int p = data;
         for (int by = 0; by < blocksY; by++) for (int bx = 0; bx < blocksX; bx++)
         {

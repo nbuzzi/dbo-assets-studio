@@ -21,18 +21,18 @@ internal sealed class PakArchive
 
     public static async Task<PakArchive> OpenAsync(string selectedPath, string format = "taiwan", string? family = null)
     {
-        if (format != "taiwan") throw new InvalidDataException("Formato soportado: taiwan.");
+        if (format != "taiwan") throw new InvalidDataException("Supported format: taiwan.");
         string index = Path.GetFullPath(selectedPath);
         string stem = Path.GetFileNameWithoutExtension(index);
         var unitMatch = Regex.Match(stem, @"^(.*?)(\d+)$");
         if (unitMatch.Success)
         {
             string sibling = Path.Combine(Path.GetDirectoryName(index)!, unitMatch.Groups[1].Value + ".pak");
-            if (!File.Exists(sibling)) throw new IOException("Esta es una unidad de datos. Falta su índice: " + sibling);
+            if (!File.Exists(sibling)) throw new IOException("This is a data unit. Its index is missing: " + sibling);
             index = sibling;
         }
         using var source = new FileStream(index, FileMode.Open, FileAccess.Read, FileShare.Read);
-        if (source.Length > 128L * 1024 * 1024) throw new IOException("El archivo supera el límite del índice (128 MiB). Abrí el índice, por ejemplo tex.pak.");
+        if (source.Length > 128L * 1024 * 1024) throw new IOException("The file exceeds the index limit (128 MiB). Open the index instead, for example tex.pak.");
         string hash = Convert.ToHexString(SHA256.HashData(source));
         string cache = Path.Combine(Path.GetTempPath(), "DboAssetsStudio", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(cache);
@@ -47,19 +47,19 @@ internal sealed class PakArchive
             { WorkingDirectory = cache, UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };
             StudioConfig.ApplyPakKey(start);
             start.ArgumentList.Add("export-index"); start.ArgumentList.Add("index.pak"); start.ArgumentList.Add("index.bin");
-            using var process = Process.Start(start) ?? throw new IOException("No se pudo iniciar el lector Taiwan.");
+            using var process = Process.Start(start) ?? throw new IOException("Could not start the Taiwan reader.");
             var stdout = process.StandardOutput.ReadToEndAsync(); var stderr = process.StandardError.ReadToEndAsync();
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(45));
             try { await process.WaitForExitAsync(timeout.Token); }
-            catch (OperationCanceledException) { process.Kill(true); await process.WaitForExitAsync(); throw new IOException("El lector PAK excedió 45 segundos."); }
+            catch (OperationCanceledException) { process.Kill(true); await process.WaitForExitAsync(); throw new IOException("The PAK reader exceeded 45 seconds."); }
             // The deadline covers the redirected stream readers too: waiting
             // for process exit alone does not bound inherited pipe handles.
             await Task.WhenAll(stdout, stderr).WaitAsync(timeout.Token);
-            if (process.ExitCode != 0) throw new InvalidDataException("No es un índice Taiwan válido o está dañado. Otros formatos de PAK no están soportados.\n" + stderr.Result);
+            if (process.ExitCode != 0) throw new InvalidDataException("Not a valid Taiwan index, or it is damaged. Other PAK formats are not supported.\n" + stderr.Result);
             // This bounded, already completed native snapshot is local. Read it
             // sequentially without an outstanding overlapped read during parse.
             byte[] bytes = File.ReadAllBytes(raw);
-            if (bytes.Length % 140 != 0) throw new InvalidDataException("Índice con ABI inválida.");
+            if (bytes.Length % 140 != 0) throw new InvalidDataException("Index with invalid ABI.");
             var entries = new List<PakEntry>();
             var lengths = new Dictionary<byte, long>();
             stem = Path.GetFileNameWithoutExtension(index);
@@ -74,7 +74,7 @@ internal sealed class PakArchive
             {
                 byte unit = bytes[offset];
                 int nul = Array.IndexOf(bytes, (byte)0, offset + 1, 128);
-                if (nul < 0) throw new InvalidDataException("Nombre de recurso sin terminador.");
+                if (nul < 0) throw new InvalidDataException("Resource name without terminator.");
                 string name = Encoding.Latin1.GetString(bytes, offset + 1, nul - offset - 1).Replace('/', '\\');
                 if (name.StartsWith(".\\")) name = name[2..];
                 uint size = BinaryPrimitives.ReadUInt32LittleEndian(bytes.AsSpan(offset + 132, 4));
@@ -92,12 +92,12 @@ internal sealed class PakArchive
 
     public async Task<byte[]> ReadAsync(PakEntry entry)
     {
-        if (!Entries.Contains(entry)) throw new InvalidDataException("Entrada ajena al archivo abierto.");
-        if (entry.Size > 128L * 1024 * 1024) throw new IOException("Vista previa/extracción limitada a 128 MiB por archivo.");
+        if (!Entries.Contains(entry)) throw new InvalidDataException("Entry does not belong to the open archive.");
+        if (entry.Size > 128L * 1024 * 1024) throw new IOException("Preview/extraction limited to 128 MiB per file.");
         using (var index = File.OpenRead(IndexPath))
-            if (Convert.ToHexString(SHA256.HashData(index)) != IndexHash) throw new IOException("El índice cambió. Volvé a abrir el PAK.");
+            if (Convert.ToHexString(SHA256.HashData(index)) != IndexHash) throw new IOException("The index changed. Reopen the PAK.");
         using var unit = new FileStream(entry.UnitPath, FileMode.Open, FileAccess.Read, FileShare.Read, 65536, true);
-        if ((ulong)entry.Offset + entry.Size > (ulong)unit.Length) throw new InvalidDataException("El recurso excede los límites de su unidad PAK.");
+        if ((ulong)entry.Offset + entry.Size > (ulong)unit.Length) throw new InvalidDataException("The resource exceeds the bounds of its PAK unit.");
         unit.Position = entry.Offset;
         byte[] bytes = new byte[entry.Size];
         await unit.ReadExactlyAsync(bytes);

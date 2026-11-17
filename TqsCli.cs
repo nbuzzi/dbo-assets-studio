@@ -15,7 +15,7 @@ internal static class TqsCli
             var created = TqsTemplates.Create(int.Parse(args[1], System.Globalization.CultureInfo.InvariantCulture), args[2]);
             return new { created.SourcePath, created.OriginalSha256, created.Dialect, draft = true, partyMaximum = 5, created.CanMutate, diagnostics = created.Diagnostics };
         }
-        if (args.Length < 2) throw new ArgumentException("Falta el archivo TQS.");
+        if (args.Length < 2) throw new ArgumentException("Missing TQS file.");
         var doc = WpsDocument.LoadTqs(args[1]);
         switch (args[0])
         {
@@ -38,20 +38,20 @@ internal static class TqsCli
                 Count(args, 4);
                 ApplyPlan(doc, args[2]);
                 return doc.SaveCandidate(args[3]);
-            default: throw new ArgumentException("Comando TQS desconocido: " + args[0]);
+            default: throw new ArgumentException("Unknown TQS command: " + args[0]);
         }
     }
 
     public static void ApplyPlan(WpsDocument doc, string path)
     {
-        if (doc.Dialect != "tqs") throw new ArgumentException("El plan TQS requiere LoadTqs explícito.");
+        if (doc.Dialect != "tqs") throw new ArgumentException("The TQS plan requires an explicit LoadTqs.");
         ContentSafety.NoLinks(path);
-        if (new FileInfo(path).Length > 8L * 1024 * 1024) throw new IOException("Límite de plan: 8 MiB.");
+        if (new FileInfo(path).Length > 8L * 1024 * 1024) throw new IOException("Plan limit: 8 MiB.");
         using var json = JsonDocument.Parse(File.ReadAllBytes(path), new JsonDocumentOptions { MaxDepth = 32 });
         var root = json.RootElement;
-        if (String(root, "format") != "tqs-plan-v1") throw new InvalidDataException("Formato de plan TQS desconocido.");
-        if (!String(root, "sourceSha256").Equals(doc.OriginalSha256, StringComparison.OrdinalIgnoreCase)) throw new IOException("El plan no coincide con el SHA-256 del TQS cargado.");
-        if (!root.TryGetProperty("operations", out var operations) || operations.ValueKind != JsonValueKind.Array) throw new InvalidDataException("El plan requiere operations[].");
+        if (String(root, "format") != "tqs-plan-v1") throw new InvalidDataException("Unknown TQS plan format.");
+        if (!String(root, "sourceSha256").Equals(doc.OriginalSha256, StringComparison.OrdinalIgnoreCase)) throw new IOException("The plan does not match the SHA-256 of the loaded TQS.");
+        if (!root.TryGetProperty("operations", out var operations) || operations.ValueKind != JsonValueKind.Array) throw new InvalidDataException("The plan requires operations[].");
         foreach (var operation in operations.EnumerateArray())
         {
             string op = String(operation, "op");
@@ -66,15 +66,15 @@ internal static class TqsCli
                         : operation.TryGetProperty("parentId", out var parentId) && parentId.ValueKind != JsonValueKind.Null ? parentId.GetString() : null;
                     var parameters = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
                     if (operation.TryGetProperty("params", out var values))
-                        foreach (var value in values.EnumerateObject()) parameters.Add(value.Name, value.Value.GetString() ?? throw new InvalidDataException("params requiere literales como strings."));
+                        foreach (var value in values.EnumerateObject()) parameters.Add(value.Name, value.Value.GetString() ?? throw new InvalidDataException("params requires literals as strings."));
                     doc.AddNode(parent, String(operation, "kind"), operation.TryGetProperty("name", out var name) ? name.GetString() ?? "" : "", parameters);
                     break;
-                default: throw new InvalidDataException("Operación TQS no permitida: " + op);
+                default: throw new InvalidDataException("TQS operation not allowed: " + op);
             }
         }
-        if (doc.Validate().Any(d => d.Severity == "error")) throw new InvalidDataException("El plan TQS no pasa validación.");
+        if (doc.Validate().Any(d => d.Severity == "error")) throw new InvalidDataException("The TQS plan fails validation.");
     }
 
-    private static string String(JsonElement element, string key) => element.TryGetProperty(key, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString()! : throw new InvalidDataException("Falta string: " + key);
-    private static void Count(string[] args, int expected) { if (args.Length != expected) throw new ArgumentException("Uso inválido; consultar tqs help."); }
+    private static string String(JsonElement element, string key) => element.TryGetProperty(key, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString()! : throw new InvalidDataException("Missing string: " + key);
+    private static void Count(string[] args, int expected) { if (args.Length != expected) throw new ArgumentException("Invalid usage; see tqs help."); }
 }

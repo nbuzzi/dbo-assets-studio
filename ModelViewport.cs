@@ -20,17 +20,17 @@ internal sealed class StudioModel
     public static StudioModel Parse(byte[] bytes)
     {
         using var stream = new MemoryStream(bytes); using var reader = new BinaryReader(stream);
-        if (Encoding.ASCII.GetString(reader.ReadBytes(4)) != "OSM1") throw new InvalidDataException("Formato de geometría no válido.");
-        int Count(int maximum) { uint value = reader.ReadUInt32(); if (value > maximum) throw new InvalidDataException("Demasiados elementos en la geometría."); return (int)value; }
-        double Float() { float value = reader.ReadSingle(); if (!float.IsFinite(value) || Math.Abs(value) > 1e8f) throw new InvalidDataException("Coordenadas inválidas."); return value; }
+        if (Encoding.ASCII.GetString(reader.ReadBytes(4)) != "OSM1") throw new InvalidDataException("Invalid geometry format.");
+        int Count(int maximum) { uint value = reader.ReadUInt32(); if (value > maximum) throw new InvalidDataException("Too many elements in the geometry."); return (int)value; }
+        double Float() { float value = reader.ReadSingle(); if (!float.IsFinite(value) || Math.Abs(value) > 1e8f) throw new InvalidDataException("Invalid coordinates."); return value; }
         var model = new StudioModel(); int count = Count(512), totalVertices = 0, totalTriangles = 0;
         for (int part = 0; part < count; part++)
         {
             int nv = Count(1_000_000), nt = Count(1_000_000), nm = Count(4096);
             if (nv == 0 || (long)nv * 20 + (long)nt * 16 + (long)nm * 132 > stream.Length - stream.Position)
-                throw new InvalidDataException("Geometría vacía o truncada.");
+                throw new InvalidDataException("Empty or truncated geometry.");
             totalVertices += nv; totalTriangles += nt;
-            if (totalVertices > 1_000_000 || totalTriangles > 1_000_000 || nm == 0) throw new InvalidDataException("Geometría fuera de límites.");
+            if (totalVertices > 1_000_000 || totalTriangles > 1_000_000 || nm == 0) throw new InvalidDataException("Geometry out of bounds.");
             var positions = new Point3D[nv]; var uv = new W.Point[nv]; var triangles = new int[nt][]; var materials = new ModelMaterial[nm];
             for (int v = 0; v < nv; v++) { positions[v] = new Point3D(Float(), Float(), Float()); uv[v] = new W.Point(Float(), Float()); }
             for (int t = 0; t < nt; t++)
@@ -42,12 +42,12 @@ internal sealed class StudioModel
             {
                 uint color = reader.ReadUInt32(); byte[] name = reader.ReadBytes(128);
                 int end = Array.IndexOf(name, (byte)0);
-                if (name.Length != 128 || end < 0) throw new InvalidDataException("Material truncado.");
+                if (name.Length != 128 || end < 0) throw new InvalidDataException("Truncated material.");
                 materials[m] = new ModelMaterial(color, Encoding.Latin1.GetString(name, 0, end));
             }
             model.Parts.Add(new ModelPart(positions, uv, triangles, materials));
         }
-        if (stream.Position != stream.Length || model.TriangleCount == 0) throw new InvalidDataException("Modelo vacío o salida inesperada.");
+        if (stream.Position != stream.Length || model.TriangleCount == 0) throw new InvalidDataException("Empty model or unexpected output.");
         return model;
     }
 }
@@ -67,7 +67,7 @@ internal sealed class ModelViewport : System.Windows.Forms.UserControl
     {
         BackColor = System.Drawing.Color.FromArgb(12, 19, 26);
         Controls.Add(_host); _host.Child = _surface; _surface.Children.Add(_view); _view.Camera = _camera;
-        var footer = new WC.TextBlock { Text = "ARRASTRAR: ROTAR    •    RUEDA: ZOOM    •    DOBLE CLIC: CENTRAR", Foreground = new M.SolidColorBrush(M.Color.FromRgb(125, 155, 166)),
+        var footer = new WC.TextBlock { Text = Loc.T("DRAG: ROTATE    •    WHEEL: ZOOM    •    DOUBLE-CLICK: CENTER", "ARRASTRAR: ROTAR    •    RUEDA: ZOOM    •    DOBLE CLIC: CENTRAR"), Foreground = new M.SolidColorBrush(M.Color.FromRgb(125, 155, 166)),
             FontSize = 10, Margin = new W.Thickness(16), VerticalAlignment = W.VerticalAlignment.Bottom, IsHitTestVisible = false };
         _surface.Children.Add(footer);
         _surface.MouseLeftButtonDown += (_, e) => { if (e.ClickCount == 2) { ResetView(); return; } _drag = e.GetPosition(_surface); _surface.CaptureMouse(); };
@@ -110,7 +110,7 @@ internal sealed class ModelViewport : System.Windows.Forms.UserControl
             }
         }
         Rect3D bounds = geometryGroup.Bounds;
-        if (bounds.IsEmpty) throw new InvalidDataException("Modelo sin geometría visible.");
+        if (bounds.IsEmpty) throw new InvalidDataException("Model has no visible geometry.");
         MeshCount = geometryGroup.Children.Count;
         _target = new Point3D(bounds.X + bounds.SizeX / 2, bounds.Y + bounds.SizeY / 2, bounds.Z + bounds.SizeZ / 2);
         _radius = Math.Max(.01, Math.Sqrt(bounds.SizeX * bounds.SizeX + bounds.SizeY * bounds.SizeY + bounds.SizeZ * bounds.SizeZ) / 2);

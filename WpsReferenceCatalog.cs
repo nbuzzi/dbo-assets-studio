@@ -41,15 +41,15 @@ internal sealed class WpsReferenceCatalog
         ContentSafety.NoLinks(rdfFolder);
         var catalog = new WpsReferenceCatalog();
         catalog.LoadClientRows(rdfFolder, schemas);
-        foreach (string kind in new[] { "item", "mob" }) if (!catalog._rows.Any(r => r.Kind == kind)) catalog.Notes.Add("No se cargaron referencias " + kind + "; revisar tablas/esquemas vinculados.");
+        foreach (string kind in new[] { "item", "mob" }) if (!catalog._rows.Any(r => r.Kind == kind)) catalog.Notes.Add("No references loaded for " + kind + "; check the linked tables/schemas.");
         string provenance = Path.Combine(rdfFolder, "provenance.json");
         if (File.Exists(provenance) && new FileInfo(provenance).Length < 4 * 1024 * 1024)
         {
-            try { using var document = JsonDocument.Parse(File.ReadAllBytes(provenance)); if (document.RootElement.TryGetProperty("capturedAt", out var captured)) catalog.Notes.Add("Snapshot de tablas: " + captured.GetString() + ". Vincular fuentes actuales si la versión cambió."); }
-            catch (JsonException) { catalog.Notes.Add("No se pudo leer la procedencia del snapshot."); }
+            try { using var document = JsonDocument.Parse(File.ReadAllBytes(provenance)); if (document.RootElement.TryGetProperty("capturedAt", out var captured)) catalog.Notes.Add("Table snapshot: " + captured.GetString() + ". Link current sources if the version changed."); }
+            catch (JsonException) { catalog.Notes.Add("Could not read the snapshot provenance."); }
         }
         if (!string.IsNullOrWhiteSpace(serverSpawnRoot)) catalog.LoadSpawnGroups(serverSpawnRoot, schemas, rdfFolder);
-        catalog.Notes.Add("Los grupos listados provienen de tablas estáticas de spawn. Los grupos creados dinámicamente por WPS/CC no se deducen de esas tablas. Elegir un grupo no cambia el mundo del WPS.");
+        catalog.Notes.Add("Listed groups come from static spawn tables. Groups created dynamically by WPS/CC are not inferred from those tables. Picking a group does not change the WPS world.");
         return catalog;
     }
 
@@ -66,13 +66,13 @@ internal sealed class WpsReferenceCatalog
             {
                 string leaf = Path.GetFileName(entry.Name);
                 if (!wanted.Contains(leaf)) continue;
-                if (leaf.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) throw new InvalidDataException("Nombre RDF inválido.");
-                if (!seen.Add(leaf)) throw new InvalidDataException("El PAK contiene tablas ambiguas con el nombre " + leaf);
-                if (entry.Size > remaining) throw new InvalidDataException("Las tablas RDF exceden el límite de importación.");
+                if (leaf.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) throw new InvalidDataException("Invalid RDF name.");
+                if (!seen.Add(leaf)) throw new InvalidDataException("The PAK contains ambiguous tables named " + leaf);
+                if (entry.Size > remaining) throw new InvalidDataException("RDF tables exceed the import limit.");
                 remaining -= entry.Size;
                 await File.WriteAllBytesAsync(Path.Combine(dir, leaf), await archive.ReadAsync(entry));
             }
-            if (seen.Count == 0) throw new InvalidDataException("El PAK no contiene tablas RDF Taiwan reconocidas.");
+            if (seen.Count == 0) throw new InvalidDataException("The PAK contains no recognized Taiwan RDF tables.");
             var catalog = await Task.Run(() => LoadFolder(dir, schemas, serverSpawnRoot));
             for (int i = 0; i < catalog._rows.Count; i++)
             {
@@ -87,7 +87,7 @@ internal sealed class WpsReferenceCatalog
     }
 
     public WpsReferenceRecord Get(string key) => _byKey.TryGetValue(key, out var row)
-        ? row : throw new KeyNotFoundException("No existe referencia WPS con key " + key);
+        ? row : throw new KeyNotFoundException("No WPS reference with key " + key);
 
     /// <param name="context">For groups, exact spawn-table filename or world table ID/name. Required when results span contexts.</param>
     public IReadOnlyList<WpsReferenceRecord> Query(string kind, string query, string? worldId, int page, int pageSize)
@@ -123,7 +123,7 @@ internal sealed class WpsReferenceCatalog
         if (File.Exists(textAll))
         {
             try { _itemNames = MapNameRdfService.ReadTextCategory(textAll, 3); _mobNames = MapNameRdfService.ReadTextCategory(textAll, 5); }
-            catch (Exception ex) { Notes.Add("TextAll: " + ex.Message + "; se usan nombres embebidos en RDF."); }
+            catch (Exception ex) { Notes.Add("TextAll: " + ex.Message + "; using names embedded in RDF."); }
         }
         foreach (var schema in schemas)
         {
@@ -136,7 +136,7 @@ internal sealed class WpsReferenceCatalog
             if (!item && !mob) continue;
             try
             {
-                var id = Field(schema, "tblidx") ?? throw new InvalidDataException("Falta tblidx en el esquema.");
+                var id = Field(schema, "tblidx") ?? throw new InvalidDataException("tblidx is missing from the schema.");
                 var name = Field(schema, "wszNameText", "wszName", "NameText");
                 var model = Field(schema, "szModel", "szModelName", "modelName");
                 var icon = item ? Field(schema, "szIcon_Name", "szIconName") : null;
@@ -184,20 +184,20 @@ internal sealed class WpsReferenceCatalog
                 string path = Path.Combine(root, table);
                 if (!File.Exists(path)) continue;
                 ContentSafety.NoLinks(path);
-                if (new FileInfo(path).Length > 128L * 1024 * 1024) throw new IOException("Tabla de mobs mayor a 128 MiB.");
+                if (new FileInfo(path).Length > 128L * 1024 * 1024) throw new IOException("Mob table exceeds 128 MiB.");
                 int stride = layout.GetProperty("rowSize").GetInt32(), idOffset = layout.GetProperty("idOffset").GetInt32();
                 int modelOffset = layout.GetProperty("modelOffset").GetInt32(), modelLength = layout.GetProperty("modelLength").GetInt32();
                 int nameOffset = layout.GetProperty("nameOffset").GetInt32(), nameLength = layout.GetProperty("nameLength").GetInt32();
                 bool wide = layout.GetProperty("nameWide").GetBoolean();
                 byte[] bytes = File.ReadAllBytes(path);
                 if (stride <= 0 || bytes.Length < 1 || (bytes.Length - 1) % stride != 0 || idOffset < 0 || idOffset + 4 > stride || modelOffset < 0 || modelOffset + modelLength > stride || nameOffset < 0 || nameOffset + nameLength * (wide ? 2 : 1) > stride)
-                    throw new InvalidDataException("La tabla no coincide con la ABI declarada por resource-layout.json.");
+                    throw new InvalidDataException("The table does not match the ABI declared by resource-layout.json.");
                 for (int offset = 1; offset < bytes.Length; offset += stride)
                 {
                     if (layout.TryGetProperty("validityOffset", out var validityElement))
                     {
                         int validityOffset = validityElement.GetInt32();
-                        if (validityOffset < 0 || validityOffset >= stride) throw new InvalidDataException("Offset validity inválido.");
+                        if (validityOffset < 0 || validityOffset >= stride) throw new InvalidDataException("Invalid validity offset.");
                         if (bytes[offset + validityOffset] == 0) continue;
                     }
                     string id = BitConverter.ToUInt32(bytes, offset + idOffset).ToString(CultureInfo.InvariantCulture);
@@ -220,12 +220,12 @@ internal sealed class WpsReferenceCatalog
 
     private void LoadSpawnGroups(string spawnRoot, IReadOnlyList<RdfSchema> schemas, string clientRoot)
     {
-        if (!Directory.Exists(spawnRoot)) { Notes.Add("No se encontró la carpeta server spawn RDF: " + spawnRoot); return; }
+        if (!Directory.Exists(spawnRoot)) { Notes.Add("Server spawn RDF folder not found: " + spawnRoot); return; }
         // Server spawn tables have their own Taiwan schema catalog. It sits one
         // directory above table/rdf in the usual server_data/table layout.
         ContentSafety.NoLinks(spawnRoot);
         var schema = WpsSpawnSchema.Select(RdfSchema.LoadCatalog(Path.Combine(AppContext.BaseDirectory, "wps-reference-schemas.txt")));
-        if (schema.RowSize != 84) throw new InvalidDataException("MobSpawn Taiwan requiere filas de 84 bytes (SpawnTable.h).");
+        if (schema.RowSize != 84) throw new InvalidDataException("Taiwan MobSpawn requires 84-byte rows (SpawnTable.h).");
         var worldBySpawn = LoadWorldSpawnNames(clientRoot, schemas);
         var groupRows = new Dictionary<string, List<WpsGroupMember>>(StringComparer.OrdinalIgnoreCase);
         var groupTables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -283,7 +283,7 @@ internal sealed class WpsReferenceCatalog
             foreach (var row in RdfDocument.Open(path, worldSchema).Rows)
             {
                 string file = Path.GetFileNameWithoutExtension(worldSchema.Decode(spawn, row.Current).Trim());
-                if (file.Length > 0) result[file] = "Mundo " + worldSchema.Decode(id, row.Current).Trim() + (label == null ? "" : " " + worldSchema.Decode(label, row.Current).Trim());
+                if (file.Length > 0) result[file] = "World " + worldSchema.Decode(id, row.Current).Trim() + (label == null ? "" : " " + worldSchema.Decode(label, row.Current).Trim());
             }
         }
         catch { /* A missing/invalid WorldTable means groups retain spawn-filename scope. */ }
@@ -296,7 +296,7 @@ internal sealed class WpsReferenceCatalog
         if (_byKey.TryGetValue(row.Key, out var previous))
         {
             _byKey.Remove(row.Key); _rows.Remove(previous); _ambiguousKeys.Add(row.Key);
-            Notes.Add("ID duplicado excluido del buscador: " + row.Key); return;
+            Notes.Add("Duplicate ID excluded from search: " + row.Key); return;
         }
         _byKey[row.Key] = row;
         _rows.Add(row);

@@ -7,15 +7,15 @@ internal static class WorkspaceCli
         var tokens = new List<string>(); string? client = null, server = null; bool replace = false;
         for (int i = 0; i < args.Length; i++)
         {
-            if (args[i] == "--replace") { if (replace) throw new ArgumentException("--replace repetido."); replace = true; }
+            if (args[i] == "--replace") { if (replace) throw new ArgumentException("--replace repeated."); replace = true; }
             else if (args[i] is "--client" or "--server")
-            { string option = args[i]; if (++i >= args.Length) throw new ArgumentException("Falta valor de " + option); if (option == "--client") client = args[i]; else server = args[i]; }
-            else if (args[i].StartsWith("--")) throw new ArgumentException("Opción desconocida: " + args[i]);
+            { string option = args[i]; if (++i >= args.Length) throw new ArgumentException("Missing value for " + option); if (option == "--client") client = args[i]; else server = args[i]; }
+            else if (args[i].StartsWith("--")) throw new ArgumentException("Unknown option: " + args[i]);
             else tokens.Add(args[i]);
         }
         if (tokens.Count == 0) throw new ArgumentException(Help);
-        if (tokens[0] != "init" && (client != null || server != null)) throw new ArgumentException("--client/--server sólo en init.");
-        if (replace && tokens[0] is not ("add" or "import-pak" or "import-mob")) throw new ArgumentException("--replace sólo al importar/adoptar.");
+        if (tokens[0] != "init" && (client != null || server != null)) throw new ArgumentException("--client/--server only with init.");
+        if (replace && tokens[0] is not ("add" or "import-pak" or "import-mob")) throw new ArgumentException("--replace only when importing/adopting.");
         return tokens[0] switch
         {
             "init" when tokens.Count == 3 => StudioWorkspace.Create(tokens[1], tokens[2], client, server).Status(),

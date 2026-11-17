@@ -2,6 +2,7 @@
   <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0-windows</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><AssemblyName>dbo-assets</AssemblyName><Version>5.7.0</Version><EnableDefaultCompileItems>false</EnableDefaultCompileItems></PropertyGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
+    <Compile Include="../Loc.cs" Link="Loc.cs" />
     <Compile Include="../UiLayout.cs" Link="UiLayout.cs" />
     <Compile Include="../UiRenderService.cs" Link="UiRenderService.cs" />
     <Compile Include="../UiCodegen.cs" Link="UiCodegen.cs" />
