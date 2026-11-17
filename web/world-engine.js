@@ -65,11 +65,14 @@ export function installWorldEngine({sidebar, main, api, toast, escape: e}) {
  const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(() => scheduleViewport()) : null;
  const running = () => !!status?.running;
 
+ // The engine is a native child window drawn above the page: hide it while a modal (Ctrl+K palette, dialogs) is open.
+ const overlayOpen = () => !!document.querySelector('.palette-scrim:not(.hidden), dialog[open]');
+ if (typeof MutationObserver === 'function') new MutationObserver(() => { if (visible) scheduleViewport(); }).observe(document.body, {subtree: true, attributes: true, attributeFilter: ['class', 'open']});
  function rect(hidden = false) {
   const view = $('#we-view'), r = view?.getBoundingClientRect();
   if (!r) return {x: 0, y: 0, width: 0, height: 0, visible: false};
   const x = Math.max(0, r.left), y = Math.max(0, r.top), width = Math.max(0, Math.min(window.innerWidth, r.right) - x), height = Math.max(0, Math.min(window.innerHeight, r.bottom) - y);
-  return {x, y, width, height, visible: !hidden && visible && running() && !document.hidden && width >= 64 && height >= 64};
+  return {x, y, width, height, visible: !hidden && visible && running() && !document.hidden && !overlayOpen() && width >= 64 && height >= 64};
  }
  function sendViewport(force = false, hidden = false) {
   const r = rect(hidden), key = JSON.stringify(r);

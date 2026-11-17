@@ -32,6 +32,27 @@ Safety model: every write goes to a **new output folder** with the original pres
 ## Screenshots
 
 <p align="center">
+  <img src="docs/screenshots/world-editor.png" alt="World Editor with the client's engine embedded" width="100%">
+</p>
+<p align="center"><sub>World Editor: a world rendered by the client's own engine inside the app, with world list, cameras and engine stats.</sub></p>
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/world-editor-terrain.png" alt="Terrain height and texture brushes"><br><sub>Terrain: height and texture brushes (a hill raised and painted).</sub></td>
+<td width="50%"><img src="docs/screenshots/world-editor-spawns.png" alt="Mob and NPC spawns drawn in the engine"><br><sub>Spawns: mob/NPC tables drawn in the engine, palette by level, place and move.</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/world-editor-water.png" alt="Water tool"><br><sub>Water: create a lake, type, color, alpha, blend, UV.</sub></td>
+<td width="50%"><img src="docs/screenshots/ui-maker.png" alt="UI Maker"><br><sub>UI Maker: layout JSON, real NtlGui render, lint and approval.</sub></td>
+</tr>
+</table>
+
+<p align="center">
+  <img src="docs/screenshots/command-palette.png" alt="Command palette" width="100%">
+</p>
+<p align="center"><sub>Grouped side menu and command palette (<code>Ctrl+K</code>).</sub></p>
+
+<p align="center">
   <img src="docs/screenshots/resource-browser.png" alt="Resource browser with preview and inspector" width="100%">
 </p>
 <p align="center"><sub>Resource browser: PAK library, collections, live preview and inspector.</sub></p>
@@ -39,7 +60,7 @@ Safety model: every write goes to a **new output folder** with the original pres
 <p align="center">
   <img src="docs/screenshots/table-editor.png" alt="Schema-aware RDF table editor" width="100%">
 </p>
-<p align="center"><sub>Schema-aware RDF table editor with pending-change highlighting. Screenshots use synthetic demo data.</sub></p>
+<p align="center"><sub>Schema-aware RDF table editor with pending-change highlighting. The resource browser and table screenshots use synthetic demo data.</sub></p>
 
 ## Quick start
 

@@ -12,10 +12,10 @@
     "bar": "12 / 30"
   },
   "components": [
-    { "id": "frame", "type": "panel", "rect": [0, 0, 452, 500], "fill": "#F0141A22" },
-    { "id": "header", "type": "panel", "rect": [0, 0, 452, 40], "fill": "#FF1E2A38" },
+    { "id": "frame", "type": "panel", "rect": [0, 0, 452, 500], "fill": "#141A22F0" },
+    { "id": "header", "type": "panel", "rect": [0, 0, 452, 40], "fill": "#1E2A38" },
     { "id": "title", "type": "label", "rect": [16, 7, 380, 26], "text": "@title", "color": "#FFFFFF" },
-    { "id": "btnClose", "type": "button", "rect": [416, 8, 24, 24], "text": "X", "fill": "#FF3A4656", "states": { "focus": "#FF4C5A6C", "down": "#FF2A3442" } },
+    { "id": "btnClose", "type": "button", "rect": [416, 8, 24, 24], "text": "X", "fill": "#3A4656", "states": { "focus": "#4C5A6C", "down": "#2A3442" } },
     {
       "type": "repeat", "count": 15, "columns": 5, "step": [85, 62], "origin": [16, 52],
       "data": [
@@ -26,21 +26,21 @@
         { "status": "LOCKED", "c": "#8C96A5" }, { "status": "LOCKED", "c": "#8C96A5" }, { "status": "LOCKED", "c": "#8C96A5" }
       ],
       "children": [
-        { "id": "slot{i}", "type": "panel", "rect": [0, 0, 80, 56], "fill": "#FF243040" },
+        { "id": "slot{i}", "type": "panel", "rect": [0, 0, 80, 56], "fill": "#243040" },
         { "id": "slotName{i}", "type": "label", "rect": [0, 4, 80, 16], "text": "SLOT {n}", "align": "center", "color": "#EBE1C8" },
         { "id": "slotStatus{i}", "type": "label", "rect": [0, 36, 80, 14], "text": "{status}", "align": "center", "color": "{c}" }
       ]
     },
     {
-      "id": "confirm", "type": "button", "rect": [16, 248, 420, 30], "text": "@confirm", "color": "#FFFFFF", "fill": "#FF2F6FB0",
-      "states": { "focus": "#FF3A82CC", "down": "#FF245A90", "disabled": "#FF3A3F46" }
+      "id": "confirm", "type": "button", "rect": [16, 248, 420, 30], "text": "@confirm", "color": "#FFFFFF", "fill": "#2F6FB0",
+      "states": { "focus": "#3A82CC", "down": "#245A90", "disabled": "#3A3F46" }
     },
     { "id": "sectionTitle", "type": "label", "rect": [26, 294, 240, 18], "text": "@section", "color": "#FFCD28" },
     { "id": "counter", "type": "label", "rect": [266, 294, 160, 18], "text": "@counter", "align": "right" },
-    { "id": "bar", "type": "progress", "rect": [26, 316, 400, 14], "value": 0.4, "fill": "#FF39B54A", "text": "@bar", "fontSize": 80, "align": "center" },
+    { "id": "bar", "type": "progress", "rect": [26, 316, 400, 14], "value": 0.4, "fill": "#39B54A", "text": "@bar", "fontSize": 80, "align": "center" },
     {
       "type": "repeat", "count": 3, "columns": 3, "step": [137, 0], "origin": [26, 344],
-      "data": [ { "label": "STAGE 1", "c": "#FF2E4A34" }, { "label": "STAGE 2", "c": "#FF2A3038" }, { "label": "STAGE 3", "c": "#FF2A3038" } ],
+      "data": [ { "label": "STAGE 1", "c": "#2E4A34" }, { "label": "STAGE 2", "c": "#2A3038" }, { "label": "STAGE 3", "c": "#2A3038" } ],
       "children": [
         { "id": "card{i}", "type": "panel", "rect": [0, 0, 126, 88], "fill": "{c}" },
         { "id": "cardLabel{i}", "type": "label", "rect": [0, 3, 126, 14], "text": "{label}", "align": "center", "color": "#FFCD28" }
