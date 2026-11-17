@@ -120,6 +120,8 @@ internal sealed partial class MainForm
     private async Task<object?> StudioCommandAsync(string action, JsonElement args)
     {
         if (action.StartsWith("quest-")) return await QuestCommandAsync(action, args);
+        if (action.StartsWith("ui-maker-", StringComparison.Ordinal)) return await UiMakerCommandAsync(action, args);
+        if (action.StartsWith("world-engine-", StringComparison.Ordinal)) return await WorldEngineCommandAsync(action, args);
         if (action.StartsWith("wps-")) return await WpsCommandAsync(action, args);
         if (action.StartsWith("pak-") || action is "rdf-export" or "rdf-patch") return await PackageCommandAsync(action, args);
         string S(string name) => args.TryGetProperty(name, out var v) ? v.GetString() ?? "" : "";

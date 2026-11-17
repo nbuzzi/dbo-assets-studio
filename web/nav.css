@@ -1,0 +1,82 @@
+/* Navegación del Studio: menú lateral agrupado y plegable, paleta de comandos (Ctrl+K)
+   y pestañas internas consistentes (.studio-tabs). Se carga después de studio.css. */
+:root{--rail-open:228px;--rail-closed:64px;--rail:var(--rail-open)}
+.app.rail-collapsed{--rail:var(--rail-closed)}
+
+.rail{grid-row:1/4;align-items:stretch;gap:0;padding:12px 10px 10px;min-height:0;width:var(--rail);overflow:hidden}
+.rail-head{display:flex;align-items:center;gap:10px;padding:2px 4px 13px 6px;border-bottom:1px solid var(--line);margin-bottom:4px;min-height:52px}
+.rail .brand{margin:0;flex:none;width:32px;height:32px;font-size:22px;line-height:26px}
+.rail .wordmark{font-size:12px;letter-spacing:2px;line-height:1.2;overflow:hidden}
+.rail .wordmark span{font-size:7.5px;letter-spacing:2.2px;color:var(--gold);font-weight:600}
+.rail-toggle{margin-left:auto;flex:none;width:28px;height:28px;border-radius:7px;display:grid;place-items:center;color:#6f7889}
+.rail-toggle:hover{background:#232833;color:#dfe3ea}
+.rail-toggle svg{width:17px;height:17px}
+.rail-scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:2px 0 8px;scrollbar-width:thin}
+.rail-group{margin-top:10px}
+.rail-group-title{margin:0 0 3px;padding:0 9px;font:700 9.5px/16px "Segoe UI Variable Text","Segoe UI",sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#646d7e;white-space:nowrap}
+.rail .rail-button{width:100%;height:32px;display:flex;align-items:center;justify-content:flex-start;gap:11px;padding:0 9px;border-radius:7px;font-size:12.5px;text-align:left;white-space:nowrap;color:#a2abba}
+.rail .rail-button:hover{background:#20242d;color:#e3e7ee}
+.rail .rail-button.active{background:var(--gold-soft);color:var(--gold);box-shadow:inset 0 0 0 1px #51422d}
+.rail .rail-button svg{width:18px;height:18px}
+.rail .rail-button:focus-visible,.rail-toggle:focus-visible,.cmdk:focus-visible{outline:2px solid #8a6a3a;outline-offset:1px}
+.rail-label{overflow:hidden;text-overflow:ellipsis}
+.rail .rail-bottom{margin:0;padding-top:8px;border-top:1px solid var(--line);display:flex;align-items:center;gap:8px;justify-items:initial}
+.rail .rail-bottom .rail-button{flex:1;min-width:0}
+.rail .avatar{flex:none;width:28px;height:28px;font-size:9px}
+
+/* Plegado: solo íconos, con separadores entre áreas */
+.rail-collapsed .rail{padding:12px 8px 10px}
+.rail-collapsed .rail-head{flex-direction:column;gap:10px;padding:2px 0 12px}
+.rail-collapsed .rail .wordmark,.rail-collapsed .rail-label{display:none}
+.rail-collapsed .rail-toggle{margin:0;transform:scaleX(-1)}
+.rail-collapsed .rail-group{margin-top:6px}
+.rail-collapsed .rail-group-title{height:9px;padding:0;font-size:0;display:flex;align-items:center;justify-content:center}
+.rail-collapsed .rail-group-title::before{content:"";width:20px;height:1px;background:#353b48}
+.rail-collapsed .rail .rail-button{justify-content:center;padding:0;height:38px}
+.rail-collapsed .rail .rail-bottom{flex-direction:column}
+.rail-collapsed .rail .rail-bottom .rail-button{width:100%;flex:none}
+
+/* Barra superior: ruta Área › Herramienta › Pestaña y disparador de la paleta */
+.topbar{gap:16px;padding:0 22px}
+.breadcrumb{gap:8px;min-width:0;white-space:nowrap}
+.breadcrumb #crumb{color:var(--text);font-weight:600}
+.crumb-area,.crumb-tab{color:#9aa3b2}
+.crumb-sep{color:#4a5160}
+.breadcrumb .key{margin-left:6px}
+.cmdk{margin-left:auto;display:flex;align-items:center;gap:10px;width:min(360px,34vw);min-width:180px;height:34px;padding:0 10px 0 12px;border:1px solid #2f3542;border-radius:8px;background:#11141a;color:#7d8697;font-size:12px;text-align:left}
+.cmdk:hover{border-color:#414858;color:#aab2bf}
+.cmdk>span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cmdk svg{width:16px;height:16px}
+.cmdk kbd,.palette kbd{font:600 10px Consolas,monospace;color:#a7afbd;border:1px solid #3a4150;border-radius:4px;padding:2px 5px;background:#1b1f27}
+.topbar .top-right{margin-left:0}
+
+/* Paleta de comandos */
+.palette-scrim{position:fixed;inset:0;z-index:1000;background:#06080bb3;display:flex;justify-content:center;align-items:flex-start;padding-top:min(110px,12vh)}
+.palette-scrim.hidden{display:none}
+.palette{width:min(640px,calc(100vw - 32px));max-height:min(560px,calc(100vh - 140px));display:flex;flex-direction:column;border:1px solid #39404e;border-radius:12px;background:#181c24;box-shadow:0 30px 80px #000a;overflow:hidden}
+.palette-input{display:flex;align-items:center;gap:10px;padding:0 16px;border-bottom:1px solid var(--line)}
+.palette-input svg{width:17px;height:17px;color:#8a93a3}
+.palette-input input{flex:1;height:50px;border:0;outline:0;background:transparent;color:var(--text);font:14px "Segoe UI Variable Text","Segoe UI",sans-serif}
+.palette-list{overflow-y:auto;padding:4px 0 6px}
+.palette-section{margin:10px 16px 4px;font:700 9.5px "Segoe UI";letter-spacing:.14em;color:#646d7e;text-transform:uppercase}
+.palette-row{display:flex;align-items:center;gap:12px;width:100%;padding:8px 16px;font-size:12.5px;color:#c4cad5;text-align:left}
+.palette-row svg{width:17px;height:17px;color:#8a93a3}
+.palette-row small{margin-left:auto;color:#7a8496;font-size:11px;white-space:nowrap}
+.palette-row.selected{background:#262b35;color:#fff;box-shadow:inset 2px 0 0 var(--gold)}
+.palette-row.selected svg{color:var(--gold)}
+.palette-row mark{background:none;color:var(--gold);font-weight:650}
+.palette-empty{padding:18px 16px;color:#7d8697;font-size:12px}
+.palette-foot{display:flex;gap:16px;border-top:1px solid var(--line);padding:8px 16px;font-size:10.5px;color:#6f7889}
+
+/* Pestañas internas consistentes para modos de una herramienta */
+.studio-tabs{display:flex;align-items:flex-end;gap:2px;padding:0;border:0;border-bottom:1px solid #2b313b;border-radius:0;background:none;overflow-x:auto;scrollbar-width:none}
+.studio-tabs button{flex:none;display:flex;align-items:center;gap:7px;height:42px;padding:0 15px;border:0;border-bottom:2px solid transparent;border-radius:0;background:none;color:#9099a9;font:500 12.5px "Segoe UI Variable Text","Segoe UI",sans-serif;white-space:nowrap;cursor:pointer}
+.studio-tabs button:hover{color:#e3e7ee}
+.studio-tabs button.active{color:#e3bf7c;border-bottom-color:#c5a163;background:none}
+
+/* Taller de mapas: los modos pasan a ser pestañas arriba de todo el taller */
+#map-workshop .map-workshop-shell{grid-template-rows:auto minmax(0,1fr)}
+#map-workshop .map-workshop-shell>.studio-tabs{grid-column:1/-1;padding:0 20px;background:#12161e}
+#map-workshop .map-workshop-header{flex-wrap:wrap;align-items:flex-start}
+#map-workshop .map-workshop-header>div:first-child{flex:1 1 300px;min-width:260px}
+#map-workshop .map-actions{flex:1 1 auto;flex-wrap:wrap;justify-content:flex-end}

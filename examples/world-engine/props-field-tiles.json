@@ -1,0 +1,21 @@
+{
+  "description": "World Editor props: field 3057 (Kokkara) fog/sky/bloom/color/weather + tile attribute and material brush. Loaded fields only.",
+  "pos": [4583, 0, 4053],
+  "camera": {"mode": "free", "yaw": 45, "pitch": -40, "dist": 160},
+  "steps": [
+    {"cmd": "prop-get", "field": 3057},
+    {"cmd": "prop-set", "field": 3057, "props": {
+      "fog": {"color": [255, 140, 90], "near": 60, "far": 300},
+      "sky": {"colors": [[90, 20, 40], [255, 120, 60], [255, 220, 170]]},
+      "bloom": {"monoPower": 3.2},
+      "fieldColor": [255, 230, 210],
+      "weather": [1, -1, -1, -1, -1]}},
+    {"cmd": "prop-tile-paint", "x": 4583, "z": 4053, "radius": 14, "target": "bit", "mask": 16, "op": "set"},
+    {"cmd": "prop-tile-paint", "x": 4613, "z": 4063, "radius": 8, "target": "material", "value": 5},
+    {"cmd": "prop-tile-get", "x": 4583, "z": 4053},
+    {"cmd": "prop-tile-stats", "field": 3057},
+    {"cmd": "prop-gameprop-selftest", "value": "0x00012345"},
+    {"cmd": "prop-overlay", "mode": "bit", "mask": 16, "radius": 96},
+    {"cmd": "prop-get", "field": 3057}
+  ]
+}

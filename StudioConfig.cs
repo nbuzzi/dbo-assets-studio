@@ -20,7 +20,7 @@ internal static class StudioConfig
     public const string FileName = "studio.config.json";
     public const string PakKeyVariable = "DBO_PAK_KEY";
 
-    private sealed record Model(string? PakKey);
+    private sealed record Model(string? PakKey, string? ClientRoot = null, string? ServerTables = null);
 
     private static readonly JsonSerializerOptions Options = new() { PropertyNameCaseInsensitive = true, ReadCommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true };
 
@@ -43,6 +43,28 @@ internal static class StudioConfig
                 if (!File.Exists(path)) continue;
                 var model = JsonSerializer.Deserialize<Model>(File.ReadAllText(path), Options);
                 if (!string.IsNullOrWhiteSpace(model?.PakKey)) return model!.PakKey!.Trim();
+            }
+            catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException) { }
+        }
+        return null;
+    }
+
+    /// <summary>Folder of your own client install (the one that contains <c>pack\</c>), or null. Env: DBO_CLIENT_ROOT.</summary>
+    public static string? ClientRoot() => Setting("DBO_CLIENT_ROOT", m => m.ClientRoot);
+
+    /// <summary>Folder with your server's RDF tables (Table_World_Data.rdf, spawn tables), or null. Env: DBO_SERVER_TABLES.</summary>
+    public static string? ServerTables() => Setting("DBO_SERVER_TABLES", m => m.ServerTables);
+
+    private static string? Setting(string variable, Func<Model, string?> pick)
+    {
+        if (Environment.GetEnvironmentVariable(variable) is { Length: > 0 } fromEnvironment) return fromEnvironment;
+        foreach (string path in Candidates())
+        {
+            try
+            {
+                if (!File.Exists(path)) continue;
+                var model = JsonSerializer.Deserialize<Model>(File.ReadAllText(path), Options);
+                if (model != null && pick(model) is { } value && !string.IsNullOrWhiteSpace(value)) return value.Trim();
             }
             catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException) { }
         }

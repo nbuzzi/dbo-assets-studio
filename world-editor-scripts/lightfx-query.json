@@ -1,0 +1,9 @@
+{
+  "pos": [4578, 0, 4052],
+  "camera": {"mode": "top", "dist": 75},
+  "query": [
+    {"cmd": "light-list", "everything": true, "range": 40},
+    {"cmd": "light-field"},
+    {"cmd": "sound-field"}
+  ]
+}

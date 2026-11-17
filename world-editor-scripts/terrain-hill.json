@@ -1,0 +1,12 @@
+{
+  "pos": [4700, 0, 4130],
+  "camera": {"mode": "free", "yaw": 35, "pitch": -40, "dist": 110},
+  "steps": [
+    {"cmd": "terrain-layers", "x": 4700, "z": 4130},
+    {"cmd": "terrain-height", "mode": "raise", "x": 4700, "z": 4130, "radius": 22, "amount": 6},
+    {"cmd": "terrain-height", "mode": "raise", "x": 4700, "z": 4130, "radius": 12, "amount": 4},
+    {"cmd": "terrain-height", "mode": "smooth", "x": 4700, "z": 4130, "radius": 26, "amount": 3},
+    {"cmd": "terrain-paint", "layer": 0, "x": 4700, "z": 4130, "radius": 16, "amount": 1.0},
+    {"cmd": "height-at", "x": 4700, "z": 4130}
+  ]
+}

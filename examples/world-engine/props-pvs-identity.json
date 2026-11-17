@@ -1,0 +1,10 @@
+{
+  "description": "Regression: rebuilding the PVS of an untouched area must reproduce the shipped the PVS file (world/<name>/-------) records byte for byte (no file in the candidate).",
+  "pos": [4583, 0, 4053],
+  "camera": {"mode": "free", "yaw": 0, "pitch": -35, "dist": 520},
+  "steps": [
+    {"cmd": "pvs-build", "radius": 200, "wait": true, "timeoutSeconds": 600},
+    {"cmd": "pvs-state"},
+    {"cmd": "pvs-overlay", "enabled": true, "layer": 0}
+  ]
+}

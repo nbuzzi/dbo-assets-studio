@@ -1,0 +1,15 @@
+{
+  "pos": [4578, 0, 4052],
+  "camera": {"mode": "top", "dist": 75},
+  "steps": [
+    {"cmd": "light-add", "type": "point", "x": 4586, "z": 4060, "height": 4, "color": [255, 140, 40], "radius": 18},
+    {"cmd": "light-world-add", "shape": "sphere", "x": 4568, "z": 4046, "height": 3, "radius": 12, "color": [120, 200, 255]},
+    {"cmd": "effect-add", "name": "obj_fire_red_002", "x": 4576, "z": 4056, "scale": 1.5},
+    {"cmd": "sound-add", "name": "GENERAL_ENV_SHORE_LOOP.wav", "x": 4588, "z": 4042, "volume": 0.7, "min": 6, "max": 20},
+    {"cmd": "sound-move", "ref": "selected", "dx": 2, "dz": -2},
+    {"cmd": "light-world-add", "shape": "box", "x": 4560, "z": 4064, "height": 4, "scale": [12, 6, 12], "rot": [0, 30, 0]},
+    {"cmd": "undo"},
+    {"cmd": "light-field", "ambient": [160, 112, 224]},
+    {"cmd": "light-list", "everything": true, "range": 40}
+  ]
+}

@@ -14,7 +14,10 @@ Open source desktop and command-line tool to **browse, inspect and edit the asse
 - **PAK packaging** – build overlay / repack candidates with plan, hashes and audit trail; originals are never modified.
 - **RDF table editor** – schema-aware editing of server/client tables, validation, diff review, additive imports, text tables.
 - **WPS / TQS editor** – visual editor for World Play Scripts and Time Quest Scripts (dungeon flows, stages, rewards), plus a quest editor.
+- **World Editor** – open any world of the client with the game's own engine embedded in the app, and edit spawns, terrain (height and texture brushes), objects, water, lights, effects, sounds, field/tile properties and PVS on a private copy. See [docs/WORLD-EDITOR.md](docs/WORLD-EDITOR.md).
+- **UI Maker** – preview game windows with the client's own GUI library (NtlGui + GFx/Flash), import any `.frm`/`.srf` window, lint, review screenshots, approve and generate C++. See [docs/UI-MAKER.md](docs/UI-MAKER.md).
 - **Asset tools** – model/texture/effect inspection and repair helpers, map and terrain workshop, 3D viewport.
+- **Redesigned navigation** – grouped, collapsible side menu, breadcrumb and a command palette (`Ctrl+K`).
 - **Projects & deliveries** – versioned workspace that tracks your changes and exports a ZIP with manifest and hashes.
 - **CLI** – `dbo-assets` exposes the same services as the UI for scripting (`dbo-assets help`).
 
@@ -29,6 +32,27 @@ Safety model: every write goes to a **new output folder** with the original pres
 ## Screenshots
 
 <p align="center">
+  <img src="docs/screenshots/world-editor.png" alt="World Editor with the client's engine embedded" width="100%">
+</p>
+<p align="center"><sub>World Editor: a world rendered by the client's own engine inside the app, with world list, cameras and engine stats.</sub></p>
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/world-editor-terrain.png" alt="Terrain height and texture brushes"><br><sub>Terrain: height and texture brushes (a hill raised and painted).</sub></td>
+<td width="50%"><img src="docs/screenshots/world-editor-spawns.png" alt="Mob and NPC spawns drawn in the engine"><br><sub>Spawns: mob/NPC tables drawn in the engine, palette by level, place and move.</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/world-editor-water.png" alt="Water tool"><br><sub>Water: create a lake, type, color, alpha, blend, UV.</sub></td>
+<td width="50%"><img src="docs/screenshots/ui-maker.png" alt="UI Maker"><br><sub>UI Maker: layout JSON, real NtlGui render, lint and approval.</sub></td>
+</tr>
+</table>
+
+<p align="center">
+  <img src="docs/screenshots/command-palette.png" alt="Command palette" width="100%">
+</p>
+<p align="center"><sub>Grouped side menu and command palette (<code>Ctrl+K</code>).</sub></p>
+
+<p align="center">
   <img src="docs/screenshots/resource-browser.png" alt="Resource browser with preview and inspector" width="100%">
 </p>
 <p align="center"><sub>Resource browser: PAK library, collections, live preview and inspector.</sub></p>
@@ -36,7 +60,7 @@ Safety model: every write goes to a **new output folder** with the original pres
 <p align="center">
   <img src="docs/screenshots/table-editor.png" alt="Schema-aware RDF table editor" width="100%">
 </p>
-<p align="center"><sub>Schema-aware RDF table editor with pending-change highlighting. Screenshots use synthetic demo data.</sub></p>
+<p align="center"><sub>Schema-aware RDF table editor with pending-change highlighting. The resource browser and table screenshots use synthetic demo data.</sub></p>
 
 ## Quick start
 
@@ -70,6 +94,8 @@ The PAK index of the client is encrypted. **The key is not shipped with this rep
    { "pakKey": "YOUR-PAK-KEY" }
    ```
 
+3. Optional, for UI Maker and the World Editor: `"clientRoot"` (your client folder, the one with `pack\`) and, for spawns, `"serverTables"` (your server's RDF table folder).
+
 Lookup order for the configuration file: `DBO_STUDIO_CONFIG` env var → next to the executable → current directory → `%LOCALAPPDATA%\DBO Assets Studio\`. The environment variable `DBO_PAK_KEY` overrides the file.
 
 The app passes the key to the native helper through its environment (never on the command line).
@@ -87,6 +113,14 @@ The app passes the key to the native helper through its environment (never on th
 .\build.ps1 -OutputDirectory .\dist -PakTool .\native\bin\pak-tool.exe
 ```
 
+World Editor and UI Maker need two more native helpers, built against **your own** client sources (see [docs/WORLD-EDITOR.md](docs/WORLD-EDITOR.md) and [docs/UI-MAKER.md](docs/UI-MAKER.md)):
+
+```powershell
+.\build-ui-render.ps1  -ClientSource C:\path\to\client-source -DirectXRoot C:\path\to\DirectX9 -ClientRoot C:\path\to\client
+.\build-world-host.ps1 -ClientSource C:\path\to\client-source -DirectXRoot C:\path\to\DirectX9 -ClientRoot C:\path\to\client -BuildToolLibs
+.\build.ps1 -OutputDirectory .\dist -PakTool .\native\bin\pak-tool.exe -UiRender .\native\bin\ui-render.exe -WorldHostDirectory .\native\bin\world-host
+```
+
 The `native/` folder also contains reference C++ helpers (property/scene/terrain readers). They are built against the DBO client sources and are **not required** to build or run the managed application, but features that rely on them need the matching helper executables next to the app.
 
 ## Usage
@@ -97,6 +131,8 @@ dbo-assets help                          # CLI reference
 dbo-assets pak inspect <index.pak>
 dbo-assets pak list <index.pak> --filter .rdf
 dbo-assets pak extract <index.pak> <path-inside-pak> <new-folder>
+dbo-assets ui render <layout.uilayout.json> --out window.png
+dbo-assets world-engine capture dbo_main_world shot.png --camera top
 ```
 
 ## Guía rápida (español)
@@ -105,6 +141,7 @@ dbo-assets pak extract <index.pak> <path-inside-pak> <new-folder>
 2. Copiá `studio.config.example.json` → `studio.config.json` y completá `pakKey` con la clave de **tu propio** cliente. Ese archivo no se sube al repo.
 3. Compilá con `build.ps1`. Para leer PAK necesitás además `pak-tool.exe` (ver `build-pak-tool.ps1`; requiere tus propias fuentes del cliente).
 4. Abrí `DboAssetsStudio.exe`, elegí un PAK/RDF/WPS y trabajá sobre **copias**: la herramienta siempre genera candidatos en una carpeta nueva y deja el original intacto.
+5. **World Editor** (Mundo › World Editor) y **UI Maker** (Interfaz › UI Maker) usan el motor y la librería de interfaz del propio cliente: compilá `world-host.exe` y `ui-render.exe` con tus fuentes del cliente (`build-world-host.ps1`, `build-ui-render.ps1`) y completá `clientRoot` (y `serverTables` para spawns) en `studio.config.json`. Con `Ctrl+K` buscás cualquier herramienta.
 
 ## Troubleshooting
 
