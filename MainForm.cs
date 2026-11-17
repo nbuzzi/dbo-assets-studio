@@ -40,7 +40,7 @@ internal sealed partial class MainForm : Form
 
     public MainForm(bool modern = true)
     {
-        Text = "DBO Assets Studio · Content Studio 5.4";
+        Text = "DBO Assets Studio · Content Studio 5.7";
         StartPosition = FormStartPosition.CenterScreen;
         MinimumSize = new Size(1280, 760);
         Size = new Size(1500, 920);

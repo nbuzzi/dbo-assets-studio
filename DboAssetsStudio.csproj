@@ -9,7 +9,7 @@
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AssemblyName>DboAssetsStudio</AssemblyName>
-    <Version>5.6.0</Version>
+    <Version>5.7.0</Version>
     <Product>DBO Assets Studio</Product>
     <Authors>nNico</Authors>
     <Company>nNico</Company>

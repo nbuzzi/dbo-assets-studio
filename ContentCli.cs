@@ -41,7 +41,7 @@ internal static class ContentCli
                 4 when args[1] == "tables-apply" => NewMapTableService.Run(args[2],args[3]),
                 _ => throw new ArgumentException("map plan <recipe.json> <preview-template.html> <media-helper.exe|none> <new-plan.json> | map preview <plan> | map apply <plan> <fresh-candidate>")
             };
-            else if (args[0] == "version") result = new { tool = "dbo-assets", version = "5.6.0", planVersion = 1 };
+            else if (args[0] == "version") result = new { tool = "dbo-assets", version = "5.7.0", planVersion = 1 };
             else throw new ArgumentException("Comando desconocido. Ejecutá dbo-assets help.");
             Console.WriteLine(JsonSerializer.Serialize(new { ok = true, result }, ContentSafety.Json));
             return result is RdfComparison comparison && comparison.HasConflicts ? 3 : 0;
@@ -235,7 +235,7 @@ internal static class ContentCli
     }
     public static List<PakChange> SealChanges(IEnumerable<PakChange> changes) => changes.Select(c => c.File == null ? c : c with { File = Path.GetFullPath(c.File), Sha256 = ContentSafety.Hash(c.File) }).ToList();
     private const string Help = """
-    DBO Assets CLI 5.4 — Taiwan 2.0
+    DBO Assets CLI 5.7 — Taiwan 2.0
     ui init | render | lint | review | approve | status | codegen | assets | frm list | frm render | import | swf   (UI Maker; detalle: dbo-assets ui help)
     world-engine worlds | prepare <world> | capture <world> <new.png> [--pos x,y,z] [--camera top|front|free] [--dist m] [--spawns spawn.rdf] | pick <world> <x,y,z> --spawns spawn.rdf | edit ... (World Editor, real engine)
     spawn read|... (spawn tables; detalle: dbo-assets spawn help)
