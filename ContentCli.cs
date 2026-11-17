@@ -13,7 +13,10 @@ internal static class ContentCli
                 Console.WriteLine(Help); return 0;
             }
             object result;
-            if (args[0] == "workspace") result = await WorkspaceCli.RunAsync(args[1..]);
+            if (args[0] == "ui") result = await UiMakerCli.RunAsync(args[1..]);
+            else if (args[0] == "spawn") result = SpawnCli.Run(args[1..]);
+            else if (args[0] == "world-engine") result = await WorldEngineCli.RunAsync(args[1..]);
+            else if (args[0] == "workspace") result = await WorkspaceCli.RunAsync(args[1..]);
             else if (args[0] == "wps") result = WpsCli.Run(args[1..]);
             else if (args[0] == "tqs") result = TqsCli.Run(args[1..]);
             else if (args[0] == "quest") result = QuestCli.Run(args[1..]);
@@ -233,6 +236,9 @@ internal static class ContentCli
     public static List<PakChange> SealChanges(IEnumerable<PakChange> changes) => changes.Select(c => c.File == null ? c : c with { File = Path.GetFullPath(c.File), Sha256 = ContentSafety.Hash(c.File) }).ToList();
     private const string Help = """
     DBO Assets CLI 5.4 — Taiwan 2.0
+    ui init | render | lint | review | approve | status | codegen | assets | frm list | frm render | import | swf   (UI Maker; detalle: dbo-assets ui help)
+    world-engine worlds | prepare <world> | capture <world> <new.png> [--pos x,y,z] [--camera top|front|free] [--dist m] [--spawns spawn.rdf] | pick <world> <x,y,z> --spawns spawn.rdf | edit ... (World Editor, real engine)
+    spawn read|... (spawn tables; detalle: dbo-assets spawn help)
     mob status | list | configure <kit-folder>
     mob import <model.glb> <name> | generate <prompt.txt> <name> --allow-paid
     mob run <job-id> | allow-rig <job-id> | recover <job-id> <phase> <task-id>

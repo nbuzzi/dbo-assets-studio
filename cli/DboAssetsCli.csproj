@@ -2,6 +2,22 @@
   <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0-windows</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><AssemblyName>dbo-assets</AssemblyName><Version>5.6.0</Version><EnableDefaultCompileItems>false</EnableDefaultCompileItems></PropertyGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
+    <Compile Include="../UiLayout.cs" Link="UiLayout.cs" />
+    <Compile Include="../UiRenderService.cs" Link="UiRenderService.cs" />
+    <Compile Include="../UiCodegen.cs" Link="UiCodegen.cs" />
+    <Compile Include="../UiMakerCli.cs" Link="UiMakerCli.cs" />
+    <Compile Include="../UiGuiScript.cs" Link="UiGuiScript.cs" />
+    <Compile Include="../UiFrmService.cs" Link="UiFrmService.cs" />
+    <Compile Include="../WorldEngineService.cs" Link="WorldEngineService.cs" />
+    <Compile Include="../WorldEngineCli.cs" Link="WorldEngineCli.cs" />
+    <Compile Include="../WorldEngineHostProcess.cs" Link="WorldEngineHostProcess.cs" />
+    <Compile Include="../WorldEngineWorkspace.cs" Link="WorldEngineWorkspace.cs" />
+    <Compile Include="../WorldEnginePvsAudit.cs" Link="WorldEnginePvsAudit.cs" />
+    <Compile Include="../SpawnReadService.cs" Link="SpawnReadService.cs" />
+    <Compile Include="../SpawnEditorService.cs" Link="SpawnEditorService.cs" />
+    <Compile Include="../SpawnCatalogService.cs" Link="SpawnCatalogService.cs" />
+    <Compile Include="../PortalReadService.cs" Link="PortalReadService.cs" />
+    <Compile Include="../SpawnSelfTest.cs" Link="SpawnSelfTest.cs" />
     <Compile Include="../StudioConfig.cs" Link="StudioConfig.cs" />
     <Compile Include="../AppPaths.cs" Link="AppPaths.cs" />
     <Compile Include="../TqsCli.cs" Link="TqsCli.cs" />

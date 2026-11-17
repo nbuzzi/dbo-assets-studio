@@ -324,7 +324,7 @@ internal static class RdfCli
         return (doc, key);
     }
 
-    private static string LocateCatalog()
+    internal static string LocateCatalog()
     {
         var candidates = new[] { Path.Combine(AppContext.BaseDirectory, "taiwan.txt"),
             Path.Combine(AppContext.BaseDirectory, "tools", "taiwan-table-studio", "taiwan.txt"),

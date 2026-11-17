@@ -1,0 +1,20 @@
+{
+  "description": "World Editor PVS: a terrain ridge north of Kokkara, then 'Build selected area PVS' for field 3057 (4 sectors). Save rewrites the PVS file (world/<name>/-------) only for those sector records.",
+  "pos": [4583, 0, 4053],
+  "camera": {"mode": "free", "yaw": 0, "pitch": -35, "dist": 520},
+  "steps": [
+    {"cmd": "pvs-get", "x": 4583, "z": 4053},
+    {"cmd": "terrain-height", "mode": "raise", "x": 4103, "z": 4283, "radius": 70, "amount": 160},
+    {"cmd": "terrain-height", "mode": "raise", "x": 4223, "z": 4283, "radius": 70, "amount": 160},
+    {"cmd": "terrain-height", "mode": "raise", "x": 4343, "z": 4283, "radius": 70, "amount": 160},
+    {"cmd": "terrain-height", "mode": "raise", "x": 4463, "z": 4283, "radius": 70, "amount": 160},
+    {"cmd": "terrain-height", "mode": "raise", "x": 4583, "z": 4283, "radius": 70, "amount": 160},
+    {"cmd": "terrain-height", "mode": "raise", "x": 4703, "z": 4283, "radius": 70, "amount": 160},
+    {"cmd": "terrain-height", "mode": "raise", "x": 4823, "z": 4283, "radius": 70, "amount": 160},
+    {"cmd": "terrain-height", "mode": "raise", "x": 4943, "z": 4283, "radius": 70, "amount": 160},
+    {"cmd": "terrain-height", "mode": "raise", "x": 5063, "z": 4283, "radius": 70, "amount": 160},
+    {"cmd": "pvs-build", "field": 3057, "wait": true, "timeoutSeconds": 600},
+    {"cmd": "pvs-get", "x": 4583, "z": 4053},
+    {"cmd": "pvs-overlay", "enabled": true, "layer": 0}
+  ]
+}

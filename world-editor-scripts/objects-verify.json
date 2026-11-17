@@ -1,0 +1,10 @@
+{
+  "comment": "world-engine verify <candidato> objects-verify.json  ·  relee el candidato en un host nuevo (visor) y lista los objetos de la zona.",
+  "pos": [4592, 0, 4060],
+  "camera": { "mode": "top", "dist": 150 },
+  "steps": [
+    { "cmd": "objects-list", "x": 4592, "z": 4060, "radius": 90, "limit": 200 },
+    { "cmd": "objects-list", "filter": "CAPSULEHOUSE", "x": 4592, "z": 4060, "radius": 200 },
+    { "cmd": "objects-list", "filter": "01_N_GRASS_ROUND1_001", "x": 4538.9, "z": 4048.7, "radius": 3 }
+  ]
+}

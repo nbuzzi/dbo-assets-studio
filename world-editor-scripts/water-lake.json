@@ -1,0 +1,16 @@
+{
+  "pos": [5056, 0, 4416],
+  "camera": {"mode": "free", "yaw": 30, "pitch": -38, "dist": 300},
+  "steps": [
+    {"cmd": "water-get", "x": 5056, "z": 4416, "radius": 140},
+    {"cmd": "water-terrain", "x": 5056, "z": 4416, "radius": 140},
+    {"cmd": "water-apply", "op": "create", "x": 5056, "z": 4416, "radius": 140, "typeName": "Lake_a", "height": -76},
+    {"cmd": "water-apply", "op": "update", "x": 5056, "z": 4416, "radius": 140, "color": [70, 150, 210], "alpha": 180, "height": -71, "scale": 4, "rotation": 0.4},
+    {"cmd": "water-apply", "op": "update", "x": 5056, "z": 4416, "radius": 140, "height": -40},
+    {"cmd": "undo"},
+    {"cmd": "water-get", "x": 5056, "z": 4416, "radius": 140}
+  ],
+  "inspect": [
+    {"cmd": "water-get", "x": 5056, "z": 4416, "radius": 140}
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "comment": "world-engine edit dbo_main_world objects-undo-identity.json <candidato-nuevo>  ·  borrar, mover cruzando sector/field y crear, y deshacer todo: el candidato no debe tener cambios en los wfif (deshacer es exacto).",
+  "pos": [4592, 0, 4060],
+  "steps": [
+    { "cmd": "objects-delete", "serial": 70310, "x": 4538.9, "z": 4048.7 },
+    { "cmd": "objects-transform", "serial": 70347, "x": 4605.7, "z": 4009.3, "dx": 30, "yaw": 10, "scale": 2 },
+    { "cmd": "objects-create", "name": "01_N_TREE_ROUND_001", "x": 4572, "z": 4102 },
+    { "cmd": "undo" }, { "cmd": "undo" }, { "cmd": "undo" },
+    { "cmd": "objects-list", "x": 4592, "z": 4060, "radius": 90, "limit": 300 }
+  ]
+}
